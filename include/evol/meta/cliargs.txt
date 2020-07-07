@@ -1,0 +1,7 @@
+{
+  .identifier = 'c',
+  .access_letters = "c",
+  .access_name = "config",
+  .value_name = "ConfigFile",
+  .description = "lua configuration file",
+}
