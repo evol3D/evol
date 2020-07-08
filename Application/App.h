@@ -1,11 +1,10 @@
 #ifndef EVOL_APP_H
 #define EVOL_APP_H
 
-struct App {
+extern struct _ev_app_struct{
     const char *name;
     int (*start)();
-};
-
-extern struct App app;
+    int (*destroy)();
+} App;
 
 #endif //EVOL_APP_H

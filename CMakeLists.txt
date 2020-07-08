@@ -13,16 +13,21 @@ if(DebugMode)
 	endif()
 endif()
 
+add_subdirectory(Application/Window/glfw)
+
 add_executable(evol
 		src/main.c
 		Application/App.h
 		Application/App.c
 		include/ev_log/rxi_logger/log.c
-)
+		include/globals.h Application/Window/Window.c Application/Window/Window.h)
 
 target_include_directories(evol PUBLIC
 		include
+		Application
         ${evol_SOURCE_DIR}
 		${evol_BINARY_DIR}
+		Application/Window/glfw/include
 )
 
+target_link_libraries(evol glfw)

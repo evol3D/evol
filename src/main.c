@@ -1,7 +1,7 @@
 #include <stdio.h>
-#include "Application/App.h"
+#include "App.h"
 
 int main()
 {
-	return app.start();
+	return App.start();
 }
