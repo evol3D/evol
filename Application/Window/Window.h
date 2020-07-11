@@ -7,14 +7,18 @@
 #define MAX_WINDOW_TITLE_LENGTH 256
 
 #include "globals.h"
+#include "stdbool.h"
 
-struct _ev_Window {
+extern struct _ev_Window {
     int (*init)();
     int (*createWindow)();
     int (*setSize)(int, int);
     int (*deinit)();
     void *(*getWindowHandle)();
     int (*setTitle)(const char *);
+    bool (*shouldClose)();
+    void (*pollEvents)();
+    bool (*isCreated)();
 } Window;
 
 #endif //EVOL_WINDOW_H

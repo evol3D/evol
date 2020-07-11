@@ -5,6 +5,8 @@ project(evol)
 option(DebugMode "Enable debugging features." ON)
 option(ColoredLogs "Use color coding for different logging levels. (DebugMode Needed)" ON)
 
+set(EVENT_DIRECTORY ${evol_SOURCE_DIR}/include/events)
+
 if(DebugMode)
 	add_compile_definitions(DEBUG)
 
@@ -14,13 +16,14 @@ if(DebugMode)
 endif()
 
 add_subdirectory(Application/Window/glfw)
+add_subdirectory(Application/EventSystem)
 
 add_executable(evol
 		src/main.c
 		Application/App.h
 		Application/App.c
 		include/ev_log/rxi_logger/log.c
-		include/globals.h Application/Window/Window.c Application/Window/Window.h)
+		include/globals.h Application/Window/Window.c Application/Input/Input.c include/events/WindowEvent.h Application/EventDebug/EventDebug.c Application/EventDebug/EventDebug.h)
 
 target_include_directories(evol PUBLIC
 		include
@@ -28,6 +31,11 @@ target_include_directories(evol PUBLIC
         ${evol_SOURCE_DIR}
 		${evol_BINARY_DIR}
 		Application/Window/glfw/include
+        Application/EventSystem/include
 )
 
-target_link_libraries(evol glfw)
+target_include_directories(event_system PUBLIC
+		Application
+)
+
+target_link_libraries(evol glfw event_system)

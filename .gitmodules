@@ -1,3 +1,7 @@
 [submodule "Application/Window/glfw"]
 	path = Application/Window/glfw
 	url = https://github.com/glfw/glfw
+	branch = 3.3-stable
+[submodule "Application/EventSystem"]
+	path = Application/EventSystem
+	url = https://github.com/mo7sener/EventSystemTemplate
