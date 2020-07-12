@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.1)
 
 project(evol)
 
+set(CMAKE_BUILD_TYPE Debug)
 option(DebugMode "Enable debugging features." ON)
 option(ColoredLogs "Use color coding for different logging levels. (DebugMode Needed)" ON)
 
@@ -23,7 +24,7 @@ add_executable(evol
 		Application/App.h
 		Application/App.c
 		include/ev_log/rxi_logger/log.c
-		include/globals.h Application/Window/Window.c Application/Input/Input.c include/events/WindowEvent.h Application/EventDebug/EventDebug.c Application/EventDebug/EventDebug.h)
+		include/globals.h Application/Window/Window.c Application/Input/Input.c include/events/WindowEvent.h Application/EventDebug/EventDebug.c Application/EventDebug/EventDebug.h include/events/ControlEvent.h)
 
 target_include_directories(evol PUBLIC
 		include
@@ -39,3 +40,7 @@ target_include_directories(event_system PUBLIC
 )
 
 target_link_libraries(evol glfw event_system)
+
+
+configure_file(${event_system_SOURCE_DIR}/extern/pthreads4w/dll/x64/pthreadVC2.dll
+		${evol_BINARY_DIR}/pthreadVC2.dll COPYONLY)

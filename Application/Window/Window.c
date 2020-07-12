@@ -15,6 +15,7 @@ static int ev_window_set_title(const char *title);
 static void ev_window_poll_events();
 static bool ev_window_should_close();
 static inline bool ev_window_is_created();
+static inline double ev_window_get_time();
 
 static inline void *ev_get_window_handle();
 
@@ -39,6 +40,7 @@ struct _ev_Window Window = {
         .shouldClose = ev_window_should_close,
         .pollEvents = ev_window_poll_events,
         .isCreated = ev_window_is_created,
+        .getTime = ev_window_get_time,
 };
 
 static bool ev_window_should_close()
@@ -61,9 +63,6 @@ static int ev_window_init()
     WindowData.windowHandle = NULL;
     WindowData.created = false;
 
-    { // EventListener initialization
-        event_listener_init(&WindowData.eventListener);
-    }
 
 
     return 0;
@@ -81,11 +80,30 @@ static int ev_window_deinit()
     return 0;
 }
 
+bool ev_window_control_event_handler(ControlEvent *event)
+{
+    switch(event->variant)
+    {
+//        case WindowPollSignal:
+//            Window.pollEvents();
+//            break;
+        default:
+            break;
+    }
+
+    return false;
+}
+
 static int ev_window_create_window()
 {
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
     WindowData.windowHandle = glfwCreateWindow(WindowData.width, WindowData.height, WindowData.windowTitle, NULL, NULL);
     WindowData.created = true;
+
+    { // EventListener initialization
+        event_listener_init(&WindowData.eventListener);
+        event_listener_subscribe(&WindowData.eventListener, CONTROL_EVENT, ev_window_control_event_handler);
+    }
 
     ev_window_set_callbacks();
 
@@ -119,6 +137,11 @@ static void ev_framebuffer_size_event_dispatch(GLFWwindow *windowHandle, int wid
     );
 
     EventSystem.dispatch(&e);
+}
+
+static inline double ev_window_get_time()
+{
+    return glfwGetTime();
 }
 
 static void ev_window_set_callbacks()

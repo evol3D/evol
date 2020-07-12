@@ -7,6 +7,7 @@ void ev_Event_Debug_init();
 bool ev_Event_Debug_mouse_event_printer(MouseEvent *event);
 bool ev_Event_Debug_key_event_printer(KeyEvent *event);
 bool ev_Event_Debug_window_event_printer(WindowEvent *event);
+bool ev_Event_Debug_control_event_printer(ControlEvent *event);
 void ev_Event_Debug_deinit();
 
 struct ev_Event_Debug EventDebug = {
@@ -22,6 +23,7 @@ void ev_Event_Debug_init()
     event_listener_subscribe(&EventDebug.listener, MOUSE_EVENT, ev_Event_Debug_mouse_event_printer);
     event_listener_subscribe(&EventDebug.listener, KEY_EVENT, ev_Event_Debug_key_event_printer);
     event_listener_subscribe(&EventDebug.listener, WINDOW_EVENT, ev_Event_Debug_window_event_printer);
+//    event_listener_subscribe(&EventDebug.listener, CONTROL_EVENT, ev_Event_Debug_control_event_printer);
 
 }
 
@@ -95,6 +97,29 @@ bool ev_Event_Debug_window_event_printer(WindowEvent *event)
             break;
         default:
             printf("Unsupported WindowEvent variant\n");
+            break;
+    }
+
+    return false;
+}
+
+bool ev_Event_Debug_control_event_printer(ControlEvent *event)
+{
+    switch(event->variant)
+    {
+        case NewFrame:
+            printf(
+                    "NewFrame: TimeStep = %f\n",
+                    event->data.timeStep
+            );
+            break;
+        case WindowPollSignal:
+            printf(
+					"WindowPollSignal\n"
+            );
+            break;
+        default:
+            printf("Unsupported ControlEvent variant\n");
             break;
     }
 

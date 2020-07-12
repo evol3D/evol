@@ -19,6 +19,7 @@ extern struct _ev_Window {
     bool (*shouldClose)();
     void (*pollEvents)();
     bool (*isCreated)();
+    double (*getTime)();
 } Window;
 
 #endif //EVOL_WINDOW_H
