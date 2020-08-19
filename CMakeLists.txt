@@ -9,38 +9,38 @@ option(ColoredLogs "Use color coding for different logging levels. (DebugMode Ne
 set(EVENT_DIRECTORY ${evol_SOURCE_DIR}/include/events)
 
 if(DebugMode)
-	add_compile_definitions(DEBUG)
+  add_compile_definitions(DEBUG)
 
-	if(ColoredLogs)
-		add_compile_definitions(LOG_USE_COLOR)
-	endif()
+  if(ColoredLogs)
+    add_compile_definitions(LOG_USE_COLOR)
+  endif()
 endif()
 
 add_subdirectory(Application/Window/glfw)
 add_subdirectory(Application/EventSystem)
 
 add_executable(evol
-		src/main.c
-		Application/App.h
-		Application/App.c
-		include/ev_log/rxi_logger/log.c
-		include/globals.h Application/Window/Window.c Application/Input/Input.c include/events/WindowEvent.h Application/EventDebug/EventDebug.c Application/EventDebug/EventDebug.h include/events/ControlEvent.h)
+    src/main.c
+    Application/App.h
+    Application/App.c
+    include/ev_log/rxi_logger/log.c
+    include/globals.h Application/Window/Window.c Application/Input/Input.c include/events/WindowEvent.h Application/EventDebug/EventDebug.c Application/EventDebug/EventDebug.h include/events/ControlEvent.h)
 
 target_include_directories(evol PUBLIC
-		include
-		Application
-        ${evol_SOURCE_DIR}
-		${evol_BINARY_DIR}
-		Application/Window/glfw/include
-        Application/EventSystem/include
+    include
+    Application
+    ${evol_SOURCE_DIR}
+    ${evol_BINARY_DIR}
+    Application/Window/glfw/include
+    Application/EventSystem/include
 )
 
 target_include_directories(event_system PUBLIC
-		Application
+    Application
 )
 
 target_link_libraries(evol glfw event_system)
 
 
 configure_file(${event_system_SOURCE_DIR}/extern/pthreads4w/dll/x64/pthreadVC2.dll
-		${evol_BINARY_DIR}/pthreadVC2.dll COPYONLY)
+    ${evol_BINARY_DIR}/pthreadVC2.dll COPYONLY)
