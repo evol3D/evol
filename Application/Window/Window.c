@@ -59,7 +59,7 @@ static int ev_window_init()
 
     WindowData.width = DEFAULT_WINDOW_WIDTH;
     WindowData.height = DEFAULT_WINDOW_HEIGHT;
-    strcpy_s(WindowData.windowTitle, MAX_WINDOW_TITLE_LENGTH, DEFAULT_WINDOW_TITLE);
+    strcpy(WindowData.windowTitle, DEFAULT_WINDOW_TITLE);
     WindowData.windowHandle = NULL;
     WindowData.created = false;
 
@@ -151,7 +151,7 @@ static void ev_window_set_callbacks()
 
 static int ev_window_set_title(const char *title)
 {
-    strcpy_s(WindowData.windowTitle, MAX_WINDOW_TITLE_LENGTH, title);
+    strcpy(WindowData.windowTitle, title);
 
     if(WindowData.created)
     {

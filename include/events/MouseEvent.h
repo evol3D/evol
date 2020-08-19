@@ -1,7 +1,7 @@
 #ifndef EVOL_MOUSEEVENT_H
 #define EVOL_MOUSEEVENT_H
 
-#include "Input\Input.h"
+#include "Input/Input.h"
 
 enum MouseEventVariant {
     MouseButtonPressed,
