@@ -8,6 +8,8 @@ option(ColoredLogs "Use color coding for different logging levels. (DebugMode Ne
 
 set(EVENT_DIRECTORY ${evol_SOURCE_DIR}/include/events)
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 if(DebugMode)
   add_compile_definitions(DEBUG)
 
@@ -18,13 +20,17 @@ endif()
 
 add_subdirectory(Application/Window/glfw)
 add_subdirectory(Application/EventSystem)
+add_subdirectory(Application/World/flecs)
 
 add_executable(evol
     src/main.c
-    Application/App.h
     Application/App.c
     include/ev_log/rxi_logger/log.c
-    include/globals.h Application/Window/Window.c Application/Input/Input.c include/events/WindowEvent.h Application/EventDebug/EventDebug.c Application/EventDebug/EventDebug.h include/events/ControlEvent.h)
+    Application/Window/Window.c
+    Application/Input/Input.c
+    Application/EventDebug/EventDebug.c
+    Application/World/World.c
+    )
 
 target_include_directories(evol PUBLIC
     include
@@ -33,13 +39,18 @@ target_include_directories(evol PUBLIC
     ${evol_BINARY_DIR}
     Application/Window/glfw/include
     Application/EventSystem/include
+    Application/World/flecs/include
 )
 
 target_include_directories(event_system PUBLIC
     Application
 )
 
-target_link_libraries(evol glfw event_system)
+target_link_libraries(evol
+  glfw
+  event_system
+  flecs
+  )
 
 
 configure_file(${event_system_SOURCE_DIR}/extern/pthreads4w/dll/x64/pthreadVC2.dll
