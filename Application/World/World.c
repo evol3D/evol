@@ -12,17 +12,18 @@ struct ev_World World = {
 };
 
 struct ev_World_Data {
-  ecs_world_t *instance;
+  int placeholder;
 } WorldData;
 
 static int ev_world_init()
 {
-  WorldData.instance = ecs_init();
+  World.instance = ecs_init();
   return 0;
 }
 
 static int ev_world_deinit()
 {
-  ecs_fini(WorldData.instance);
+  ecs_fini(World.instance);
   return 0;
 }
+
