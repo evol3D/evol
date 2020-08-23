@@ -30,6 +30,8 @@ add_executable(evol
     Application/Input/Input.c
     Application/EventDebug/EventDebug.c
     Application/World/World.c
+
+    Application/Scratchpad/Scratchpad.c
     )
 
 target_include_directories(evol PUBLIC

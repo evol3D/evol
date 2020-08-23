@@ -1,6 +1,13 @@
 #ifndef EVOL_APP_H
 #define EVOL_APP_H
 
+#include "Window/Window.h"
+#include "ev_log/ev_log.h"
+#include "EventSystem.h"
+#include "EventDebug/EventDebug.h"
+#include "World/World.h"
+#include "Scratchpad/Scratchpad.h"
+
 extern struct ev_app_struct{
     const char *name;
     int (*start)();

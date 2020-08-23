@@ -1,8 +1,4 @@
 #include "App.h"
-#include "Window/Window.h"
-#include "ev_log/ev_log.h"
-#include "EventSystem.h"
-#include "EventDebug/EventDebug.h"
 
 #ifdef WIN32
 #include "windows.h"
@@ -66,7 +62,13 @@ static int start()
         Input.init();
     }
 
+    {
+        World.init();
+    }
 
+    {
+        Scratchpad.execute();
+    }
 
     return game_loop();
 }
@@ -152,6 +154,10 @@ static int game_loop()
 static int destroy()
 {
     closeSystem = true;
+
+    {
+        World.deinit();
+    }
 
     {
         Input.deinit();
