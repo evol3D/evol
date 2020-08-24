@@ -6,10 +6,16 @@
 static int ev_world_init();
 static int ev_world_deinit();
 
+Component ecs_type(TransformPosition);
+Component ecs_type(TransformRotation);
+Component ecs_type(TransformScale);
+
 struct ev_World World = {
   .init   = ev_world_init,
   .deinit = ev_world_deinit,
 };
+
+void RegisterBaseComponents();
 
 struct ev_World_Data {
   int placeholder;
@@ -18,6 +24,7 @@ struct ev_World_Data {
 static int ev_world_init()
 {
   World.instance = ecs_init();
+
   return 0;
 }
 
@@ -26,4 +33,3 @@ static int ev_world_deinit()
   ecs_fini(World.instance);
   return 0;
 }
-

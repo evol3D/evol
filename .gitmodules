@@ -8,3 +8,4 @@
 [submodule "Application/World/flecs"]
 	path = Application/World/flecs
 	url = https://github.com/sandermertens/flecs
+  branch = master

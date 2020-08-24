@@ -66,8 +66,12 @@ static int start()
         World.init();
     }
 
+    /* { */
+    /*     Scratchpad.execute(); */
+    /* } */
+
     {
-        Scratchpad.execute();
+        Game.init();
     }
 
     return game_loop();
@@ -153,6 +157,10 @@ static int game_loop()
 
 static int destroy()
 {
+    {
+      Game.deinit();
+    }
+
     closeSystem = true;
 
     {
