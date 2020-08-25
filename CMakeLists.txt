@@ -33,6 +33,7 @@ add_executable(evol
     Application/Game/Game.c
 
     Application/World/modules/transform_module.c
+    Application/World/modules/script_module.c
 
     # Application/Scratchpad/Scratchpad.c
     )
