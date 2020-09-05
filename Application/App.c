@@ -28,159 +28,166 @@ static int destroy();
 static int game_loop();
 
 struct ev_app_struct App = {
-    .name = "evol",
-    .start = start,
-    .destroy = destroy,
-    .lastFrameTime = 0,
-    .lastWindowPollTime = 0,
-    .lastEventSystemUpdate = 0,
-    .framerate = 144,
-    .windowPollRate = 500,
-    .eventSystemUpdateRate = 500,
+  .name = "evol",
+  .start = start,
+  .destroy = destroy,
+  .lastFrameTime = 0,
+  .lastWindowPollTime = 0,
+  .lastEventSystemUpdate = 0,
+  .framerate = 144,
+  .windowPollRate = 500,
+  .eventSystemUpdateRate = 500,
 };
 
 static int start()
 {
-    ev_log_info("Application Started");
+  ev_log_info("Application Started");
 
-    { // EventSystem Initialization
-        EventSystem.init();
-    }
+  { // EventSystem Initialization
+    EventSystem.init();
+  }
 
-    {
-        EventDebug.init();
-    }
+  {
+    EventDebug.init();
+  }
 
-    { // Window Initialization
-        Window.init();
-        Window.setTitle("evol3D");
-        Window.setSize(800, 600);
-        Window.createWindow();
-    }
+  { // Window Initialization
+    Window.init();
+    Window.setTitle("evol3D");
+    Window.setSize(800, 600);
+    Window.createWindow();
+  }
 
-    {
-        Input.init();
-    }
+  {
+    Input.init();
+  }
 
-    {
-        World.init();
-    }
+  {
+    World.init();
+  }
 
-    /* { */
-    /*     Scratchpad.execute(); */
-    /* } */
+  {
+    Physics.init();
+  }
 
-    {
-        Game.init();
-    }
+  /* { */
+  /*     Scratchpad.execute(); */
+  /* } */
 
-    return game_loop();
+  {
+      Game.init();
+  }
+
+  return game_loop();
 }
 
 bool closeSystem = false;
 
 static void* event_system_loop()
 {
-    while(!closeSystem)
+  while(!closeSystem)
+  {
+    double time = Window.getTime();
+    double timeStep = time - App.lastEventSystemUpdate;
+    double remainingTime = (1.f/(double)App.eventSystemUpdateRate) - timeStep;
+
+    if(remainingTime <= 0)
     {
-        double time = Window.getTime();
-        double timeStep = time - App.lastEventSystemUpdate;
-        double remainingTime = (1.f/(double)App.eventSystemUpdateRate) - timeStep;
-
-        if(remainingTime <= 0)
-        {
-            EventSystem.update();
-            App.lastEventSystemUpdate = time;
-        }
-        else
-        {
-            sleep_ms(remainingTime * 1000);
-        }
+      EventSystem.update();
+      App.lastEventSystemUpdate = time;
     }
+    else
+    {
+      sleep_ms(remainingTime * 1000);
+    }
+  }
 
-    return 0;
+  return 0;
 }
 
 static void *render_loop()
 {
-    while(!closeSystem)
-    {
-        double time = Window.getTime();
-        double timeStep = time - App.lastFrameTime;
-        double remainingTime = (1.f/(double)App.framerate) - timeStep;
+  while(!closeSystem)
+  {
+    double time = Window.getTime();
+    double timeStep = time - App.lastFrameTime;
+    double remainingTime = (1.f/(double)App.framerate) - timeStep;
 
-        if(remainingTime <= 0)
-        {
-            ControlEvent e = CreateControlEvent(
-                    (NewFrame),
-                    ((ControlEventData){
-                            .timeStep = timeStep,
-                    })
-            );
-            EventSystem.dispatch(&e);
-            App.lastFrameTime = time;
-        }
-        else
-        {
-            sleep_ms(remainingTime * 1000);
-        }
+    if(remainingTime <= 0)
+    {
+      ControlEvent e = CreateControlEvent(
+        (NewFrame),
+        ((ControlEventData){
+          .timeStep = timeStep,
+        })
+      );
+      EventSystem.dispatch(&e);
+      App.lastFrameTime = time;
     }
-    return 0;
+    else
+    {
+        sleep_ms(remainingTime * 1000);
+    }
+  }
+  return 0;
 }
 
 static int game_loop()
 {
-    pthread_t eventSystem_thread;
-    pthread_t renderLoop_thread;
+  pthread_t eventSystem_thread;
+  pthread_t renderLoop_thread;
 
-    pthread_create(&eventSystem_thread, NULL, event_system_loop, NULL);
-    pthread_create(&renderLoop_thread, NULL, render_loop, NULL);
+  pthread_create(&eventSystem_thread, NULL, event_system_loop, NULL);
+  /* pthread_create(&renderLoop_thread, NULL, render_loop, NULL); */
 
-    while(!Window.shouldClose())
+  while(!Window.shouldClose())
+  {
+    double time = Window.getTime();
+    double timeStep = time - App.lastWindowPollTime;
+    double remainingTime = (1.f/(double)App.windowPollRate) - timeStep;
+
+    if (remainingTime <= 0)
     {
-        double time = Window.getTime();
-        double timeStep = time - App.lastWindowPollTime;
-        double remainingTime = (1.f/(double)App.windowPollRate) - timeStep;
-
-        if (remainingTime <= 0)
-        {
-            Window.pollEvents();
-            App.lastWindowPollTime = time;
-        }
-        else
-        {
-            sleep_ms(remainingTime * 1000);
-        }
+      Window.pollEvents();
+      App.lastWindowPollTime = time;
     }
-    return App.destroy();
+    else
+    {
+      sleep_ms(remainingTime * 1000);
+    }
+  }
+  return App.destroy();
 }
 
 static int destroy()
 {
-    {
-      Game.deinit();
-    }
+  {
+    Game.deinit();
+  }
 
-    closeSystem = true;
+  closeSystem = true;
+  {
+    Physics.deinit();
+  }
 
-    {
-        World.deinit();
-    }
+  {
+    World.deinit();
+  }
 
-    {
-        Input.deinit();
-    }
+  {
+    Input.deinit();
+  }
 
-    { // Window termination
-        Window.deinit();
-    }
+  { // Window termination
+    Window.deinit();
+  }
 
-    {
-        EventDebug.deinit();
-    }
+  {
+    EventDebug.deinit();
+  }
 
-    { // EventSystem termination
-        EventSystem.deinit();
-    }
-    return 0;
+  { // EventSystem termination
+    EventSystem.deinit();
+  }
+  return 0;
 }

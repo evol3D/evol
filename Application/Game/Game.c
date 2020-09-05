@@ -30,7 +30,7 @@ static int ev_game_init()
   printf("Components in cube: %s\n", Entity_PrintComponents(cube));
   printf("Content of ScriptComponent in cube: %s\n", Entity_GetComponent(cube, ScriptComponent)->script_path);
 
-  while (ecs_progress(World.instance, 0));
+  /* while (ecs_progress(World.instance, 0)); */
 
   return 0;
 }

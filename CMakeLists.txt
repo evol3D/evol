@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.1)
 
 project(evol)
 
-set(CMAKE_BUILD_TYPE Debug)
+set(CMAKE_BUILD_TYPE DEBUG)
 option(DebugMode "Enable debugging features." ON)
 option(ColoredLogs "Use color coding for different logging levels. (DebugMode Needed)" ON)
 
@@ -18,9 +18,14 @@ if(DebugMode)
   endif()
 endif()
 
+list(APPEND GLOBAL_INCLUDES 
+  "${evol_SOURCE_DIR}/include" 
+  "${evol_SOURCE_DIR}/Application")
+
 add_subdirectory(Application/Window/glfw)
 add_subdirectory(Application/EventSystem)
 add_subdirectory(Application/World/flecs)
+add_subdirectory(Application/Physics)
 
 add_executable(evol
     src/main.c
@@ -39,8 +44,7 @@ add_executable(evol
     )
 
 target_include_directories(evol PUBLIC
-    include
-    Application
+    ${GLOBAL_INCLUDES}
     ${evol_SOURCE_DIR}
     ${evol_BINARY_DIR}
     Application/Window/glfw/include
@@ -56,6 +60,7 @@ target_link_libraries(evol
   glfw
   event_system
   flecs
+  evphys
   )
 
 
