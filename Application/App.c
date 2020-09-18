@@ -63,11 +63,15 @@ static int start()
   }
 
   {
+    Physics.init();
+  }
+
+  {
     World.init();
   }
 
   {
-    Physics.init();
+    // Scripting initialization
   }
 
   /* { */
