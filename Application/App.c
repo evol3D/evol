@@ -4,7 +4,7 @@
 #include "windows.h"
 void sleep_ms(double milliseconds)
 {
-  Sleep(seconds);
+  Sleep(milliseconds);
 }
 #else
 #include "unistd.h"

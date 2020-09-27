@@ -12,8 +12,8 @@ cmake = import('cmake')
 glfw_proj = cmake.subproject('glfw')
 glfw_dep = glfw_proj.dependency('glfw')
 
-flecs_proj = cmake.subproject('flecs')
-flecs_dep = flecs_proj.dependency('flecs')
+flecs_proj = subproject('flecs')
+flecs_dep = flecs_proj.get_variable('flecs_dep')
 
 evol_eventsystem_proj = subproject('evol-eventsystem')
 evol_eventsystem_dep = evol_eventsystem_proj.get_variable('eventsystem_dependency')
@@ -37,6 +37,7 @@ srcfiles = files('src/main.c',
             'Application/World/modules/script_module.c')
 
 incdir = include_directories( './include', './Application', '.') 
+
 
 evol_exe = executable( 'evol', srcfiles, include_directories: incdir, dependencies: [glfw_dep, dl_dep, evol_eventsystem_dep, evol_thread_dep, flecs_dep ])
 

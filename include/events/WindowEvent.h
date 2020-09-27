@@ -7,7 +7,7 @@ REGISTER_EVENT(WindowEvent, EVENT_STRUCT());
 
 // Secondary
 REGISTER_EVENT(WindowResizedEvent, EVENT_STRUCT(
-      unsigned int newWindowWidth, newWindowHeight
+    unsigned int newWindowWidth, newWindowHeight;
 ));
 
 #define INIT_WINDOW_EVENTS \
