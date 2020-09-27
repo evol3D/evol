@@ -20,8 +20,8 @@ void sleep_ms(double milliseconds)
 }
 #endif
 
-#define HAVE_STRUCT_TIMESPEC
-#include "pthread.h"
+#include <evolpthreads.h>
+#include <events/events.h>
 
 static int start();
 static int destroy();
@@ -39,12 +39,19 @@ struct ev_app_struct App = {
   .eventSystemUpdateRate = 500,
 };
 
+//TODO: Fix the need for this
+int result;
+
 static int start()
 {
   ev_log_info("Application Started");
 
   { // EventSystem Initialization
-    EventSystem.init();
+    //TODO: Fix the need for this
+    SET_RESULT_VAR(result);
+
+    INIT_EVOL_EVENTS();
+    INITIALIZE_EVENTSYSTEM();
   }
 
   {
@@ -62,9 +69,9 @@ static int start()
     Input.init();
   }
 
-  {
-    Physics.init();
-  }
+  /* { */
+  /*   Physics.init(); */
+  /* } */
 
   {
     World.init();
@@ -97,7 +104,7 @@ static void* event_system_loop()
 
     if(remainingTime <= 0)
     {
-      EventSystem.update();
+      EVENTSYSTEM_PROGRESS();
       App.lastEventSystemUpdate = time;
     }
     else
@@ -106,40 +113,41 @@ static void* event_system_loop()
     }
   }
 
+
   return 0;
 }
 
-static void *render_loop()
-{
-  while(!closeSystem)
-  {
-    double time = Window.getTime();
-    double timeStep = time - App.lastFrameTime;
-    double remainingTime = (1.f/(double)App.framerate) - timeStep;
+/* static void *render_loop() */
+/* { */
+/*   while(!closeSystem) */
+/*   { */
+/*     double time = Window.getTime(); */
+/*     double timeStep = time - App.lastFrameTime; */
+/*     double remainingTime = (1.f/(double)App.framerate) - timeStep; */
 
-    if(remainingTime <= 0)
-    {
-      ControlEvent e = CreateControlEvent(
-        (NewFrame),
-        ((ControlEventData){
-          .timeStep = timeStep,
-        })
-      );
-      EventSystem.dispatch(&e);
-      App.lastFrameTime = time;
-    }
-    else
-    {
-        sleep_ms(remainingTime * 1000);
-    }
-  }
-  return 0;
-}
+/*     if(remainingTime <= 0) */
+/*     { */
+/*       /1* ControlEvent e = CreateControlEvent( *1/ */
+/*       /1*   (NewFrame), *1/ */
+/*       /1*   ((ControlEventData){ *1/ */
+/*       /1*     .timeStep = timeStep, *1/ */
+/*       /1*   }) *1/ */
+/*       /1* ); *1/ */
+/*       /1* EventSystem.dispatch(&e); *1/ */
+/*       App.lastFrameTime = time; */
+/*     } */
+/*     else */
+/*     { */
+/*         sleep_ms(remainingTime * 1000); */
+/*     } */
+/*   } */
+/*   return 0; */
+/* } */
 
 static int game_loop()
 {
   pthread_t eventSystem_thread;
-  pthread_t renderLoop_thread;
+  /* pthread_t renderLoop_thread; */
 
   pthread_create(&eventSystem_thread, NULL, event_system_loop, NULL);
   /* pthread_create(&renderLoop_thread, NULL, render_loop, NULL); */
@@ -171,7 +179,7 @@ static int destroy()
 
   closeSystem = true;
   {
-    Physics.deinit();
+    /* Physics.deinit(); */
   }
 
   {
@@ -191,7 +199,7 @@ static int destroy()
   }
 
   { // EventSystem termination
-    EventSystem.deinit();
+    TERMINATE_EVENTSYSTEM();
   }
   return 0;
 }

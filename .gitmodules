@@ -1,14 +1,3 @@
-[submodule "Application/Window/glfw"]
-	path = Application/Window/glfw
-	url = https://github.com/glfw/glfw
-	branch = 3.3-stable
-[submodule "Application/EventSystem"]
-	path = Application/EventSystem
-	url = https://github.com/mo7sener/EventSystemTemplate
-[submodule "Application/World/flecs"]
-	path = Application/World/flecs
-	url = https://github.com/sandermertens/flecs
-  branch = master
 [submodule "Application/Physics/bullet3"]
 	path = Application/Physics/bullet3
 	url = https://github.com/bulletphysics/bullet3

@@ -7,8 +7,9 @@
 #include "EventDebug/EventDebug.h"
 #include "World/World.h"
 #include "Scratchpad/Scratchpad.h"
+#include "Input/Input.h"
 #include "Game/Game.h"
-#include "Physics/Physics.h"
+/* #include "Physics/Physics.h" */
 
 extern struct ev_app_struct{
     const char *name;

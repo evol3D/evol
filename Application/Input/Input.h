@@ -2,16 +2,13 @@
 #define EVOL_INPUT_H
 
 #include "stdbool.h"
+#include "events/events.h"
 
 typedef unsigned int KeyCode;
 typedef unsigned int KeyState;
 
 typedef unsigned int MouseBtnState;
 typedef unsigned int MouseButton;
-typedef struct {
-    double x;
-    double y;
-} MousePosition;
 
 extern struct ev_Input {
     int (*init)();
