@@ -40,8 +40,3 @@ incdir = include_directories( './include', './Application', '.')
 
 
 evol_exe = executable( 'evol', srcfiles, include_directories: incdir, dependencies: [glfw_dep, dl_dep, evol_eventsystem_dep, evol_thread_dep, flecs_dep ])
-
-# target_include_directories(['evol', 'PUBLIC', global_includes, evol_source_dir, evol_binary_dir, 'Application/Window/glfw/include', 'Application/EventSystem/include', 'Application/World/flecs/include'])
-# target_include_directories(['event_system', 'PUBLIC', 'Application'])
-# target_link_libraries(['evol', 'glfw', 'event_system', 'flecs', 'evphys'])
-# configure_file([event_system_source_dir, '/extern/pthreads4w/dll/x64/pthreadVC2.dll', evol_binary_dir, '/pthreadVC2.dll', 'COPYONLY'])
