@@ -16,7 +16,7 @@ struct ev_app_struct App = {
   .lastWindowPollTime = 0,
   .lastEventSystemUpdate = 0,
   .framerate = 144,
-  .windowPollRate = 500,
+  .windowPollRate = 1000,
   .eventSystemUpdateRate = 500,
 };
 
