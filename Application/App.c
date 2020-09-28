@@ -69,9 +69,9 @@ static int start()
     Input.init();
   }
 
-  /* { */
-  /*   Physics.init(); */
-  /* } */
+  {
+    Physics.init();
+  }
 
   {
     World.init();
@@ -179,7 +179,7 @@ static int destroy()
 
   closeSystem = true;
   {
-    /* Physics.deinit(); */
+    Physics.deinit();
   }
 
   {

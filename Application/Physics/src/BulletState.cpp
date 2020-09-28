@@ -9,7 +9,6 @@ BulletState::BulletState()
   broadphase = new btDbvtBroadphase();
   constraintSolver = new btSequentialImpulseConstraintSolver();
   world = new btDiscreteDynamicsWorld(collisionDispatcher, broadphase, constraintSolver, collisionConfiguration);
-
 }
 
 BulletState::~BulletState()

@@ -23,7 +23,7 @@ evol_thread_dep = evol_threads_proj.get_variable('evol_thread_dep')
 
 dl_dep = cc.find_library('dl', required: false)
 
-# physics_subproject = cmake.subproject('Physics')
+subdir('Application/Physics')
 
 srcfiles = files('src/main.c', 
             'Application/App.c', 
@@ -38,5 +38,14 @@ srcfiles = files('src/main.c',
 
 incdir = include_directories( './include', './Application', '.') 
 
-
-evol_exe = executable( 'evol', srcfiles, include_directories: incdir, dependencies: [glfw_dep, dl_dep, evol_eventsystem_dep, evol_thread_dep, flecs_dep ])
+evol_exe = executable( 'evol', srcfiles, 
+  include_directories: incdir, 
+  dependencies: [
+    glfw_dep, 
+    dl_dep, 
+    evol_eventsystem_dep, 
+    evol_thread_dep, 
+    flecs_dep, 
+    evphys_dep,
+    ],
+  )
