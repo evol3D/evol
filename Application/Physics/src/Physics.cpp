@@ -14,10 +14,10 @@ struct ev_Physics_Data {
 } PhysicsData;
 
 struct _ev_Physics Physics = {
-  .init = ev_physics_init,
-  .deinit = ev_physics_deinit,
-  .step = ev_physics_step,
-  .step_dt = ev_physics_step_dt,
+  ev_physics_init,
+  ev_physics_deinit,
+  ev_physics_step,
+  ev_physics_step_dt,
 };
 
 
@@ -36,11 +36,11 @@ static int ev_physics_deinit()
 
 static int ev_physics_step()
 {
-
+	return 0;
 }
 
 static int ev_physics_step_dt(real deltaTime)
 {
-
+	return 0;
 }
 
