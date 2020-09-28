@@ -1,4 +1,3 @@
-# project('evphys', default_options : ['default_library=static'])
 srcfiles = [
   'src/Physics.cpp',
   'src/BulletState.cpp',
@@ -6,7 +5,11 @@ srcfiles = [
 
 incdir = include_directories('.', '../../include')
 
-bullet3_proj = cmake.subproject('bullet3')
+bullet_opt_var = cmake.subproject_options()
+
+bullet_opt_var.add_cmake_defines({'BUILD_EXTRAS': false})
+
+bullet3_proj = cmake.subproject('bullet3', options: bullet_opt_var)
 bullet_dynamics_dep = bullet3_proj.dependency('BulletDynamics')
 bullet_collision_dep = bullet3_proj.dependency('BulletCollision')
 linear_math_dep = bullet3_proj.dependency('LinearMath')
