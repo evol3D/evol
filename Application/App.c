@@ -1,24 +1,5 @@
 #include "App.h"
-
-#ifdef WIN32
-#include "windows.h"
-void sleep_ms(double milliseconds)
-{
-  Sleep(milliseconds);
-}
-#else
-#include "unistd.h"
-#include "time.h"
-void sleep_ms(double milliseconds)
-{
-  struct timespec tim = 
-  {
-    .tv_sec = 0,
-    .tv_nsec = milliseconds * 1000000,
-  };
-  nanosleep(&tim, NULL);
-}
-#endif
+#include <utils.h>
 
 #include <evolpthreads.h>
 #include <events/events.h>
@@ -51,7 +32,7 @@ static int start()
     SET_RESULT_VAR(result);
 
     INIT_EVOL_EVENTS();
-    INITIALIZE_EVENTSYSTEM();
+    EventSystem.init();
   }
 
   {
@@ -104,7 +85,7 @@ static void* event_system_loop()
 
     if(remainingTime <= 0)
     {
-      EVENTSYSTEM_PROGRESS();
+      EventSystem.progress();
       App.lastEventSystemUpdate = time;
     }
     else
@@ -178,28 +159,14 @@ static int destroy()
   }
 
   closeSystem = true;
-  {
+
+  { // Terminating modules
     Physics.deinit();
-  }
-
-  {
     World.deinit();
-  }
-
-  {
     Input.deinit();
-  }
-
-  { // Window termination
     Window.deinit();
-  }
-
-  {
     EventDebug.deinit();
-  }
-
-  { // EventSystem termination
-    TERMINATE_EVENTSYSTEM();
+    EventSystem.deinit();
   }
   return 0;
 }

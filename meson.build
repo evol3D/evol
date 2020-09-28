@@ -26,6 +26,7 @@ dl_dep = cc.find_library('dl', required: false)
 subdir('Application/Physics')
 
 srcfiles = files('src/main.c', 
+            'src/utils.c',
             'Application/App.c', 
             'include/ev_log/rxi_logger/log.c', 
             'Application/Window/Window.c', 
