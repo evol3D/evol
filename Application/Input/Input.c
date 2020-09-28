@@ -3,6 +3,7 @@
 #include "assert.h"
 #include "ev_log/ev_log.h"
 #include "EventSystem.h"
+#include "events/events.h"
 
 
 // This is bad. This is so bad. If you ever plan on getting this engine big, you should
@@ -79,39 +80,50 @@ static int ev_input_deinit()
 
 static inline void mouse_move_event_dispatch(GLFWwindow* windowHandle, double x, double y)
 {
-    MouseEvent e = CreateMouseEvent( MouseMoved,((MouseEventData){(MousePosition){x, y}, 0}));
-    EventSystem.dispatch(&e);
+    DISPATCH_EVENT(MouseMovedEvent, {.cursorPosition = {x, y}});
 }
 
 static inline void mouse_button_event_dispatch(GLFWwindow* windowHandle, int button, int action, int mods)
 {
-    MouseEvent e = CreateMouseEvent(
-            ((action == MOUSE_BTN_DOWN)?MouseButtonPressed:MouseButtonReleased),
-            ((MouseEventData) {
-                .button = button,
-                .mods = mods,
-            })
-    );
-    EventSystem.dispatch(&e);
+  if(action == MOUSE_BTN_DOWN)
+  {
+    DISPATCH_EVENT(MouseButtonPressedEvent, {
+          .button = button, 
+          .mods = mods
+        });
+  }
+  else
+  {
+    DISPATCH_EVENT(MouseButtonReleasedEvent, {
+          .button = button, 
+          .mods = mods
+        });
+  }
 }
 
 static inline void key_event_dispatch(GLFWwindow *windowHandle, int key, int scancode, int action, int mods)
 {
-    KeyEvent e = CreateKeyEvent(
-            (
-                    action == KEY_DOWN
-                        ?KeyPressed
-                        :action == KEY_UP
-                            ?KeyReleased
-                            :KeyRepeat
-            ),
-            ((KeyEventData) {
-                .key = key,
-                .mods = mods,
-            })
-    );
-
-    EventSystem.dispatch(&e);
+  if(action == KEY_DOWN)
+  {
+    DISPATCH_EVENT(KeyPressedEvent, {
+          .keyCode = key, 
+          .mods = mods
+        });
+  }
+  else if (action == KEY_UP)
+  {
+    DISPATCH_EVENT(KeyReleasedEvent, {
+          .keyCode = key, 
+          .mods = mods
+        });
+  }
+  else
+  {
+    DISPATCH_EVENT(KeyRepeatEvent, {
+          .keyCode = key, 
+          .mods = mods
+        });
+  }
 }
 
 static void ev_input_setup_callbacks()

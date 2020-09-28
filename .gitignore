@@ -5,3 +5,8 @@
 **/.idea/**
 
 **/cmake-build-*/**
+
+**/Session.vim
+
+subprojects/*
+!*.wrap

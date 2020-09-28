@@ -1,31 +1,28 @@
 #ifndef EVOL_KEYEVENT_H
 #define EVOL_KEYEVENT_H
 
-#include "Input/Input.h"
+#include "Event.h"
 
-enum KeyEventVariant {
-    KeyPressed,
-    KeyReleased,
-    KeyRepeat,
-};
+typedef unsigned int KeyCode;
 
+REGISTER_EVENT(KeyEvent, EVENT_STRUCT());
+REGISTER_EVENT(KeyPressedEvent, EVENT_STRUCT(
+      KeyCode keyCode;
+      unsigned int mods;
+));
+REGISTER_EVENT(KeyReleasedEvent, EVENT_STRUCT(
+      KeyCode keyCode;
+      unsigned int mods;
+));
+REGISTER_EVENT(KeyRepeatEvent, EVENT_STRUCT(
+      KeyCode keyCode;
+      unsigned int mods;
+));
 
-typedef struct {
-    KeyCode key;
-    unsigned int mods;
-} KeyEventData;
-
-typedef struct {
-    unsigned int type;
-    enum KeyEventVariant variant;
-    KeyEventData data;
-} KeyEvent;
-
-#define CreateKeyEvent(v,d) \
-     { \
-        .type = KEY_EVENT,\
-        .variant = v,\
-        .data = d,\
-     }
+#define INIT_KEY_EVENTS \
+  INIT_EVENT_PRIMARY(KeyEvent); \
+  INIT_EVENT_SECONDARY(KeyPressedEvent, KeyEvent); \
+  INIT_EVENT_SECONDARY(KeyReleasedEvent, KeyEvent); \
+  INIT_EVENT_SECONDARY(KeyRepeatEvent, KeyEvent);
 
 #endif //EVOL_KEYEVENT_H

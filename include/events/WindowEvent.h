@@ -1,26 +1,17 @@
 #ifndef EVOL_WINDOWEVENT_H
 #define EVOL_WINDOWEVENT_H
+#include <Event.h>
 
-enum WindowEventVariant {
-    WindowResized,
-};
+// Primary
+REGISTER_EVENT(WindowEvent, EVENT_STRUCT());
 
-typedef struct {
-    int width;
-    int height;
-} WindowEventData;
+// Secondary
+REGISTER_EVENT(WindowResizedEvent, EVENT_STRUCT(
+    unsigned int newWindowWidth, newWindowHeight;
+));
 
-typedef struct {
-    unsigned int type;
-    enum WindowEventVariant variant;
-    WindowEventData data;
-} WindowEvent;
-
-#define CreateWindowEvent(v,d) \
-     { \
-        .type = WINDOW_EVENT,\
-        .variant = v,\
-        .data = d,\
-     }
+#define INIT_WINDOW_EVENTS \
+  INIT_EVENT_PRIMARY(WindowEvent); \
+  INIT_EVENT_SECONDARY(WindowResizedEvent, WindowEvent);
 
 #endif //EVOL_WINDOWEVENT_H

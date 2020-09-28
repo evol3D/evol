@@ -4,6 +4,8 @@
 #include "stdbool.h"
 #include "stdio.h"
 #include "EventSystem.h"
+#include <Input/Input.h>
+#include "events/events.h"
 #include <ev_log/ev_log.h>
 
 static int ev_window_init();
@@ -16,6 +18,7 @@ static void ev_window_poll_events();
 static bool ev_window_should_close();
 static inline bool ev_window_is_created();
 static inline double ev_window_get_time();
+static inline void ev_window_set_should_close(bool flag);
 
 static inline void *ev_get_window_handle();
 
@@ -26,8 +29,6 @@ struct ev_Window_Data {
     void *windowHandle;
 
     bool created;
-
-    struct EventListener eventListener;
 } WindowData;
 
 struct _ev_Window Window = {
@@ -41,6 +42,7 @@ struct _ev_Window Window = {
         .pollEvents = ev_window_poll_events,
         .isCreated = ev_window_is_created,
         .getTime = ev_window_get_time,
+        .setShouldClose = ev_window_set_should_close,
 };
 
 static bool ev_window_should_close()
@@ -63,36 +65,23 @@ static int ev_window_init()
     WindowData.windowHandle = NULL;
     WindowData.created = false;
 
-
-
     return 0;
 }
 
 static int ev_window_deinit()
 {
-    { // EventListener termination
-        event_listener_deinit(&WindowData.eventListener);
-    }
-
     glfwDestroyWindow(WindowData.windowHandle);
     glfwTerminate();
 
     return 0;
 }
 
-bool ev_window_control_event_handler(ControlEvent *event)
-{
-    switch(event->variant)
+DECLARE_EVENT_HANDLER(EV_WINDOW_KeyEventHandler, (KeyPressedEvent *event) {
+    if(event->keyCode == KEY_ESCAPE)
     {
-//        case WindowPollSignal:
-//            Window.pollEvents();
-//            break;
-        default:
-            break;
+      Window.setShouldClose(1);
     }
-
-    return false;
-}
+});
 
 static int ev_window_create_window()
 {
@@ -100,12 +89,9 @@ static int ev_window_create_window()
     WindowData.windowHandle = glfwCreateWindow(WindowData.width, WindowData.height, WindowData.windowTitle, NULL, NULL);
     WindowData.created = true;
 
-    { // EventListener initialization
-        event_listener_init(&WindowData.eventListener);
-        event_listener_subscribe(&WindowData.eventListener, CONTROL_EVENT, ev_window_control_event_handler);
-    }
-
     ev_window_set_callbacks();
+
+    ACTIVATE_EVENT_HANDLER(EV_WINDOW_KeyEventHandler, KeyPressedEvent);
 
     return 0;
 }
@@ -119,6 +105,8 @@ static int ev_window_set_size(int width, int height)
     {
         glfwSetWindowSize(WindowData.windowHandle, width, height);
     }
+
+    return 0;
 }
 
 static inline void *ev_get_window_handle()
@@ -128,15 +116,10 @@ static inline void *ev_get_window_handle()
 
 static void ev_framebuffer_size_event_dispatch(GLFWwindow *windowHandle, int width, int height)
 {
-    WindowEvent e = CreateWindowEvent(
-            (WindowResized),
-            ((WindowEventData) {
-                .width = width,
-                .height = height,
-            })
-    );
-
-    EventSystem.dispatch(&e);
+  DISPATCH_EVENT(WindowResizedEvent, {
+      .newWindowWidth = width,
+      .newWindowHeight = height,
+      });
 }
 
 static inline double ev_window_get_time()
@@ -163,4 +146,9 @@ static int ev_window_set_title(const char *title)
 static inline bool ev_window_is_created()
 {
     return WindowData.created;
+}
+
+static inline void ev_window_set_should_close(bool flag)
+{
+  glfwSetWindowShouldClose(Window.getWindowHandle(), flag);
 }

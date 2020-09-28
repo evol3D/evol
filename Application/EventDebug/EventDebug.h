@@ -4,7 +4,6 @@
 #include "EventSystem.h"
 
 extern struct ev_Event_Debug{
-    struct EventListener listener;
     void (*init)();
     void (*deinit)();
 } EventDebug;
