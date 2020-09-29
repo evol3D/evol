@@ -25,28 +25,28 @@ dl_dep = cc.find_library('dl', required: false)
 
 subdir('Application/Physics')
 
-srcfiles = files('src/main.c', 
+srcfiles = files('src/main.c',
             'src/utils.c',
-            'Application/App.c', 
-            'include/ev_log/rxi_logger/log.c', 
-            'Application/Window/Window.c', 
-            'Application/Input/Input.c', 
-            'Application/World/World.c', 
+            'Application/App.c',
+            'include/ev_log/rxi_logger/log.c',
+            'Application/Window/Window.c',
+            'Application/Input/Input.c',
+            'Application/World/World.c',
             'Application/EventDebug/EventDebug.c',
-            'Application/Game/Game.c', 
-            'Application/World/modules/transform_module.c', 
+            'Application/Game/Game.c',
+            'Application/World/modules/transform_module.c',
             'Application/World/modules/script_module.c')
 
-incdir = include_directories( './include', './Application', '.') 
+incdir = include_directories( './include', './Application', '.')
 
-evol_exe = executable( 'evol', srcfiles, 
-  include_directories: incdir, 
+evol_exe = executable( 'evol', srcfiles,
+  include_directories: incdir,
   dependencies: [
-    glfw_dep, 
-    dl_dep, 
-    evol_eventsystem_dep, 
-    evol_thread_dep, 
-    flecs_dep, 
+    glfw_dep,
+    dl_dep,
+    evol_eventsystem_dep,
+    evol_thread_dep,
+    flecs_dep,
     evphys_dep,
     ],
   )
