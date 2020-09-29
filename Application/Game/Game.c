@@ -5,6 +5,10 @@
 #include "World/modules/script_module.h"
 #include "World/modules/physics_module.h"
 
+#include "EventSystem.h"
+#include "events/KeyEvent.h"
+#include "Input/Input.h"
+
 static int ev_game_init();
 static int ev_game_deinit();
 static Entity ev_game_create_entity();
@@ -18,6 +22,15 @@ struct ev_Game_Data {
   int placeholder;
 } GameData;
 
+DECLARE_EVENT_HANDLER(physics_step_game_space, (KeyPressedEvent *event) {
+    printf("Key event received\n");
+    if(event->keyCode == KEY_SPACE)
+    {
+      printf("Key is space\n");
+      Physics.step();
+    }
+});
+
 static int ev_game_init()
 {
   /* ImportModule(TransformModule); */
@@ -25,13 +38,15 @@ static int ev_game_init()
 
   /* Entity box = CreateEntity(); */
 
+  ACTIVATE_EVENT_HANDLER(physics_step_game_space, KeyPressedEvent);
+
   RigidBody box_rb;
   box_rb.collisionShape = Physics.createBox(1, 1, 1);
   box_rb.mass = 1;
 
   Physics.addRigidBody(&box_rb);
 
-  Physics.step();
+  /* Physics.step(); */
 
   /* Entity_AddComponentSet(sphere, Transform); */
   /* Entity_SetComponent(sphere, ScriptComponent, {"path/to/script"}); */

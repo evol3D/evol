@@ -13,8 +13,7 @@ BulletState::BulletState()
 
 BulletState::~BulletState()
 {
-  if(visualDebugging)
-    PhysicsDebugWindow::deinit();
+  PhysicsDebugWindow::deinit();
 
   clearCollisionObjects();
 
@@ -58,6 +57,8 @@ CollisionShape BulletState::createBox(real x, real y, real z)
 
 void BulletState::addRigidBody(RigidBody *rb)
 {
+  world->setGravity(btVector3(btScalar(0), btScalar(-10), btScalar(0)));
+
   btTransform startTransform;
   startTransform.setIdentity();
 
@@ -82,5 +83,6 @@ void BulletState::addRigidBody(RigidBody *rb)
 
 void BulletState::step()
 {
-  world->stepSimulation(0.0167, 10);
+  world->stepSimulation(0.3167f, 10);
+  printf("Stepping simulation\n");
 }

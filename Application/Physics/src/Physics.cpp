@@ -39,6 +39,7 @@ static int ev_physics_deinit()
 
 static int ev_physics_step()
 {
+  PhysicsData.state->step();
 	return 0;
 }
 
