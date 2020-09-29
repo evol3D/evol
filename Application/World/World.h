@@ -3,7 +3,6 @@
 
 #include <flecs.h>
 
-
 typedef ecs_entity_t Entity;
 typedef ecs_world_t* WorldInstance;
 typedef ecs_type_t ComponentSet;
@@ -12,6 +11,7 @@ typedef ecs_type_t Component;
 extern struct ev_World {
     int (*init)();
     int (*deinit)();
+    int (*progress)();
     WorldInstance instance;
 } World;
 

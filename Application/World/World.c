@@ -5,17 +5,13 @@
 
 static int ev_world_init();
 static int ev_world_deinit();
-
-Component ecs_type(TransformPosition);
-Component ecs_type(TransformRotation);
-Component ecs_type(TransformScale);
+static int ev_world_progress();
 
 struct ev_World World = {
   .init   = ev_world_init,
   .deinit = ev_world_deinit,
+  .progress = ev_world_progress,
 };
-
-void RegisterBaseComponents();
 
 struct ev_World_Data {
   int placeholder;
@@ -32,4 +28,9 @@ static int ev_world_deinit()
 {
   ecs_fini(World.instance);
   return 0;
+}
+
+static int ev_world_progress()
+{
+  return ecs_progress(World.instance, 0);
 }

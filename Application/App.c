@@ -46,17 +46,17 @@ static int start()
     Window.createWindow();
   }
 
-  {
-    Input.init();
-  }
+  /* { */
+  /*   Input.init(); */
+  /* } */
 
   {
     Physics.init();
   }
 
-  {
-    World.init();
-  }
+  /* { */
+  /*   World.init(); */
+  /* } */
 
   {
     // Scripting initialization
@@ -162,8 +162,8 @@ static int destroy()
 
   { // Terminating modules
     Physics.deinit();
-    World.deinit();
-    Input.deinit();
+    /* World.deinit(); */
+    /* Input.deinit(); */
     Window.deinit();
     EventDebug.deinit();
     EventSystem.deinit();

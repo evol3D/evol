@@ -2,6 +2,9 @@
 
 #include "PhysicsState.h"
 #include "btBulletDynamicsCommon.h"
+#include "btBulletCollisionCommon.h"
+
+
 class BulletState: public PhysicsState 
 {
   private:
@@ -16,5 +19,8 @@ class BulletState: public PhysicsState
   public:
     BulletState();
     ~BulletState();
+    void step();
     void visualize();
+    CollisionShape createBox(real x, real y, real z);
+    void addRigidBody(RigidBody *rb);
 };
