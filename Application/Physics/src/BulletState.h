@@ -20,7 +20,10 @@ class BulletState: public PhysicsState
     BulletState();
     ~BulletState();
     void step();
+    void step_dt(real dt);
     void visualize();
     CollisionShape createBox(real x, real y, real z);
+    CollisionShape createSphere(real r);
     void addRigidBody(RigidBody *rb);
+    void setGravity(real x, real y, real z);
 };

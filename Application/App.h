@@ -10,9 +10,13 @@
 #include "Input/Input.h"
 #include "Game/Game.h"
 #include "Physics/Physics.h"
+#include "evolpthreads.h"
 
 extern struct ev_app_struct{
     const char *name;
+    bool closeSystem;
+    pthread_t eventsystem_thread;
+    pthread_t gameloop_thread;
     int (*start)();
     int (*destroy)();
     double lastFrameTime;

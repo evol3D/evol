@@ -10,6 +10,7 @@ static int game_loop();
 
 struct ev_app_struct App = {
   .name = "evol",
+  .closeSystem = false,
   .start = start,
   .destroy = destroy,
   .lastFrameTime = 0,
@@ -73,11 +74,10 @@ static int start()
   return game_loop();
 }
 
-bool closeSystem = false;
 
 static void* event_system_loop()
 {
-  while(!closeSystem)
+  while(!App.closeSystem)
   {
     double time = Window.getTime();
     double timeStep = time - App.lastEventSystemUpdate;
@@ -94,44 +94,14 @@ static void* event_system_loop()
     }
   }
 
-
   return 0;
 }
 
-/* static void *render_loop() */
-/* { */
-/*   while(!closeSystem) */
-/*   { */
-/*     double time = Window.getTime(); */
-/*     double timeStep = time - App.lastFrameTime; */
-/*     double remainingTime = (1.f/(double)App.framerate) - timeStep; */
-
-/*     if(remainingTime <= 0) */
-/*     { */
-/*       /1* ControlEvent e = CreateControlEvent( *1/ */
-/*       /1*   (NewFrame), *1/ */
-/*       /1*   ((ControlEventData){ *1/ */
-/*       /1*     .timeStep = timeStep, *1/ */
-/*       /1*   }) *1/ */
-/*       /1* ); *1/ */
-/*       /1* EventSystem.dispatch(&e); *1/ */
-/*       App.lastFrameTime = time; */
-/*     } */
-/*     else */
-/*     { */
-/*         sleep_ms(remainingTime * 1000); */
-/*     } */
-/*   } */
-/*   return 0; */
-/* } */
-
 static int game_loop()
 {
-  pthread_t eventSystem_thread;
-  /* pthread_t renderLoop_thread; */
 
-  pthread_create(&eventSystem_thread, NULL, event_system_loop, NULL);
-  /* pthread_create(&renderLoop_thread, NULL, render_loop, NULL); */
+  pthread_create(&App.eventsystem_thread, NULL, event_system_loop, NULL);
+  pthread_create(&App.gameloop_thread, NULL, (void*)Game.loop, NULL);
 
   while(!Window.shouldClose())
   {
@@ -148,17 +118,21 @@ static int game_loop()
     {
       sleep_ms(remainingTime * 1000);
     }
+
   }
   return App.destroy();
 }
 
 static int destroy()
 {
+  App.closeSystem = true;
+
+  pthread_join(App.eventsystem_thread, 0);
+  pthread_join(App.gameloop_thread, 0);
+
   {
     Game.deinit();
   }
-
-  closeSystem = true;
 
   { // Terminating modules
     Physics.deinit();

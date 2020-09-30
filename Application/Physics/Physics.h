@@ -20,6 +20,8 @@ extern struct _ev_Physics {
   int (*step_dt)(real);
   CollisionShape (*createBox)(real, real, real);
   void (*addRigidBody)(RigidBody*);
+  void (*setGravity)(real, real, real);
+  CollisionShape (*createSphere)(real);
 } Physics;
 
 

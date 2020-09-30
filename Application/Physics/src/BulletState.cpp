@@ -55,10 +55,22 @@ CollisionShape BulletState::createBox(real x, real y, real z)
   return new btBoxShape(btVector3(btScalar(x), btScalar(y), btScalar(z)));
 }
 
+CollisionShape BulletState::createSphere(real r)
+{
+  return new btSphereShape(btScalar(r));
+}
+
+btVector3 PhysicsPosition2btVector3(PhysicsPosition *position)
+{
+  return btVector3(
+      position->x,
+      position->y,
+      position->z
+  );
+}
+
 void BulletState::addRigidBody(RigidBody *rb)
 {
-  world->setGravity(btVector3(btScalar(0), btScalar(-10), btScalar(0)));
-
   btTransform startTransform;
   startTransform.setIdentity();
 
@@ -71,7 +83,7 @@ void BulletState::addRigidBody(RigidBody *rb)
     ((btCollisionShape*)rb->collisionShape)->calculateLocalInertia(rb->mass, localInertia);
   }
 
-  startTransform.setOrigin(btVector3(0, 0, 0));
+  startTransform.setOrigin(PhysicsPosition2btVector3(&(rb->position)));
 
   btDefaultMotionState *motionState = new btDefaultMotionState(startTransform);
   btRigidBody::btRigidBodyConstructionInfo rbInfo(rb->mass, motionState, (btCollisionShape*)rb->collisionShape, localInertia);
@@ -81,8 +93,17 @@ void BulletState::addRigidBody(RigidBody *rb)
   world->addRigidBody(body);
 }
 
+void BulletState::setGravity(real x, real y, real z)
+{
+  world->setGravity(btVector3(btScalar(x), btScalar(y), btScalar(z)));
+}
+
 void BulletState::step()
 {
   world->stepSimulation(0.3167f, 10);
-  printf("Stepping simulation\n");
+}
+
+void BulletState::step_dt(real dt)
+{
+  world->stepSimulation(dt, 10);
 }

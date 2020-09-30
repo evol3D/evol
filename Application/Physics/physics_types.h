@@ -9,18 +9,23 @@ extern "C" {
 #include "types.h"
 #include "engine_config.h"
 
+typedef struct {
+  real x, y, z;
+} PhysicsPosition;
+
+typedef struct {
+  real x, y, z;
+} PhysicsEulerRotation;
+
 #ifdef BULLET_PHYSICS
-# ifdef __cplusplus
-/* #  include "btBulletDynamicsCommon.h" */
-   /* typedef btCollisionShape*                                     CollisionShape; */
    typedef void* CollisionShape;
-# else
-   typedef void* CollisionShape;
-# endif
 #endif
 
 typedef struct 
 {
+  PhysicsPosition position;
+  PhysicsEulerRotation rotation;
+
   CollisionShape collisionShape;
   real mass;
 } RigidBody;
