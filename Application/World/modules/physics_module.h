@@ -2,35 +2,37 @@
 #define WORLD_PHYSICS_MODULE_H
 
 #include "flecs.h"
-
-typedef float real;
-
-typedef struct
-{
-  real x;
-  real y;
-  real z;
-} LinearVelocity;
+#include "types.h"
+#include "physics_types.h"
 
 typedef struct
 {
-  real x;
-  real y;
-  real z;
-} AngularVelocity;
+  ev_Vector3 linearVelocity;
+  ev_Vector3 angularVelocity;
+
+  real mass;
+  real restitution;
+
+  CollisionShape collisionShape;
+
+} RigidBodyComponent;
 
 typedef struct
 {
-  ECS_DECLARE_COMPONENT(LinearVelocity);
-  ECS_DECLARE_COMPONENT(AngularVelocity);
-  ECS_DECLARE_TYPE(Physics);
+  RigidBodyHandle handle;
+} RigidBodyHandleComponent;
+
+
+typedef struct
+{
+  ECS_DECLARE_COMPONENT(RigidBodyComponent);
+  ECS_DECLARE_COMPONENT(RigidBodyHandleComponent);
 } PhysicsModule;
 
 void PhysicsModuleImport(ecs_world_t *world);
 
 #define PhysicsModuleImportHandles(module)\
-  ECS_IMPORT_COMPONENT(module, LinearVelocity);\
-  ECS_IMPORT_COMPONENT(module, AngularVelocity);\
-  ECS_IMPORT_TYPE(module, Physics);
+  ECS_IMPORT_COMPONENT(module, RigidBodyComponent); \
+  ECS_IMPORT_COMPONENT(module, RigidBodyHandleComponent);
 
 #endif

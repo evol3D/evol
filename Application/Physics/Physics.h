@@ -19,9 +19,11 @@ extern struct _ev_Physics {
   int (*step)();
   int (*step_dt)(real);
   CollisionShape (*createBox)(real, real, real);
-  void (*addRigidBody)(RigidBody*);
+  RigidBodyHandle (*addRigidBody)(RigidBody*);
   void (*setGravity)(real, real, real);
   CollisionShape (*createSphere)(real);
+  void (*removeRigidBody)(RigidBodyHandle);
+  void (*updateRigidBody)(RigidBodyHandle, RigidBody*);
 } Physics;
 
 

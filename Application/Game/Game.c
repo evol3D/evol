@@ -28,8 +28,6 @@ DECLARE_EVENT_HANDLER(physics_step_game_space, (KeyPressedEvent *event) {
     printf("Key event received\n");
     if(event->keyCode == KEY_SPACE)
     {
-      printf("Key is space\n");
-      Physics.step();
     }
 });
 
@@ -49,41 +47,40 @@ typedef struct
   enum PhysicsType physicsType;
 } EntityCreationInfo;
 
+Entity box;
+
 static int ev_game_init()
 {
-  /* ImportModule(TransformModule); */
-  /* ImportModule(ScriptModule); */
+  ImportModule(TransformModule);
+  ImportModule(PhysicsModule);
 
-  /* Entity box = CreateEntity(); */
+  Physics.setGravity(0, -10, 0);
 
-  ACTIVATE_EVENT_HANDLER(physics_step_game_space, KeyPressedEvent);
+  box = CreateEntity();
+  Entity_SetComponent(box, 
+      TransformComponent, {
+        .position = { 0,  10,  0},
+        .rotation = { 0,  0,  0},
+        .scale    = { 1,  1,  1},
+      });
+  Entity_SetComponent(box,
+      RigidBodyComponent, {
+        .mass = 1,
+        .collisionShape = Physics.createBox(1, 1, 1),
+      });
 
-  Physics.setGravity(0, -1, 0);
-
-  RigidBody box_rb;
-  box_rb.position = (PhysicsPosition){0, 10, 0};
-  box_rb.rotation = (PhysicsEulerRotation){0, 0, 0};
-  box_rb.collisionShape = Physics.createBox(1, 1, 1);
-  box_rb.mass = 10;
-
-  RigidBody sphere_rb;
-  sphere_rb.position = (PhysicsPosition) {0, -30, 0};
-  sphere_rb.rotation = (PhysicsEulerRotation) {0, 0, 0};
-  sphere_rb.collisionShape = Physics.createSphere(20);
-  sphere_rb.mass = 0;
-
-  Physics.addRigidBody(&box_rb);
-  Physics.addRigidBody(&sphere_rb);
-
-  /* Physics.step(); */
-
-  /* Entity_AddComponentSet(sphere, Transform); */
-  /* Entity_SetComponent(sphere, ScriptComponent, {"path/to/script"}); */
-
-  /* ecs_set_target_fps(World.instance, 1); */
-
-  /* printf("Components in cube: %s\n", Entity_PrintComponents(cube)); */
-  /* printf("Content of ScriptComponent in cube: %s\n", Entity_GetComponent(cube, ScriptComponent)->script_path); */
+  Entity sphere = CreateEntity();
+  Entity_SetComponent(sphere, 
+      TransformComponent, {
+        .position = {0, -30, 0},
+        .rotation = {0, 0, 0},
+        .scale    = {1, 1, 1},
+      });
+  Entity_SetComponent(sphere,
+      RigidBodyComponent, {
+        .mass = 0,
+        .collisionShape = Physics.createSphere(30),
+      });
 
   return 0;
 }
@@ -100,7 +97,9 @@ static int ev_game_deinit()
 void ev_game_loop_physics(real dt)
 {
   Physics.step_dt(dt);
-  ev_log_info("Physics Step");
+
+  ImportModule(TransformModule);
+  ev_log_info("Physics Step. dt = %f", dt);
 }
 
 void update()
@@ -114,13 +113,15 @@ void fixedUpdate()
 static void ev_game_loop()
 {
   double old = 0;
-  unsigned int physics_steprate = 60;
   double new;
+
   while(!App.closeSystem)
   {
     new = Window.getTime();
     double timeStep = new - old;
-    double remainingTime = (1.f/(double)physics_steprate) - timeStep;
+
+    ev_game_loop_physics(timeStep);
+
 
     old = new;
   }

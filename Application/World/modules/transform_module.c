@@ -4,14 +4,7 @@ void TransformModuleImport(ecs_world_t *world)
 {
   ECS_MODULE(world, TransformModule);
 
-  ECS_COMPONENT(world, Position);
-  ECS_COMPONENT(world, Rotation);
-  ECS_COMPONENT(world, Scale);
+  ECS_COMPONENT(world, TransformComponent);
 
-  ECS_TYPE(world, Transform, Position, Rotation, Scale);
-
-  ECS_EXPORT_COMPONENT(Position);
-  ECS_EXPORT_COMPONENT(Rotation);
-  ECS_EXPORT_COMPONENT(Scale);
-  ECS_EXPORT_TYPE(Transform);
+  ECS_EXPORT_COMPONENT(TransformComponent);
 }

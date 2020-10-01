@@ -9,26 +9,19 @@ extern "C" {
 #include "types.h"
 #include "engine_config.h"
 
-typedef struct {
-  real x, y, z;
-} PhysicsPosition;
-
-typedef struct {
-  real x, y, z;
-} PhysicsEulerRotation;
-
-#ifdef BULLET_PHYSICS
-   typedef void* CollisionShape;
-#endif
+typedef void* CollisionShape;
+typedef void* RigidBodyHandle;
 
 typedef struct 
 {
-  PhysicsPosition position;
-  PhysicsEulerRotation rotation;
+  ev_Vector3* position;
+  ev_Vector3* rotation;
 
   CollisionShape collisionShape;
   real mass;
 } RigidBody;
+
+#define ANG2RAD(ang) ((ang/180) * M_PI)
 
 #ifdef __cplusplus
 }

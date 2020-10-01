@@ -7,6 +7,7 @@ typedef ecs_entity_t Entity;
 typedef ecs_world_t* WorldInstance;
 typedef ecs_type_t ComponentSet;
 typedef ecs_type_t Component;
+typedef ecs_iter_t SystemArgs;
 
 extern struct ev_World {
     int (*init)();
@@ -46,9 +47,9 @@ extern struct ev_World {
 
 #define Entity_AddComponent(...) ecs_add(World.instance, __VA_ARGS__)
 #define Entity_RemoveComponent(entt, cmp) ecs_remove(World.instance, entt, cmp)
-#define Entity_SetComponent(entt, cmp, value) ecs_set(World.instance, entt, cmp, value)
+#define Entity_SetComponent(entt, cmp, ...) ecs_set(World.instance, entt, cmp, __VA_ARGS__)
 #define Entity_GetComponent(entt, cmp) ecs_get(World.instance, entt, cmp)
-#define Entity_GetComponent_mut(entt, cmp) ecs_get_mut(World.instance, entt, cmp)
+#define Entity_GetComponent_mut(entt, cmp) ecs_get_mut(World.instance, entt, cmp, NULL)
 
 #define Entity_AddChild(parent) ecs_new_w_entity(World.instance, ECS_CHILDOF | parent)
 

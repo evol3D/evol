@@ -24,6 +24,8 @@ class BulletState: public PhysicsState
     void visualize();
     CollisionShape createBox(real x, real y, real z);
     CollisionShape createSphere(real r);
-    void addRigidBody(RigidBody *rb);
     void setGravity(real x, real y, real z);
+    RigidBodyHandle addRigidBody(RigidBody *rb);
+    void removeRigidBody(RigidBodyHandle handle);
+    void updateRigidBody(RigidBodyHandle handle, RigidBody *rb);
 };

@@ -35,7 +35,9 @@ srcfiles = files('src/main.c',
             'Application/EventDebug/EventDebug.c',
             'Application/Game/Game.c',
             'Application/World/modules/transform_module.c',
-            'Application/World/modules/script_module.c')
+            'Application/World/modules/script_module.c',
+            'Application/World/modules/physics_module.c',
+            )
 
 incdir = include_directories( './include', './Application', '.')
 
