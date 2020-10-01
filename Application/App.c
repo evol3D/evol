@@ -119,6 +119,8 @@ static int game_loop()
       sleep_ms(remainingTime * 1000);
     }
 
+    /* Game.loop(); */
+
   }
   return App.destroy();
 }

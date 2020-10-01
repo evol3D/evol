@@ -7,6 +7,7 @@ extern "C" {
 #endif
 
 #include "types.h"
+#include "utils.h"
 #include "engine_config.h"
 
 typedef void* CollisionShape;
@@ -14,14 +15,14 @@ typedef void* RigidBodyHandle;
 
 typedef struct 
 {
-  ev_Vector3* position;
-  ev_Vector3* rotation;
+  unsigned int entt_id;
 
   CollisionShape collisionShape;
   real mass;
 } RigidBody;
 
 #define ANG2RAD(ang) ((ang/180) * M_PI)
+#define RAD2ANG(rad) ((rad/M_PI) * 180)
 
 #ifdef __cplusplus
 }

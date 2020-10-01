@@ -10,13 +10,14 @@ void SetRigidBody(ecs_iter_t *it) {
   TransformComponent *tr = ecs_column(it, TransformComponent, 2);
   RigidBodyHandleComponent *rb_handle = ecs_column(it, RigidBodyHandleComponent, 3);
 
+
   for(int i = 0; i < it->count; ++i)
   {
     RigidBody rb_phys;
-    rb_phys.position = &(tr[i].position);
-    rb_phys.rotation = &(tr[i].rotation);
+    rb_phys.entt_id = it->entities[i];
     rb_phys.mass = rb[i].mass;
     rb_phys.collisionShape = rb[i].collisionShape;
+
 
     if(rb_handle[i].handle)
     {
@@ -25,6 +26,7 @@ void SetRigidBody(ecs_iter_t *it) {
     else
     {
       rb_handle[i].handle = Physics.addRigidBody(&rb_phys);
+      /* printf("new rb_handle[i] = %p\n", rb_handle[i].handle); */
     }
   }
 }
@@ -34,10 +36,7 @@ void AddRigidBody(ecs_iter_t *it) {
 
   for(int i = 0; i < it->count; ++i)
   {
-    if(!ecs_get(it->world, it->entities[i], RigidBodyHandleComponent))
-    {
-      ecs_get_mut(it->world, it->entities[i], RigidBodyHandleComponent, NULL)->handle = NULL;
-    }
+      ecs_set(it->world, it->entities[i], RigidBodyHandleComponent, {.handle = 0});
   }
 }
 
