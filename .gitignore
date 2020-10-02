@@ -1,5 +1,6 @@
 **/.vs/**
-**/build/**
+**/.vscode/**
+**/build**
 **/out/**
 
 **/.idea/**
