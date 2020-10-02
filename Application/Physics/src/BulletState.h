@@ -3,6 +3,8 @@
 #include "PhysicsState.h"
 #include "btBulletDynamicsCommon.h"
 #include "btBulletCollisionCommon.h"
+#include "physics_utils.h"
+#include <mutex>
 
 
 class BulletState: public PhysicsState 
@@ -13,9 +15,14 @@ class BulletState: public PhysicsState
     btBroadphaseInterface * broadphase;
     btSequentialImpulseConstraintSolver * constraintSolver;
     btDynamicsWorld * world;
+    std::mutex world_mutex;
+    std::mutex collision_shapes_mutex;
     bool visualDebugging = false;
 
+    btAlignedObjectArray<btCollisionShape*> collisionShapes;
+
     void clearCollisionObjects();
+    void clearCollisionShapes();
   public:
     BulletState();
     ~BulletState();

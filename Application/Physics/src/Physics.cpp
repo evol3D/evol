@@ -22,18 +22,19 @@ struct ev_Physics_Data {
 struct _ev_Physics Physics = {
   ev_physics_init,
   ev_physics_deinit,
-  ev_physics_step,
-  ev_physics_step_dt,
-  ev_physics_create_box,
-  ev_physics_add_rigidbody,
-  ev_physics_set_gravity,
-  ev_physics_create_sphere,
-  ev_physics_remove_rigidbody,
-  ev_physics_update_rigidbody,
 };
 
 static int ev_physics_init()
 {
+  Physics.step            = ev_physics_step;
+  Physics.step_dt         = ev_physics_step_dt;
+  Physics.setGravity      = ev_physics_set_gravity;
+  Physics.addRigidBody    = ev_physics_add_rigidbody;
+  Physics.removeRigidBody = ev_physics_remove_rigidbody;
+  Physics.updateRigidBody = ev_physics_update_rigidbody;
+  Physics.createBox       = ev_physics_create_box;
+  Physics.createSphere    = ev_physics_create_sphere;
+
   PhysicsData.state = new BulletState;
   PhysicsData.state->visualize();
   return 0;

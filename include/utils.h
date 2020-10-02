@@ -3,12 +3,14 @@
 
 #include <types.h>
 
+// Sleep in ms
 void sleep_ms(double milliseconds);
 
-extern ev_Vector3* entity_get_position_mut(unsigned int entt);
-extern const ev_Vector3* entity_get_position(unsigned int entt);
+// ECS Related
+extern inline ev_Vector3* entity_get_position_mut(unsigned int entt);
+extern inline const ev_Vector3* entity_get_position(unsigned int entt);
 
-extern ev_Vector3* entity_get_rotation_mut(unsigned int entt);
-extern const ev_Vector3* entity_get_rotation(unsigned int entt);
+extern inline ev_Vector3* entity_get_rotation_mut(unsigned int entt);
+extern inline const ev_Vector3* entity_get_rotation(unsigned int entt);
 
 #endif

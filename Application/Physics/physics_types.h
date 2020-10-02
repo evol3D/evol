@@ -21,9 +21,6 @@ typedef struct
   real mass;
 } RigidBody;
 
-#define ANG2RAD(ang) ((ang/180) * M_PI)
-#define RAD2ANG(rad) ((rad/M_PI) * 180)
-
 #ifdef __cplusplus
 }
 #endif

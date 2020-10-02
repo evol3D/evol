@@ -1,6 +1,7 @@
 srcfiles = [
   'src/Physics.cpp',
   'src/BulletState.cpp',
+  'src/EvMotionState.cpp',
   ]
 
 incdir = include_directories('.', '../../include')

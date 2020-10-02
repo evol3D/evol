@@ -4,9 +4,9 @@
 #include <evolpthreads.h>
 #include <events/events.h>
 
-static int start();
-static int destroy();
-static int game_loop();
+static int start(void);
+static int destroy(void);
+static int game_loop(void);
 
 struct ev_app_struct App = {
   .name = "evol",
@@ -24,7 +24,7 @@ struct ev_app_struct App = {
 //TODO: Fix the need for this
 int result;
 
-static int start()
+static int start(void)
 {
   ev_log_info("Application Started");
 
@@ -119,13 +119,11 @@ static int game_loop()
       sleep_ms(remainingTime * 1000);
     }
 
-    /* Game.loop(); */
-
   }
   return App.destroy();
 }
 
-static int destroy()
+static int destroy(void)
 {
   App.closeSystem = true;
 

@@ -4,15 +4,14 @@
 #define DEFAULT_WINDOW_WIDTH 800
 #define DEFAULT_WINDOW_HEIGHT 600
 #define DEFAULT_WINDOW_TITLE "Default Title"
-#define MAX_WINDOW_TITLE_LENGTH 256
+#define MAX_WINDOW_TITLE_LENGTH 256         // Arbitrary number, unlikely to need more
 
-#include "globals.h"
 #include "stdbool.h"
 
 extern struct _ev_Window {
     int (*init)();
     int (*createWindow)();
-    int (*setSize)(int, int);
+    int (*setSize)(unsigned int, unsigned int);
     int (*deinit)();
     void *(*getWindowHandle)();
     int (*setTitle)(const char *);

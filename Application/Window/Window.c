@@ -11,7 +11,7 @@
 static int ev_window_init();
 static int ev_window_create_window();
 static int ev_window_deinit();
-static int ev_window_set_size(int width, int height);
+static int ev_window_set_size(unsigned int width, unsigned int height);
 static void ev_window_set_callbacks();
 static int ev_window_set_title(const char *title);
 static void ev_window_poll_events();
@@ -23,8 +23,9 @@ static inline void ev_window_set_should_close(bool flag);
 static inline void *ev_get_window_handle();
 
 struct ev_Window_Data {
-    uint width;
-    uint height;
+    unsigned int width;
+    unsigned int height;
+
     char windowTitle[MAX_WINDOW_TITLE_LENGTH];
     void *windowHandle;
 
@@ -45,11 +46,13 @@ struct _ev_Window Window = {
         .setShouldClose = ev_window_set_should_close,
 };
 
+// Did the window receive a closing event?
 static bool ev_window_should_close()
 {
     return glfwWindowShouldClose(WindowData.windowHandle);
 }
 
+// Handle all pending window events
 static void ev_window_poll_events()
 {
     glfwPollEvents();
@@ -96,7 +99,7 @@ static int ev_window_create_window()
     return 0;
 }
 
-static int ev_window_set_size(int width, int height)
+static int ev_window_set_size(unsigned int width, unsigned int height)
 {
     WindowData.width = width;
     WindowData.height = height;
@@ -130,6 +133,7 @@ static inline double ev_window_get_time()
 static void ev_window_set_callbacks()
 {
     glfwSetFramebufferSizeCallback(WindowData.windowHandle, ev_framebuffer_size_event_dispatch);
+    glfwSetWindowSizeCallback(WindowData.windowHandle, ev_framebuffer_size_event_dispatch);
 }
 
 static int ev_window_set_title(const char *title)

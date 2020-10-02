@@ -81,6 +81,21 @@ DECLARE_EVENT_HANDLER(EV_DEBUG_KeyEventHandler, (KeyEvent *keyEvent) {
     }
 });
 
+DECLARE_EVENT_HANDLER(EV_DEBUG_WindowEventHandler, (WindowEvent *windowEvent) {
+    ev_log_info("WindowEvent Received");
+    if(windowEvent->type == EVENT_TYPE(WindowResizedEvent))
+    {
+      WindowResizedEvent *event = (WindowResizedEvent*) windowEvent;
+      ev_log_debug(
+          "WindowResized: Width: %d, Height: %d",
+          event->newWindowWidth, event->newWindowHeight
+          );
+    }
+    else
+    {
+      ev_log_warn("Unsupported KeyEvent variant");
+    }
+});
 
 void ev_Event_Debug_init()
 {

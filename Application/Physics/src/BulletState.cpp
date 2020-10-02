@@ -1,67 +1,7 @@
 #include "stdio.h"
 #include "BulletState.h"
 #include "PhysicsDebugWindow.h"
-
-#define ev2btVector3(vec_p) \
-  (btVector3(vec_p->x, vec_p->y, vec_p->z))
-
-ATTRIBUTE_ALIGNED16(struct)
-EvMotionState : public btMotionState
-{
-  unsigned int entt_id;
-  BT_DECLARE_ALIGNED_ALLOCATOR();
-
-  EvMotionState(btVector3* graphicsVec = 0, const btTransform& startTransform = btTransform::getIdentity(), const btTransform& centerOfMassOffset = btTransform::getIdentity())
-  {
-  }
-
-  void getWorldTransform(btTransform & centerOfMassWorldTrans) const
-  {
-    const ev_Vector3 *ev_PositionVector = entity_get_position(entt_id);
-    const ev_Vector3 *ev_RotationVector = entity_get_rotation(entt_id);
-    if(ev_PositionVector)
-    {
-      centerOfMassWorldTrans.setOrigin(ev2btVector3(ev_PositionVector));
-    }
-    if(ev_RotationVector)
-    {
-      btQuaternion rot;
-      rot.setEulerZYX(
-          ANG2RAD(ev_RotationVector->z),
-          ANG2RAD(ev_RotationVector->y),
-          ANG2RAD(ev_RotationVector->x)
-          );
-      centerOfMassWorldTrans.setRotation(rot);
-    }
-  }
-
-
-  void setWorldTransform(const btTransform & centerOfMassWorldTrans)
-  {
-    ev_Vector3 *ev_PositionVector = entity_get_position_mut(entt_id);
-    ev_Vector3 *ev_RotationVector = entity_get_rotation_mut(entt_id);
-    if(ev_PositionVector)
-    {
-      const btVector3 pos = centerOfMassWorldTrans.getOrigin();
-      ev_PositionVector->x = pos.getX();
-      ev_PositionVector->y = pos.getY();
-      ev_PositionVector->z = pos.getZ();
-    }
-    if(ev_RotationVector)
-    {
-      btScalar x, y, z;
-      centerOfMassWorldTrans.getRotation().getEulerZYX(
-          z,
-          y,
-          x
-      );
-      ev_RotationVector->x = RAD2ANG(x);
-      ev_RotationVector->y = RAD2ANG(y);
-      ev_RotationVector->z = RAD2ANG(z);
-    }
-  }
-};
-
+#include "EvMotionState.h"
 
 BulletState::BulletState()
 {
@@ -77,6 +17,7 @@ BulletState::~BulletState()
   PhysicsDebugWindow::deinit();
 
   clearCollisionObjects();
+  clearCollisionShapes();
 
   delete world;
   delete constraintSolver;
@@ -102,6 +43,16 @@ void BulletState::clearCollisionObjects()
   }
 }
 
+void BulletState::clearCollisionShapes()
+{
+  for(int i = 0; i < collisionShapes.size(); ++i)
+  {
+    btCollisionShape *shape = collisionShapes[i];
+    collisionShapes[i] = 0;
+    delete shape;
+  }
+}
+
 void BulletState::visualize()
 {
   if(visualDebugging)
@@ -113,12 +64,20 @@ void BulletState::visualize()
 
 CollisionShape BulletState::createBox(real x, real y, real z)
 {
-  return new btBoxShape(btVector3(btScalar(x), btScalar(y), btScalar(z)));
+  btCollisionShape* box = new btBoxShape(btVector3(btScalar(x), btScalar(y), btScalar(z)));
+  collision_shapes_mutex.lock();
+  collisionShapes.push_back(box);
+  collision_shapes_mutex.unlock();
+  return box;
 }
 
 CollisionShape BulletState::createSphere(real r)
 {
-  return new btSphereShape(btScalar(r));
+  btCollisionShape* sphere = new btSphereShape(btScalar(r));
+  collision_shapes_mutex.lock();
+  collisionShapes.push_back(sphere);
+  collision_shapes_mutex.unlock();
+  return sphere;
 }
 
 
@@ -141,7 +100,9 @@ RigidBodyHandle BulletState::addRigidBody(RigidBody *rb)
 
   btRigidBody* body = new btRigidBody(rbInfo);
 
+  world_mutex.lock();
   world->addRigidBody(body);
+  world_mutex.unlock();
 
   return body;
 }
@@ -195,11 +156,15 @@ void BulletState::setGravity(real x, real y, real z)
 
 void BulletState::step()
 {
+  world_mutex.lock();
   world->stepSimulation(0.0167f, 10);
+  world_mutex.unlock();
 }
 
 void BulletState::step_dt(real dt)
 {
+  world_mutex.lock();
   world->stepSimulation(dt, 10);
+  world_mutex.unlock();
 }
 
