@@ -2,15 +2,16 @@ project('evol', 'c', version: '0.1', default_options : ['default_library=static'
 
 cc = meson.get_compiler('c')
 
+global_incdir = include_directories( './include', './Application', '.')
+
 if get_option('buildtype').startswith('debug')
   add_project_arguments('-DDEBUG', language : 'c')
   add_project_arguments('-DLOG_USE_COLOR', language : 'c')
 endif
 
-cmake = import('cmake')
+vulk_dep = dependency('Vulkan')
 
-glfw_proj = cmake.subproject('glfw')
-glfw_dep = glfw_proj.dependency('glfw')
+cmake = import('cmake')
 
 flecs_proj = subproject('flecs')
 flecs_dep = flecs_proj.get_variable('flecs_dep')
@@ -23,13 +24,14 @@ evol_thread_dep = evol_threads_proj.get_variable('evol_thread_dep')
 
 dl_dep = cc.find_library('dl', required: false)
 
+subdir('Application/Window')
+subdir('Application/Vulkan')
 subdir('Application/Physics')
 
 srcfiles = files('src/main.c',
             'src/utils.c',
             'Application/App.c',
             'include/ev_log/rxi_logger/log.c',
-            'Application/Window/Window.c',
             'Application/Input/Input.c',
             'Application/World/World.c',
             'Application/EventDebug/EventDebug.c',
@@ -39,16 +41,16 @@ srcfiles = files('src/main.c',
             'Application/World/modules/physics_module.c',
             )
 
-incdir = include_directories( './include', './Application', '.')
 
 evol_exe = executable( 'evol', srcfiles,
-  include_directories: incdir,
+  include_directories: global_incdir,
   dependencies: [
-    glfw_dep,
     dl_dep,
     evol_eventsystem_dep,
     evol_thread_dep,
     flecs_dep,
     evphys_dep,
+    ev_window_dep,
+    ev_vulk_dep,
     ],
   )

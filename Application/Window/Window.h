@@ -8,6 +8,8 @@
 
 #include "stdbool.h"
 
+#include "vulkan/vulkan.h"
+
 extern struct _ev_Window {
     int (*init)();
     int (*createWindow)();
@@ -19,7 +21,9 @@ extern struct _ev_Window {
     void (*pollEvents)();
     bool (*isCreated)();
     double (*getTime)();
-    void (*setShouldClose)(bool flag);
+    void (*setShouldClose)(bool );
+    void (*createVulkanSurface)(VkInstance, VkSurfaceKHR*);
+    void (*getSize)(unsigned int *, unsigned int *);
 } Window;
 
 #endif //EVOL_WINDOW_H

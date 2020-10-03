@@ -48,6 +48,10 @@ static int start(void)
   }
 
   {
+    Vulkan.init();
+  }
+
+  {
     Input.init();
   }
 
@@ -137,6 +141,7 @@ static int destroy(void)
   { // Terminating modules
     Physics.deinit();
     Input.deinit();
+    Vulkan.deinit();
     Window.deinit();
     World.deinit();
     EventDebug.deinit();

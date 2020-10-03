@@ -10,6 +10,7 @@
 #include "Input/Input.h"
 #include "Game/Game.h"
 #include "Physics/Physics.h"
+#include "Vulkan/Vulkan.h"
 #include "evolpthreads.h"
 
 extern struct ev_app_struct{

@@ -19,6 +19,8 @@ static bool ev_window_should_close();
 static inline bool ev_window_is_created();
 static inline double ev_window_get_time();
 static inline void ev_window_set_should_close(bool flag);
+static void ev_create_vulkan_surface(VkInstance instance, VkSurfaceKHR* surface);
+static void ev_window_get_size(unsigned int *width, unsigned int *height);
 
 static inline void *ev_get_window_handle();
 
@@ -44,6 +46,8 @@ struct _ev_Window Window = {
         .isCreated = ev_window_is_created,
         .getTime = ev_window_get_time,
         .setShouldClose = ev_window_set_should_close,
+        .createVulkanSurface = ev_create_vulkan_surface,
+        .getSize = ev_window_get_size,
 };
 
 // Did the window receive a closing event?
@@ -155,4 +159,15 @@ static inline bool ev_window_is_created()
 static inline void ev_window_set_should_close(bool flag)
 {
   glfwSetWindowShouldClose(Window.getWindowHandle(), flag);
+}
+
+void ev_create_vulkan_surface(VkInstance instance, VkSurfaceKHR* surface)
+{
+    glfwCreateWindowSurface(instance, WindowData.windowHandle, NULL, surface);
+}
+
+static void ev_window_get_size(unsigned int *width, unsigned int *height)
+{
+    *width = WindowData.width;
+    *height = WindowData.height;
 }
