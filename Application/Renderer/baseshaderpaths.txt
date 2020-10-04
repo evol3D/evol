@@ -1,0 +1,2 @@
+SET_SHADER(EV_BASE_SHADER_PBR_VERT, "./BaseShaders/triangle.vert.spv")
+SET_SHADER(EV_BASE_SHADER_PBR_FRAG, "./BaseShaders/triangle.frag.spv")

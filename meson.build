@@ -36,6 +36,7 @@ srcfiles = files('src/main.c',
             'Application/World/World.c',
             'Application/EventDebug/EventDebug.c',
             'Application/Game/Game.c',
+            'Application/Renderer/Renderer.c',
             'Application/World/modules/transform_module.c',
             'Application/World/modules/script_module.c',
             'Application/World/modules/physics_module.c',
@@ -53,4 +54,12 @@ evol_exe = executable( 'evol', srcfiles,
     ev_window_dep,
     ev_vulk_dep,
     ],
+  )
+
+custom_target(
+  'env_setup',
+  depends: evol_exe,
+  output: 'dummy',
+  command: [meson.current_source_dir() + '/baseshaders.sh', meson.current_source_dir(), meson.current_build_dir()],
+  build_by_default: true,
   )

@@ -11,6 +11,7 @@
 #include "Game/Game.h"
 #include "Physics/Physics.h"
 #include "Vulkan/Vulkan.h"
+#include "Renderer/Renderer.h"
 #include "evolpthreads.h"
 
 extern struct ev_app_struct{
