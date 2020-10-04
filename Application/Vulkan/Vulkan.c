@@ -2,6 +2,8 @@
 #include "Vulkan.h"
 #include "Window.h"
 #include "vulkan_utils.h"
+
+#include "stdio.h"
 #include "stdlib.h"
 
 static int ev_vulkan_init();
@@ -12,8 +14,12 @@ void ev_vulkan_detect_physical_device();
 void ev_vulkan_detect_queue_family_indices();
 void ev_vulkan_create_logical_device();
 void ev_vulkan_init_vma();
+
 void ev_vulkan_create_surface();
-void ev_vulkan_create_swapchain(unsigned int imageCount);
+
+void ev_vulkan_create_renderpass();
+
+void ev_vulkan_create_swapchain(unsigned int *imageCount);
 void ev_vulkan_create_swapchain_imageviews();
 void ev_vulkan_create_swapchain_depthbuffer();
 void ev_vulkan_create_swapchain_framebuffers();
@@ -26,6 +32,12 @@ void ev_vulkan_destroy_image(EvImage *image);
 void ev_vulkan_create_buffer(VkBufferCreateInfo *bufferCreateInfo, VmaAllocationCreateInfo *allocationCreateInfo, EvBuffer *buffer);
 void ev_vulkan_destroy_buffer(EvBuffer *buffer);
 
+VkShaderModule ev_vulkan_load_shader(const char* shaderPath);
+void ev_vulkan_unload_shader(VkShaderModule shader);
+
+static inline VkDevice ev_vulkan_get_logical_device();
+static inline VkRenderPass ev_vulkan_get_renderpass();
+
 struct ev_Vulkan Vulkan = {
         .init = ev_vulkan_init,
         .deinit = ev_vulkan_deinit,
@@ -35,6 +47,11 @@ struct ev_Vulkan Vulkan = {
         .destroyImage = ev_vulkan_destroy_image,
         .createBuffer = ev_vulkan_create_buffer,
         .destroyBuffer = ev_vulkan_destroy_buffer,
+        .getDevice = ev_vulkan_get_logical_device,
+        .getRenderPass = ev_vulkan_get_renderpass,
+
+        .loadShader = ev_vulkan_load_shader,
+        .unloadShader = ev_vulkan_unload_shader,
 };
 
 struct ev_Vulkan_Data {
@@ -75,6 +92,12 @@ static int ev_vulkan_init()
   // TODO: Should this be checked?
   VulkanData.depthStencilFormat = VK_FORMAT_D16_UNORM_S8_UINT;
 
+  // Zeroing up commandpools to identify the ones that get initialized
+  for(int i = 0; i < QUEUE_TYPE_COUNT; ++i)
+  {
+    VulkanData.commandPools[i] = 0;
+  }
+
 
 
 
@@ -101,6 +124,11 @@ static int ev_vulkan_init()
 
 static int ev_vulkan_deinit()
 {
+  // Destroy any commandpool that was created earlier
+  for(int i = 0; i < QUEUE_TYPE_COUNT; ++i)
+    if(VulkanData.commandPools[i])
+      vkDestroyCommandPool(VulkanData.logicalDevice, VulkanData.commandPools[i], NULL);
+
   // Destroy the vulkan surface
   vkDestroySurfaceKHR(VulkanData.instance, VulkanData.surface, NULL);
 
@@ -122,6 +150,8 @@ void ev_vulkan_create_instance()
     "VK_KHR_surface",
     #ifdef _WIN32
     "VK_KHR_win32_surface",
+    #else
+    "VK_KHR_xcb_surface",
     #endif
   };
 
@@ -229,7 +259,8 @@ void ev_vulkan_detect_queue_family_indices()
 
 void ev_vulkan_create_surface()
 {
-  Window.createVulkanSurface(VulkanData.instance, &VulkanData.surface);
+  VK_ASSERT(Window.createVulkanSurface(VulkanData.instance, &VulkanData.surface));
+
   VK_ASSERT(vkGetPhysicalDeviceSurfaceCapabilitiesKHR(VulkanData.physicalDevice, VulkanData.surface, &VulkanData.surfaceCapabilities));
 
   // TODO: Actually detect the format
@@ -239,8 +270,10 @@ void ev_vulkan_create_surface()
   }
 }
 
-void ev_vulkan_create_swapchain(unsigned int imageCount)
+void ev_vulkan_create_swapchain(unsigned int *imageCount)
 {
+  ev_vulkan_create_renderpass();
+
   unsigned int windowWidth = VulkanData.surfaceCapabilities.currentExtent.width;
   unsigned int windowHeight = VulkanData.surfaceCapabilities.currentExtent.height;
 
@@ -266,7 +299,16 @@ void ev_vulkan_create_swapchain(unsigned int imageCount)
           ? VK_COMPOSITE_ALPHA_POST_MULTIPLIED_BIT_KHR
           : VK_COMPOSITE_ALPHA_INHERIT_BIT_KHR;
           
-  VulkanData.swapchainImageCount = MIN(MAX(imageCount, VulkanData.surfaceCapabilities.minImageCount), VulkanData.surfaceCapabilities.maxImageCount);
+  VulkanData.swapchainImageCount = MAX(*imageCount, VulkanData.surfaceCapabilities.minImageCount);
+
+  if(VulkanData.surfaceCapabilities.maxImageCount) // If there is an upper limit
+  {
+    VulkanData.swapchainImageCount = MIN(VulkanData.swapchainImageCount, VulkanData.surfaceCapabilities.maxImageCount);
+  }
+
+  // Set the passed variable to the agreed on image count
+  *imageCount = VulkanData.swapchainImageCount;
+
   VkSwapchainCreateInfoKHR swapchainCreateInfo =
   {
     .sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR,
@@ -373,8 +415,6 @@ void ev_vulkan_create_swapchain_depthbuffer()
 
 void ev_vulkan_create_swapchain_framebuffers()
 {
-  assert(!"Need renderpass and depthbuffer for framebuffers");
-
   VulkanData.framebuffers = malloc(sizeof(VkFramebuffer) * VulkanData.swapchainImageCount);
 
   unsigned int windowWidth, windowHeight;
@@ -480,9 +520,120 @@ void ev_vulkan_destroy_swapchain()
 
   vkDestroySwapchainKHR(VulkanData.logicalDevice, VulkanData.swapchain, NULL);
 
+// Destroying the renderpass
+  vkDestroyRenderPass(VulkanData.logicalDevice, VulkanData.renderPass, NULL);
+
   free(VulkanData.swapchainCommandBuffers);
   free(VulkanData.framebuffers);
   free(VulkanData.swapchainImageViews);
   free(VulkanData.swapchainImages);
 }
 
+static inline VkDevice ev_vulkan_get_logical_device()
+{
+  return VulkanData.logicalDevice;
+}
+static inline VkRenderPass ev_vulkan_get_renderpass()
+{
+  return VulkanData.renderPass;
+}
+
+void ev_vulkan_create_renderpass()
+{
+  VkAttachmentDescription attachmentDescriptions[] = 
+	{
+		{
+			.format = VulkanData.surfaceFormat.format,
+			.samples = VK_SAMPLE_COUNT_1_BIT,
+			.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR,
+			.storeOp = VK_ATTACHMENT_STORE_OP_STORE,
+			.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE,
+			.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
+			.initialLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+			.finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+		},
+		{
+			.format = VulkanData.depthStencilFormat,
+			.samples = VK_SAMPLE_COUNT_1_BIT,
+			.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR,
+			.storeOp = VK_ATTACHMENT_STORE_OP_STORE,
+			.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE,
+			.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
+			.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED,
+			.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
+		}
+	};
+
+	VkAttachmentReference colorAttachmentReferences[] =
+	{
+		{
+			.attachment = 0,
+			.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+		},
+	};
+
+	VkAttachmentReference depthStencilAttachmentReference =
+	{
+		.attachment = 1,
+		.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
+	};
+
+	VkSubpassDescription subpassDescriptions[] =
+	{
+		{
+			.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS,
+			.inputAttachmentCount = 0,
+			.pInputAttachments = NULL,
+			.colorAttachmentCount = ARRAYSIZE(colorAttachmentReferences),
+			.pColorAttachments = colorAttachmentReferences,
+			.pResolveAttachments = NULL,
+			.pDepthStencilAttachment = &depthStencilAttachmentReference,
+			.preserveAttachmentCount = 0,
+			.pPreserveAttachments = NULL,
+		},
+	};
+
+	VkRenderPassCreateInfo renderPassCreateInfo = {
+		.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO,
+		.attachmentCount = ARRAYSIZE(attachmentDescriptions),
+		.pAttachments = attachmentDescriptions,
+		.subpassCount = ARRAYSIZE(subpassDescriptions),
+		.pSubpasses = subpassDescriptions,
+		.dependencyCount = 0,
+		.pDependencies = NULL,
+	};
+
+  VK_ASSERT(vkCreateRenderPass(VulkanData.logicalDevice, &renderPassCreateInfo, NULL, &VulkanData.renderPass));
+}
+
+
+VkShaderModule ev_vulkan_load_shader(const char* shaderPath)
+{
+  FILE* file = fopen(shaderPath, "rb");
+  if(!file) return VK_NULL_HANDLE;
+
+  fseek(file, 0, SEEK_END);
+  long length = ftell(file);
+  fseek(file, 0, SEEK_SET);
+
+  char *shaderCode = malloc(length);
+  fread(shaderCode, 1, length, file);
+  fclose(file);
+
+  VkShaderModuleCreateInfo shaderModuleCreateInfo = {
+    .sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO,
+    .codeSize = length,
+    .pCode = shaderCode,
+  };
+
+  VkShaderModule shaderModule;
+  VK_ASSERT(vkCreateShaderModule(VulkanData.logicalDevice, &shaderModuleCreateInfo, NULL, &shaderModule));
+
+  free(shaderCode);
+  return shaderModule;
+}
+
+void ev_vulkan_unload_shader(VkShaderModule shader)
+{
+  vkDestroyShaderModule(VulkanData.logicalDevice, shader, NULL);
+}
