@@ -22,7 +22,7 @@ extern struct _ev_Window {
     bool (*isCreated)();
     double (*getTime)();
     void (*setShouldClose)(bool );
-    void (*createVulkanSurface)(VkInstance, VkSurfaceKHR*);
+    VkResult (*createVulkanSurface)(VkInstance, VkSurfaceKHR*);
     void (*getSize)(unsigned int *, unsigned int *);
 } Window;
 

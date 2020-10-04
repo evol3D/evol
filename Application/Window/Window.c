@@ -19,7 +19,7 @@ static bool ev_window_should_close();
 static inline bool ev_window_is_created();
 static inline double ev_window_get_time();
 static inline void ev_window_set_should_close(bool flag);
-static void ev_create_vulkan_surface(VkInstance instance, VkSurfaceKHR* surface);
+static VkResult ev_create_vulkan_surface(VkInstance instance, VkSurfaceKHR* surface);
 static void ev_window_get_size(unsigned int *width, unsigned int *height);
 
 static inline void *ev_get_window_handle();
@@ -161,9 +161,9 @@ static inline void ev_window_set_should_close(bool flag)
   glfwSetWindowShouldClose(Window.getWindowHandle(), flag);
 }
 
-void ev_create_vulkan_surface(VkInstance instance, VkSurfaceKHR* surface)
+VkResult ev_create_vulkan_surface(VkInstance instance, VkSurfaceKHR* surface)
 {
-    glfwCreateWindowSurface(instance, WindowData.windowHandle, NULL, surface);
+    return glfwCreateWindowSurface(instance, WindowData.windowHandle, NULL, surface);
 }
 
 static void ev_window_get_size(unsigned int *width, unsigned int *height)
