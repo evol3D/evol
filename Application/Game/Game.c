@@ -56,7 +56,7 @@ void ev_game_loop_physics(real dt)
 
 
   Physics.step_dt(dt);
-  ev_log_info("Physics Step. dt = %f", dt);
+  // ev_log_info("Physics Step. dt = %f", dt);
   /* ev_log_info("Iterations: %u", ++iterations); */
 
 }
@@ -102,7 +102,7 @@ void spawn()
             .collisionShape = Physics.createSphere(3),
           });
       old = new;
-      ev_log_info("Spheres spawned: %d", spawned++);
+      // ev_log_info("Spheres spawned: %d", spawned++);
     }
   }
 }
