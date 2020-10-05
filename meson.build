@@ -13,8 +13,10 @@ vulk_dep = dependency('Vulkan')
 
 cmake = import('cmake')
 
-flecs_proj = subproject('flecs')
-flecs_dep = flecs_proj.get_variable('flecs_dep')
+flecs_dep = dependency('flecs')
+flecs_meta_dep = dependency('flecs-meta')
+flecs_dash_dep = dependency('flecs-dash')
+flecs_systems_civetweb_dep = dependency('flecs-systems-civetweb')
 
 evol_eventsystem_proj = subproject('evol-eventsystem')
 evol_eventsystem_dep = evol_eventsystem_proj.get_variable('eventsystem_dependency')
@@ -23,6 +25,7 @@ evol_threads_proj = subproject('evol_threads')
 evol_thread_dep = evol_threads_proj.get_variable('evol_thread_dep')
 
 dl_dep = cc.find_library('dl', required: false)
+
 
 subdir('Application/Window')
 subdir('Application/Vulkan')
@@ -34,6 +37,7 @@ srcfiles = files('src/main.c',
             'include/ev_log/rxi_logger/log.c',
             'Application/Input/Input.c',
             'Application/World/World.c',
+            'Application/World/flecs_threads.c',
             'Application/EventDebug/EventDebug.c',
             'Application/Game/Game.c',
             'Application/Renderer/Renderer.c',
@@ -49,10 +53,14 @@ evol_exe = executable( 'evol', srcfiles,
     dl_dep,
     evol_eventsystem_dep,
     evol_thread_dep,
-    flecs_dep,
     evphys_dep,
     ev_window_dep,
     ev_vulk_dep,
+    flecs_dep,
+    # debug
+    flecs_meta_dep,
+    flecs_dash_dep,
+    flecs_systems_civetweb_dep,
     ],
   )
 

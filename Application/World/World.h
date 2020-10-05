@@ -3,6 +3,12 @@
 
 #include <flecs.h>
 
+#ifdef DEBUG
+# include <flecs_meta.h>
+# include <flecs_dash.h>
+# include <flecs_systems_civetweb.h>
+#endif
+
 typedef ecs_entity_t Entity;
 typedef ecs_world_t* WorldInstance;
 typedef ecs_type_t ComponentSet;
@@ -30,7 +36,7 @@ extern struct ev_World {
 #define RegisterSystem_OnStore(sys, ...)    ECS_SYSTEM(World.instance, sys, EcsOnStore   , __VA_ARGS__)
 
 #define CreateEntity() ecs_new(World.instance, 0)
-#define CreateNamedEntity(name) ECS_ENTITY(World.instance, name)
+#define CreateNamedEntity(name) ECS_ENTITY(World.instance, name, 0)
 
 #define Prefab_Create(pb) ECS_PREFAB(World.instance, pb)
 

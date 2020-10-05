@@ -113,6 +113,8 @@ static int game_loop()
 
   while(!Window.shouldClose())
   {
+
+
     double time = Window.getTime();
     double timeStep = time - App.lastWindowPollTime;
     double remainingTime = (1.f/(double)App.windowPollRate) - timeStep;

@@ -45,6 +45,8 @@ void RemoveRigidBody(ecs_iter_t *it) {
   assert(!"TODO: RemoveRigidBody not implemented");
 }
 
+#include <flecs_meta.h>
+
 void PhysicsModuleImport(ecs_world_t *world)
 {
   ECS_IMPORT(world, TransformModule);
@@ -57,9 +59,11 @@ void PhysicsModuleImport(ecs_world_t *world)
   ECS_EXPORT_COMPONENT(RigidBodyComponent);
   ECS_EXPORT_COMPONENT(RigidBodyHandleComponent);
 
-
   ECS_TRIGGER(world, AddRigidBody, EcsOnAdd, RigidBodyComponent);
   ECS_TRIGGER(world, RemoveRigidBody, EcsOnRemove, RigidBodyComponent);
 
-  ECS_SYSTEM(world, SetRigidBody, EcsOnSet, RigidBodyComponent, RigidBodyHandleComponent, transform.module.TransformComponent);
+  ECS_SYSTEM(world, SetRigidBody, EcsOnSet, RigidBodyComponent, RigidBodyHandleComponent, TransformComponent);
+
+  ECS_IMPORT(world, FlecsMeta);
+
 }

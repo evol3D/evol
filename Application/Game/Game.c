@@ -24,19 +24,35 @@ struct ev_Game_Data {
   int placeholder;
 } GameData;
 
+#include "flecs.h"
+
 static int ev_game_init()
 {
   ImportModule(TransformModule);
   ImportModule(PhysicsModule);
 
-  Entity sphere = CreateEntity();
-  Entity_SetComponent(sphere, 
+  CreateNamedEntity(sphere);
+
+  Entity_SetComponent(sphere,
+      TransformComponent, {
+        .position = {0, 25, -20},
+        .rotation = {0, 45, 0},
+        .scale    = {1, 1, 1},
+      });
+  Entity_SetComponent(sphere,
+      RigidBodyComponent, {
+        .mass = 1,
+        .collisionShape = Physics.createSphere(3),
+      });
+
+  Entity ground = CreateEntity();
+  Entity_SetComponent(ground, 
       TransformComponent, {
         .position = {0, -15, 0},
         .rotation = {0, 45, 0},
         .scale    = {1, 1, 1},
       });
-  Entity_SetComponent(sphere,
+  Entity_SetComponent(ground,
       RigidBodyComponent, {
         .mass = 0,
         .collisionShape = Physics.createBox(60, 1, 60),
@@ -56,6 +72,7 @@ void ev_game_loop_physics(real dt)
 
 
   Physics.step_dt(dt);
+  World.progress();
   // ev_log_info("Physics Step. dt = %f", dt);
   /* ev_log_info("Iterations: %u", ++iterations); */
 
@@ -89,7 +106,9 @@ void spawn()
 
     if(remainingTime <= 0)
     {
+      ecs_lock(World.instance);
       Entity sphere = CreateEntity();
+      Entity_SetComponent(sphere, EcsName, {"sphere_1"});
       Entity_SetComponent(sphere,
           TransformComponent, {
             .position = {0, 25, -20},
@@ -101,6 +120,7 @@ void spawn()
             .mass = 1,
             .collisionShape = Physics.createSphere(3),
           });
+      ecs_unlock(World.instance);
       old = new;
       // ev_log_info("Spheres spawned: %d", spawned++);
     }

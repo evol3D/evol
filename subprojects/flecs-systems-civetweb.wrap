@@ -1,0 +1,6 @@
+[wrap-git]
+directory = flecs-systems-civetweb
+url = https://github.com/flecs-hub/flecs-systems-civetweb.git
+revision = head
+
+patch_directory = flecs-systems-civetweb

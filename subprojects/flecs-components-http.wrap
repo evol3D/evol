@@ -1,0 +1,6 @@
+[wrap-git]
+directory = flecs-components-http
+url = https://github.com/flecs-hub/flecs-components-http.git
+revision = head
+
+patch_directory = flecs-components-http
