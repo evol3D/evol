@@ -1,0 +1,6 @@
+[wrap-git]
+directory = cgltf
+url = https://github.com/jkuhlmann/cgltf
+revision = head
+
+patch_directory = cgltf
