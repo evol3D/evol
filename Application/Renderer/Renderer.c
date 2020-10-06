@@ -9,6 +9,8 @@ static void ev_renderer_prepare_graphics_pipelines();
 static inline void ev_renderer_load_base_shaders();
 static inline void ev_renderer_unload_base_shaders();
 
+static void ev_renderer_bind();
+
 #define SET_SHADER(id, path) RendererData.baseShaderPaths[id] = path;
 
 typedef enum
@@ -16,7 +18,7 @@ typedef enum
   EV_DESCRIPTOR_SET_LAYOUT_TEXTURE,
   EV_DESCRIPTOR_SET_LAYOUT_RIG,
 
-// Add before this line
+  // Add before this line
   DESCRIPTOR_SET_LAYOUT_COUNT,
 } DescriptorSetLayoutUsage;
 
@@ -24,7 +26,7 @@ typedef enum
 {
   EV_BASE_SHADER_PBR_VERT, EV_BASE_SHADER_PBR_FRAG,
 
-// Add before this line
+  // Add before this line
   EV_BASE_SHADER_COUNT
 } EvBaseShaderIdentifiers;
 
@@ -32,7 +34,7 @@ typedef enum
 {
   EV_GRAPHICS_PIPELINE_PBR,
 
-// Add before this line
+  // Add before this line
   GRAPHICS_PIPELINES_COUNT,
 } GraphicsPipelineUsage;
 
@@ -58,6 +60,11 @@ static int ev_renderer_init()
 
   ev_renderer_load_base_shaders();
   ev_renderer_prepare_graphics_pipelines();
+
+  Vulkan.startNewFrame();
+  ev_renderer_bind();
+  Vulkan.endFrame();
+
   return 0;
 }
 
@@ -120,42 +127,42 @@ static void ev_renderer_prepare_graphics_pipelines()
 {
   //TODO when you implement multiple pipelines take a look at input attributes , this pipeline should be a rigging pipeline
   VkPipeline simplePipeline;
-	VkPipelineLayout pipelineLayout;
+  VkPipelineLayout pipelineLayout;
 
-	VkPipelineShaderStageCreateInfo pipelineShaderStages[] = 
+  VkPipelineShaderStageCreateInfo pipelineShaderStages[] = 
   {
     {
       .sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
-			.stage = VK_SHADER_STAGE_VERTEX_BIT,
-			.module = RendererData.baseShaders[EV_BASE_SHADER_PBR_VERT],
-			.pName = "main"
-		},
+	  .stage = VK_SHADER_STAGE_VERTEX_BIT,
+	  .module = RendererData.baseShaders[EV_BASE_SHADER_PBR_VERT],
+	  .pName = "main"
+	},
     {
       .sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
-			.stage = VK_SHADER_STAGE_FRAGMENT_BIT,
-			.module = RendererData.baseShaders[EV_BASE_SHADER_PBR_FRAG],
-			.pName = "main"
-		},
-	};
+	  .stage = VK_SHADER_STAGE_FRAGMENT_BIT,
+	  .module = RendererData.baseShaders[EV_BASE_SHADER_PBR_FRAG],
+	  .pName = "main"
+	},
+  };
 
 	VkVertexInputBindingDescription BindingDescriptions[] =
 	{
-		{ 0 , 3 * sizeof(float) , VK_VERTEX_INPUT_RATE_VERTEX }, //positions
-		{ 1 , 3 * sizeof(float) , VK_VERTEX_INPUT_RATE_VERTEX }, //normals
-		{ 2 , 2 * sizeof(float) , VK_VERTEX_INPUT_RATE_VERTEX }, //uv0
-		{ 3 , 2 * sizeof(float) , VK_VERTEX_INPUT_RATE_VERTEX }, //uv1
-		{ 4 , 4 * sizeof(float) , VK_VERTEX_INPUT_RATE_VERTEX }, //joints
-		{ 5 , 4 * sizeof(float) , VK_VERTEX_INPUT_RATE_VERTEX }, //weights
+		// { 0 , 3 * sizeof(float) , VK_VERTEX_INPUT_RATE_VERTEX }, //positions
+		// { 1 , 3 * sizeof(float) , VK_VERTEX_INPUT_RATE_VERTEX }, //normals
+		// { 2 , 2 * sizeof(float) , VK_VERTEX_INPUT_RATE_VERTEX }, //uv0
+		// { 3 , 2 * sizeof(float) , VK_VERTEX_INPUT_RATE_VERTEX }, //uv1
+		// { 4 , 4 * sizeof(float) , VK_VERTEX_INPUT_RATE_VERTEX }, //joints
+		// { 5 , 4 * sizeof(float) , VK_VERTEX_INPUT_RATE_VERTEX }, //weights
 	};
 
 	VkVertexInputAttributeDescription InputAttributeDescrptions[] =
 	{
-		{ 0 , 0 , VK_FORMAT_R32G32B32_SFLOAT , 0 },
-		{ 1 , 1 , VK_FORMAT_R32G32B32_SFLOAT , 0 },
-		{ 2 , 2 , VK_FORMAT_R32G32_SFLOAT , 0 },
-		{ 3 , 3 , VK_FORMAT_R32G32_SFLOAT , 0 },
-		{ 4 , 4 , VK_FORMAT_R32G32B32A32_SFLOAT , 0 },
-		{ 5 , 5 , VK_FORMAT_R32G32B32A32_SFLOAT , 0 }
+		// { 0 , 0 , VK_FORMAT_R32G32B32_SFLOAT , 0 },
+		// { 1 , 1 , VK_FORMAT_R32G32B32_SFLOAT , 0 },
+		// { 2 , 2 , VK_FORMAT_R32G32_SFLOAT , 0 },
+		// { 3 , 3 , VK_FORMAT_R32G32_SFLOAT , 0 },
+		// { 4 , 4 , VK_FORMAT_R32G32B32A32_SFLOAT , 0 },
+		// { 5 , 5 , VK_FORMAT_R32G32B32A32_SFLOAT , 0 }
 	};
 
 	VkPipelineVertexInputStateCreateInfo pipelineVertexInputState = 
@@ -196,7 +203,7 @@ static void ev_renderer_prepare_graphics_pipelines()
 		.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO,
 		.depthTestEnable = VK_TRUE,
 		.depthWriteEnable = VK_TRUE,
-		.depthCompareOp = VK_COMPARE_OP_GREATER_OR_EQUAL,
+		.depthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL,
 		.depthBoundsTestEnable = VK_FALSE,
 		.back = {
 			.failOp = VK_STENCIL_OP_KEEP,
@@ -259,8 +266,8 @@ static void ev_renderer_prepare_graphics_pipelines()
 
 	VK_ASSERT(vkCreatePipelineLayout(Vulkan.getDevice(), &pipelineLayoutCreateInfo, NULL, &pipelineLayout));
 
-// The graphicsPipelinesCreateInfos array should follow the order set by
-// the GraphicsPipelineUsage enum.
+  // The graphicsPipelinesCreateInfos array should follow the order set by
+  // the GraphicsPipelineUsage enum.
 	VkGraphicsPipelineCreateInfo graphicsPipelinesCreateInfos[] = 
   { 
     {
@@ -304,5 +311,30 @@ static inline void ev_renderer_unload_base_shaders()
   for(int i = 0; i < EV_BASE_SHADER_COUNT; ++i)
   {
     Vulkan.unloadShader(RendererData.baseShaders[i]);
+  }
+}
+
+static void ev_renderer_bind()
+{
+  //TODO look into using secondary command buffer and recording for every pipeline
+
+  //TODO LOOK MORE INTO THIS
+  vkCmdBindPipeline(Vulkan.getCurrentFrameCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, RendererData.graphicsPipelines[EV_GRAPHICS_PIPELINE_PBR]);
+
+  //Also not sure how we will handle this. but there it is -- will we have one big buffer with all meshes and we will cherry pick from it for every pipeline'
+  //or will we have specific buffer or each type of mesh that requires a specific type of pipeline and bind it seperatly.
+  //TODO LOOK FURTHER INTO THIS
+  {
+    // VkBuffer vertexBuffers[] = { 0 };
+    // VkDeviceSize offsets[] = { 0 };
+    // vkCmdBindVertexBuffers(Vulkan.getCurrentFrameCommandBuffer(), 0, ARRAYSIZE(vertexBuffers), vertexBuffers, offsets);
+    //TODO SUPPORT HAVING A MODEL WITH NO VERTEX BUFFER ?
+    //vkCmdBindIndexBuffer(Vulkan.getCurrentFrameCommandBuffer(), indexBuffer.buffer, 0, VK_INDEX_TYPE_UINT32);
+  }
+
+  //TODO DRAW LOOP HERE nad also look into supporting shaders with no indexes
+  {
+    //vkCmdDrawIndexed(Vulkan.getCurrentFrameCommandBuffer(), indices_counts[TYPE][i], 1, indices_offsets[TYPE][i], vertices_offsets[TYPE][i], 0);
+    vkCmdDraw(Vulkan.getCurrentFrameCommandBuffer(), 3, 1, 0, 0);
   }
 }

@@ -34,20 +34,29 @@ typedef enum
 } QueueType;
 
 extern struct ev_Vulkan {
-    int (*init)();
-    int (*deinit)();
+    int (*init)(void);
+    int (*deinit)(void);
     void (*createSwapchain)(unsigned int*);
-    void (*destroySwapchain)();
+    void (*destroySwapchain)(void);
     void (*createImage)(VkImageCreateInfo *, VmaAllocationCreateInfo *, EvImage *);
     void (*destroyImage)(EvImage *);
     void (*createBuffer)(VkBufferCreateInfo *, VmaAllocationCreateInfo *, EvBuffer *);
     void (*destroyBuffer)(EvBuffer *);
 
+    void (*startNewFrame)(void);
+    void (*endFrame)(void);
+    VkCommandBuffer (*getCurrentFrameCommandBuffer)(void);
+    
+    
+
     VkShaderModule (*loadShader)(const char *);
     void (*unloadShader)(VkShaderModule);
 
-    VkDevice (*getDevice)();
-    VkRenderPass (*getRenderPass)();
+    VkDevice (*getDevice)(void);
+    VkRenderPass (*getRenderPass)(void);
+    unsigned int (*getQueueFamilyIndex)(QueueType);
+    VkCommandPool (*getCommandPool)(QueueType);
+
 } Vulkan;
 
 

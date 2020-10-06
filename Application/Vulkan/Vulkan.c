@@ -13,6 +13,7 @@ void ev_vulkan_create_instance();
 void ev_vulkan_detect_physical_device();
 void ev_vulkan_detect_queue_family_indices();
 void ev_vulkan_create_logical_device();
+
 void ev_vulkan_init_vma();
 
 void ev_vulkan_create_surface();
@@ -35,23 +36,44 @@ void ev_vulkan_destroy_buffer(EvBuffer *buffer);
 VkShaderModule ev_vulkan_load_shader(const char* shaderPath);
 void ev_vulkan_unload_shader(VkShaderModule shader);
 
+void ev_vulkan_start_new_frame(void);
+void ev_vulkan_end_frame(void);
+
+void ev_vulkan_image_memory_erier(VkImage image, VkImageLayout oldLayout, VkImageLayout newLayout, 
+  VkAccessFlags srcAccessMask, VkAccessFlags dstAccessMask, VkPipelineStageFlags srcStageMask, 
+  VkPipelineStageFlags dstStageMask, VkDependencyFlags dependencyFlags);
+
+//getters
 static inline VkDevice ev_vulkan_get_logical_device();
 static inline VkRenderPass ev_vulkan_get_renderpass();
+static inline unsigned int ev_vulkan_get_commandpool(QueueType type);
+static inline VkCommandBuffer ev_vulkan_get_current_frame_commandbuffer(void);
+static inline unsigned int ev_vulkan_get_queuefamily_index(QueueType type);
 
 struct ev_Vulkan Vulkan = {
-        .init = ev_vulkan_init,
-        .deinit = ev_vulkan_deinit,
-        .createSwapchain = ev_vulkan_create_swapchain,
-        .destroySwapchain = ev_vulkan_destroy_swapchain,
-        .createImage = ev_vulkan_create_image,
-        .destroyImage = ev_vulkan_destroy_image,
-        .createBuffer = ev_vulkan_create_buffer,
-        .destroyBuffer = ev_vulkan_destroy_buffer,
-        .getDevice = ev_vulkan_get_logical_device,
-        .getRenderPass = ev_vulkan_get_renderpass,
+  .init = ev_vulkan_init,
+  .deinit = ev_vulkan_deinit,
 
-        .loadShader = ev_vulkan_load_shader,
-        .unloadShader = ev_vulkan_unload_shader,
+  .createSwapchain = ev_vulkan_create_swapchain,
+  .destroySwapchain = ev_vulkan_destroy_swapchain,
+  .createImage = ev_vulkan_create_image,
+  .destroyImage = ev_vulkan_destroy_image,
+
+  .createBuffer = ev_vulkan_create_buffer,
+  .destroyBuffer = ev_vulkan_destroy_buffer,
+
+  .loadShader = ev_vulkan_load_shader,
+  .unloadShader = ev_vulkan_unload_shader,
+
+  .startNewFrame = ev_vulkan_start_new_frame,
+  .endFrame = ev_vulkan_end_frame,
+
+  //getters
+  .getDevice = ev_vulkan_get_logical_device,
+  .getRenderPass = ev_vulkan_get_renderpass,
+  .getCommandPool = ev_vulkan_get_commandpool,
+  .getQueueFamilyIndex = ev_vulkan_get_queuefamily_index,
+  .getCurrentFrameCommandBuffer = ev_vulkan_get_current_frame_commandbuffer,
 };
 
 struct ev_Vulkan_Data {
@@ -78,17 +100,22 @@ struct ev_Vulkan_Data {
   EvImage depthBufferImage;
   VkImageView depthBufferImageView;
 
+  unsigned int currentFrameIndex;
+
   VkRenderPass renderPass;
 
   VkCommandPool commandPools[QUEUE_TYPE_COUNT];
   VkCommandBuffer *swapchainCommandBuffers;
 
+  VkSemaphore imageSemaphore;
+  VkSemaphore signalSemaphore;
+
+  VkQueue queues[QUEUE_TYPE_COUNT];
+
 } VulkanData;
 
 static int ev_vulkan_init()
 {
-
-
   // TODO: Should this be checked?
   VulkanData.depthStencilFormat = VK_FORMAT_D16_UNORM_S8_UINT;
 
@@ -113,12 +140,15 @@ static int ev_vulkan_init()
   // Create the logical device
   ev_vulkan_create_logical_device();
 
+  // TODO: Remove
+  vkGetDeviceQueue(VulkanData.logicalDevice, VulkanData.queueFamilyIndices[GRAPHICS], 0, &VulkanData.queues[GRAPHICS]);
+
   // Initialize VMA
   ev_vulkan_init_vma();
 
   // Create the vulkan surface, then detect the surface's capabilities
   ev_vulkan_create_surface();
-
+  
   return 0;
 }
 
@@ -163,7 +193,7 @@ void ev_vulkan_create_instance()
 		.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO,
 		.pApplicationName = "evol_vulkan",
 		.applicationVersion = 0,
-		.apiVersion = VulkanData.apiVersion,
+		.apiVersion = VK_API_VERSION_1_1,
 	};
 
 	VkInstanceCreateInfo instanceCreateInfo = {
@@ -340,6 +370,15 @@ void ev_vulkan_create_swapchain(unsigned int *imageCount)
   ev_vulkan_create_swapchain_depthbuffer();
   ev_vulkan_create_swapchain_framebuffers();
   ev_vulkan_allocate_swapchain_commandbuffers();
+  ev_vulkan_create_semaphores();
+}
+
+void ev_vulkan_create_semaphores()
+{
+  VkSemaphoreCreateInfo semaphoreCreateInfo = {VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO};
+
+  VK_ASSERT(vkCreateSemaphore(VulkanData.logicalDevice, &semaphoreCreateInfo, NULL, &VulkanData.imageSemaphore));
+  VK_ASSERT(vkCreateSemaphore(VulkanData.logicalDevice, &semaphoreCreateInfo, NULL, &VulkanData.signalSemaphore));
 }
 
 void ev_vulkan_create_swapchain_imageviews()
@@ -443,17 +482,7 @@ void ev_vulkan_create_swapchain_framebuffers()
 
 void ev_vulkan_allocate_swapchain_commandbuffers()
 {
-  if(!VulkanData.commandPools[GRAPHICS])
-  {
-    VkCommandPoolCreateInfo commandPoolCreateInfo =
-    {
-      .sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,
-      // TODO: Is this really what we want to have?
-      .flags = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT,
-      .queueFamilyIndex = VulkanData.queueFamilyIndices[GRAPHICS],
-    };
-    VK_ASSERT(vkCreateCommandPool(VulkanData.logicalDevice, &commandPoolCreateInfo, NULL, &(VulkanData.commandPools[GRAPHICS])));
-  }
+  VkCommandPool gPool = Vulkan.getCommandPool(GRAPHICS);
 
   VulkanData.swapchainCommandBuffers = malloc(sizeof(VkCommandBuffer) * VulkanData.swapchainImageCount);
 
@@ -461,7 +490,7 @@ void ev_vulkan_allocate_swapchain_commandbuffers()
   {
     .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
     //TODO: Should this be GRAPHICS or PRESENT?
-    .commandPool = VulkanData.commandPools[GRAPHICS],
+    .commandPool = gPool,
     .level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
     .commandBufferCount = VulkanData.swapchainImageCount
   };
@@ -502,6 +531,11 @@ void ev_vulkan_destroy_buffer(EvBuffer *buffer)
 
 void ev_vulkan_destroy_swapchain()
 {
+  // Destroy semaphores
+  vkDestroySemaphore(VulkanData.logicalDevice, VulkanData.imageSemaphore, NULL);
+  vkDestroySemaphore(VulkanData.logicalDevice, VulkanData.signalSemaphore, NULL);
+
+
   // Free frame commandbuffers
   vkFreeCommandBuffers(VulkanData.logicalDevice, VulkanData.commandPools[GRAPHICS], VulkanData.swapchainImageCount, VulkanData.swapchainCommandBuffers);
 
@@ -520,7 +554,7 @@ void ev_vulkan_destroy_swapchain()
 
   vkDestroySwapchainKHR(VulkanData.logicalDevice, VulkanData.swapchain, NULL);
 
-// Destroying the renderpass
+  // Destroying the renderpass
   vkDestroyRenderPass(VulkanData.logicalDevice, VulkanData.renderPass, NULL);
 
   free(VulkanData.swapchainCommandBuffers);
@@ -606,7 +640,6 @@ void ev_vulkan_create_renderpass()
   VK_ASSERT(vkCreateRenderPass(VulkanData.logicalDevice, &renderPassCreateInfo, NULL, &VulkanData.renderPass));
 }
 
-
 VkShaderModule ev_vulkan_load_shader(const char* shaderPath)
 {
   FILE* file = fopen(shaderPath, "rb");
@@ -636,4 +669,165 @@ VkShaderModule ev_vulkan_load_shader(const char* shaderPath)
 void ev_vulkan_unload_shader(VkShaderModule shader)
 {
   vkDestroyShaderModule(VulkanData.logicalDevice, shader, NULL);
+}
+
+static inline unsigned int ev_vulkan_get_queuefamily_index(QueueType type)
+{
+  return VulkanData.queueFamilyIndices[type];
+}
+
+static inline unsigned int ev_vulkan_get_commandpool(QueueType type)
+{
+  if(!VulkanData.commandPools[type])
+  {
+    VkCommandPoolCreateInfo commandPoolCreateInfo =
+    {
+      .sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,
+      // TODO: Is this really what we want to have?
+      .flags = (VK_COMMAND_POOL_CREATE_TRANSIENT_BIT | VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT),
+      .queueFamilyIndex = VulkanData.queueFamilyIndices[type],
+    };
+    VK_ASSERT(vkCreateCommandPool(VulkanData.logicalDevice, &commandPoolCreateInfo, NULL, &(VulkanData.commandPools[type])));
+  }
+  return VulkanData.commandPools[type];
+}
+
+void ev_vulkan_start_new_frame(void)
+{
+  VK_ASSERT(vkAcquireNextImageKHR(VulkanData.logicalDevice, VulkanData.swapchain, ~0ull, VulkanData.imageSemaphore, NULL, &(VulkanData.currentFrameIndex)));
+
+  //start recording into the right command buffer
+  {
+    VkCommandBufferBeginInfo commandBufferBeginInfo = { 
+		  .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
+		  .flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT,
+	  };
+	  VK_ASSERT(vkBeginCommandBuffer(VulkanData.swapchainCommandBuffers[VulkanData.currentFrameIndex], &commandBufferBeginInfo));
+  }
+
+  ev_vulkan_image_memory_barrier(VulkanData.swapchainImages[VulkanData.currentFrameIndex], VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, NULL, VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, VK_DEPENDENCY_BY_REGION_BIT);
+
+  unsigned int width, height;
+  Window.getSize(&width, &height);
+
+  //strarting render pass
+  {
+    VkClearValue clearValues[] = {
+		  {
+			  .color = {0.33f, 0.22f, 0.37f, 1.f},
+		  },
+	  	{
+		  	.depthStencil = {1.0f, 1.0f},
+		  }
+	  };
+
+
+	  VkRenderPassBeginInfo renderPassBeginInfo = 
+    {
+      .sType =  VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
+      .renderPass = VulkanData.renderPass,
+      .framebuffer = VulkanData.framebuffers[VulkanData.currentFrameIndex],
+      .renderArea.extent.width = width,
+      .renderArea.extent.height = height,
+      .clearValueCount = ARRAYSIZE(clearValues),
+      .pClearValues = clearValues,
+    };
+	  vkCmdBeginRenderPass(Vulkan.getCurrentFrameCommandBuffer(), &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE); 
+  }
+
+  //not sure if this should be set every time
+  {
+    VkViewport viewport = 
+    {
+			.x = 0,
+			.y = height,
+			.width = width,
+			.height = -(float)height,
+			.minDepth = 0.0f,
+			.maxDepth = 1.0f,
+		};
+
+		VkRect2D scissor = {
+			.offset = {0, 0},
+			.extent = {width, height},
+		};
+
+		vkCmdSetViewport(VulkanData.swapchainCommandBuffers[VulkanData.currentFrameIndex], 0, 1, &viewport);
+		vkCmdSetScissor(VulkanData.swapchainCommandBuffers[VulkanData.currentFrameIndex], 0, 1, &scissor);
+  }
+
+  //I think here we should handle stuff to evol renderer
+}
+
+void ev_vulkan_end_frame(void)
+{
+  vkCmdEndRenderPass(Vulkan.getCurrentFrameCommandBuffer());
+
+  ev_vulkan_image_memory_barrier(VulkanData.swapchainImages[VulkanData.currentFrameIndex], VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR, VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT, NULL, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_DEPENDENCY_BY_REGION_BIT);
+
+  VK_ASSERT(vkEndCommandBuffer(Vulkan.getCurrentFrameCommandBuffer()));
+
+  VkPipelineStageFlags stageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+
+  VkSubmitInfo submitInfo = {VK_STRUCTURE_TYPE_SUBMIT_INFO};
+  submitInfo.pWaitDstStageMask = &stageMask;
+  submitInfo.commandBufferCount = 1;
+  submitInfo.pCommandBuffers = &VulkanData.swapchainCommandBuffers[VulkanData.currentFrameIndex];
+  submitInfo.waitSemaphoreCount = 1;
+  submitInfo.pWaitSemaphores = &VulkanData.imageSemaphore;
+  submitInfo.signalSemaphoreCount = 1;
+  submitInfo.pSignalSemaphores = &VulkanData.signalSemaphore;
+
+  VK_ASSERT(vkQueueSubmit(VulkanData.queues[GRAPHICS], 1, &submitInfo, VK_NULL_HANDLE));
+
+  VkPresentInfoKHR presentInfo = {VK_STRUCTURE_TYPE_PRESENT_INFO_KHR};
+  presentInfo.swapchainCount = 1;
+  presentInfo.pSwapchains = &VulkanData.swapchain;
+  presentInfo.pImageIndices = &VulkanData.currentFrameIndex;
+  presentInfo.waitSemaphoreCount = 1;
+  presentInfo.pWaitSemaphores = &VulkanData.signalSemaphore;
+
+  VK_ASSERT(vkQueuePresentKHR(VulkanData.queues[GRAPHICS], &presentInfo));
+
+
+
+
+  //assert(!"Not implemented");
+}
+
+static inline VkCommandBuffer ev_vulkan_get_current_frame_commandbuffer(void)
+{
+  // TODO: Do we need to reset the command buffer?
+  // TODO: Does it overwrite existing memory if not reset? If so, then resetting it
+  // will only introduce the overhead of freeing memory just to allocate it again.
+  // 
+  // Code:
+  //  vkResetCommandBuffer(VulkanData.swapchainCommandBuffers[VulkanData.currentFrameIndex], VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
+  //
+  
+  return VulkanData.swapchainCommandBuffers[VulkanData.currentFrameIndex];
+}
+
+void ev_vulkan_image_memory_barrier(VkImage image, VkImageLayout oldLayout, VkImageLayout newLayout, VkAccessFlags srcAccessMask, VkAccessFlags dstAccessMask, VkPipelineStageFlags srcStageMask, VkPipelineStageFlags dstStageMask, VkDependencyFlags dependencyFlags)
+{
+	VkImageMemoryBarrier imageMemoryBarrier = 
+  {
+		.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
+		.pNext = NULL,
+		.srcAccessMask = srcAccessMask,
+		.dstAccessMask = dstAccessMask,
+		.oldLayout = oldLayout,
+		.newLayout = newLayout,
+		.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,	// TODO
+		.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,	// TODO
+		.image = image,
+		.subresourceRange = 
+    {
+			.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
+			.levelCount = VK_REMAINING_MIP_LEVELS,
+			.layerCount = VK_REMAINING_ARRAY_LAYERS,
+		}
+	};
+
+	vkCmdPipelineBarrier(Vulkan.getCurrentFrameCommandBuffer(), srcStageMask, dstStageMask, dependencyFlags, 0, NULL, 0, NULL, 1, &imageMemoryBarrier);
 }
