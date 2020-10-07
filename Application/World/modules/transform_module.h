@@ -7,9 +7,9 @@
 
 typedef struct
 {
-  ev_Vector3 position;
-  ev_Vector3 rotation;
-  ev_Vector3 scale;
+  ev_Vector4 position;
+  ev_Vector4 rotation;
+  ev_Vector4 scale;
 } TransformComponent;
 
 static EcsMetaType __TransformComponent__ = {

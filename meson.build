@@ -28,6 +28,8 @@ dl_dep = cc.find_library('dl', required: false)
 
 cgltf_dep = dependency('cgltf')
 
+cglm_dep = dependency('cglm')
+
 
 subdir('Application/Window')
 subdir('Application/Vulkan')
@@ -61,6 +63,7 @@ evol_exe = executable( 'evol', srcfiles,
     ev_vulk_dep,
     flecs_dep,
     cgltf_dep,
+    cglm_dep,
     # debug
     flecs_meta_dep,
     flecs_dash_dep,

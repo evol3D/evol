@@ -35,8 +35,8 @@ static int ev_game_init()
 
   Entity_SetComponent(sphere,
       TransformComponent, {
-        .position = {0, 25, -20},
-        .rotation = {0, 45, 0},
+        .position = {0, 25, -45},
+        .rotation = {0, 0.383, 0, 0.924},
         .scale    = {1, 1, 1},
       });
   Entity_SetComponent(sphere,
@@ -48,15 +48,17 @@ static int ev_game_init()
   Entity ground = CreateEntity();
   Entity_SetComponent(ground, 
       TransformComponent, {
-        .position = {0, -15, 0},
-        .rotation = {0, 45, 0},
+        .position = {0, -15, -30},
+        .rotation = {0.146, 0.354, 0.354, 0.854},
         .scale    = {1, 1, 1},
       });
   Entity_SetComponent(ground,
       RigidBodyComponent, {
         .mass = 0,
-        .collisionShape = Physics.createBox(60, 1, 60),
+        .collisionShape = Physics.createBox(20, 1, 20),
       });
+
+  AssetLoader.loadGLTF("CesiumMilkTruck.gltf");
 
   return 0;
 }
@@ -112,7 +114,7 @@ void spawn()
       Entity_SetComponent(sphere,
           TransformComponent, {
             .position = {0, 25, -20},
-            .rotation = {0, 45, 0},
+            .rotation = {0.146, 0.354, 0.354, 0.854},
             .scale    = {1, 1, 1},
           });
       Entity_SetComponent(sphere,
@@ -130,8 +132,8 @@ void spawn()
 
 static void ev_game_loop()
 {
-  pthread_t spawn_thread;
-  pthread_create(&spawn_thread, NULL, (void*)spawn, NULL);
+  /* pthread_t spawn_thread; */
+  /* pthread_create(&spawn_thread, NULL, (void*)spawn, NULL); */
   double old = Window.getTime();
   unsigned int physics_steprate = 60;
   double new;

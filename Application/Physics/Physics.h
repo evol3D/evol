@@ -20,6 +20,7 @@ extern struct _ev_Physics {
   CollisionShape (*createSphere)(real);
   void (*removeRigidBody)(RigidBodyHandle);
   void (*updateRigidBody)(RigidBodyHandle, RigidBody*);
+  CollisionShape (*createStaticFromTriangleIndexVertex)(int, int *, int, int, real *, int);
 } Physics;
 
 
