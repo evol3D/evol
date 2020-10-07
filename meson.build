@@ -26,6 +26,8 @@ evol_thread_dep = evol_threads_proj.get_variable('evol_thread_dep')
 
 dl_dep = cc.find_library('dl', required: false)
 
+cgltf_dep = dependency('cgltf')
+
 
 subdir('Application/Window')
 subdir('Application/Vulkan')
@@ -44,6 +46,7 @@ srcfiles = files('src/main.c',
             'Application/World/modules/transform_module.c',
             'Application/World/modules/script_module.c',
             'Application/World/modules/physics_module.c',
+            'Application/AssetLoader/AssetLoader.c',
             )
 
 
@@ -57,6 +60,7 @@ evol_exe = executable( 'evol', srcfiles,
     ev_window_dep,
     ev_vulk_dep,
     flecs_dep,
+    cgltf_dep,
     # debug
     flecs_meta_dep,
     flecs_dash_dep,
