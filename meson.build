@@ -30,6 +30,8 @@ cgltf_dep = dependency('cgltf')
 
 cglm_dep = dependency('cglm')
 
+vec_dep = dependency('vec')
+
 
 subdir('Application/Window')
 subdir('Application/Vulkan')
@@ -48,7 +50,9 @@ srcfiles = files('src/main.c',
             'Application/World/modules/transform_module.c',
             'Application/World/modules/script_module.c',
             'Application/World/modules/physics_module.c',
-            'Application/AssetLoader/AssetLoader.c',
+            'Application/World/modules/geometry_module.c',
+            'Application/Asset/AssetLoader.c',
+            'Application/Asset/AssetStore.c',
             )
 
 
@@ -64,6 +68,7 @@ evol_exe = executable( 'evol', srcfiles,
     flecs_dep,
     cgltf_dep,
     cglm_dep,
+    vec_dep,
     # debug
     flecs_meta_dep,
     flecs_dash_dep,

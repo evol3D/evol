@@ -74,6 +74,7 @@ static int start(void)
   /* { */
   /*     Scratchpad.execute(); */
   /* } */
+  AssetStore.init();
   AssetLoader.init();
 
   {
@@ -147,6 +148,7 @@ static int destroy(void)
 
   { // Terminating modules
     AssetLoader.deinit();
+    AssetStore.deinit();
     Physics.deinit();
     Input.deinit();
     Renderer.deinit();

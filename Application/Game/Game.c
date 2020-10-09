@@ -28,6 +28,10 @@ struct ev_Game_Data {
 
 static int ev_game_init()
 {
+  World.newScene();
+
+  AssetLoader.loadGLTF("CesiumMilkTruck.gltf");
+
   ImportModule(TransformModule);
   ImportModule(PhysicsModule);
 
@@ -57,8 +61,6 @@ static int ev_game_init()
         .mass = 0,
         .collisionShape = Physics.createBox(20, 1, 20),
       });
-
-  AssetLoader.loadGLTF("CesiumMilkTruck.gltf");
 
   return 0;
 }
@@ -98,7 +100,7 @@ void spawn()
   unsigned int spawnrate = 50;
   double new;
 
-  int spawned = 0;
+  /* int spawned = 0; */
 
   while(!App.closeSystem)
   {
@@ -108,7 +110,7 @@ void spawn()
 
     if(remainingTime <= 0)
     {
-      ecs_lock(World.instance);
+      World.lockSceneAccess();
       Entity sphere = CreateEntity();
       Entity_SetComponent(sphere, EcsName, {"sphere_1"});
       Entity_SetComponent(sphere,
@@ -122,7 +124,7 @@ void spawn()
             .mass = 1,
             .collisionShape = Physics.createSphere(3),
           });
-      ecs_unlock(World.instance);
+      World.unlockSceneAccess();
       old = new;
       // ev_log_info("Spheres spawned: %d", spawned++);
     }
