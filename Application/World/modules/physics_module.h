@@ -2,6 +2,7 @@
 #define WORLD_PHYSICS_MODULE_H
 
 #include "flecs.h"
+#include <flecs_meta.h>
 #include "types.h"
 #include "physics_types.h"
 
@@ -17,11 +18,35 @@ typedef struct
 
 } RigidBodyComponent;
 
-typedef struct
+ECS_UNUSED
+static EcsMetaType __RigidBodyComponent__ = {
+    .kind = EcsStructType,
+    .size = sizeof(RigidBodyComponent),
+    .alignment = ECS_ALIGNOF(RigidBodyComponent),
+    .descriptor = 
+      "{"
+      "float linearVelocity_x; float linearVelocity_y; float linearVelocity_z; float linearVelocity_w;"
+      "float angularVelocity_x; float angularVelocity_y; float angularVelocity_z; float angularVelocity_w;"
+      "float mass; float restitution;"
+      "uint64_t collisionShape;"
+      "}"
+      ,
+    .alias = NULL
+};
+
+typedef struct RigidBodyHandleComponent
 {
   RigidBodyHandle handle;
 } RigidBodyHandleComponent;
 
+ECS_UNUSED
+static EcsMetaType __RigidBodyHandleComponent__ = {
+    .kind = EcsStructType,
+    .size = sizeof(RigidBodyHandleComponent),
+    .alignment = ECS_ALIGNOF(RigidBodyHandleComponent),
+    .descriptor = "{uint64_t handle;}",
+    .alias = NULL
+};
 
 typedef struct
 {

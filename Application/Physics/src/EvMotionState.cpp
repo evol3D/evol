@@ -2,8 +2,8 @@
 
 void EvMotionState::getWorldTransform(btTransform & centerOfMassWorldTrans) const
 {
-  const ev_Vector3 *ev_PositionVector = entity_get_position(entt_id);
-  const ev_Vector3 *ev_RotationVector = entity_get_rotation(entt_id);
+  const ev_Vector4 *ev_PositionVector = entity_get_position(entt_id);
+  const ev_Vector4 *ev_RotationVector = entity_get_rotation(entt_id);
 
   if(ev_PositionVector)
   {
@@ -11,13 +11,14 @@ void EvMotionState::getWorldTransform(btTransform & centerOfMassWorldTrans) cons
   }
   if(ev_RotationVector)
   {
-    btQuaternion rot;
-    rot.setEulerZYX(
-        ANG2RAD(ev_RotationVector->z),
-        ANG2RAD(ev_RotationVector->y),
-        ANG2RAD(ev_RotationVector->x)
-        );
-    centerOfMassWorldTrans.setRotation(rot);
+    centerOfMassWorldTrans.setRotation(
+      btQuaternion(
+        ev_RotationVector->x,
+        ev_RotationVector->y,
+        ev_RotationVector->z,
+        ev_RotationVector->w
+      )
+    );
   }
 }
 
@@ -35,14 +36,12 @@ void EvMotionState::setWorldTransform(const btTransform & centerOfMassWorldTrans
   }
   if(ev_RotationVector)
   {
-    btScalar x, y, z;
-    centerOfMassWorldTrans.getRotation().getEulerZYX(
-        z,
-        y,
-        x
-    );
-    ev_RotationVector->x = RAD2ANG(x);
-    ev_RotationVector->y = RAD2ANG(y);
-    ev_RotationVector->z = RAD2ANG(z);
+    btQuaternion rot_quat = centerOfMassWorldTrans.getRotation();
+    *ev_RotationVector = {
+      rot_quat.x(),
+      rot_quat.y(),
+      rot_quat.z(),
+      rot_quat.w()
+    };
   }
 }

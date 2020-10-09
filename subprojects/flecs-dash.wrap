@@ -1,0 +1,6 @@
+[wrap-git]
+directory = flecs-dash
+url = https://github.com/flecs-hub/flecs-dash.git
+revision = head
+
+patch_directory = flecs-dash

@@ -74,6 +74,8 @@ static int start(void)
   /* { */
   /*     Scratchpad.execute(); */
   /* } */
+  AssetStore.init();
+  AssetLoader.init();
 
   {
       Game.init();
@@ -113,6 +115,8 @@ static int game_loop()
 
   while(!Window.shouldClose())
   {
+
+
     double time = Window.getTime();
     double timeStep = time - App.lastWindowPollTime;
     double remainingTime = (1.f/(double)App.windowPollRate) - timeStep;
@@ -143,6 +147,8 @@ static int destroy(void)
   }
 
   { // Terminating modules
+    AssetLoader.deinit();
+    AssetStore.deinit();
     Physics.deinit();
     Input.deinit();
     Renderer.deinit();

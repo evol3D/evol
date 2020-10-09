@@ -656,7 +656,7 @@ VkShaderModule ev_vulkan_load_shader(const char* shaderPath)
   VkShaderModuleCreateInfo shaderModuleCreateInfo = {
     .sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO,
     .codeSize = length,
-    .pCode = shaderCode,
+    .pCode = (const unsigned int *)shaderCode,
   };
 
   VkShaderModule shaderModule;

@@ -24,22 +24,42 @@ struct ev_Game_Data {
   int placeholder;
 } GameData;
 
+#include "flecs.h"
+
 static int ev_game_init()
 {
+  World.newScene();
+
+  AssetLoader.loadGLTF("CesiumMilkTruck.gltf");
+
   ImportModule(TransformModule);
   ImportModule(PhysicsModule);
 
-  Entity sphere = CreateEntity();
-  Entity_SetComponent(sphere, 
+  CreateNamedEntity(sphere);
+
+  Entity_SetComponent(sphere,
       TransformComponent, {
-        .position = {0, -15, 0},
-        .rotation = {0, 45, 0},
+        .position = {0, 25, -45},
+        .rotation = {0, 0.383, 0, 0.924},
         .scale    = {1, 1, 1},
       });
   Entity_SetComponent(sphere,
       RigidBodyComponent, {
+        .mass = 1,
+        .collisionShape = Physics.createSphere(3),
+      });
+
+  Entity ground = CreateEntity();
+  Entity_SetComponent(ground, 
+      TransformComponent, {
+        .position = {0, -15, -30},
+        .rotation = {0.146, 0.354, 0.354, 0.854},
+        .scale    = {1, 1, 1},
+      });
+  Entity_SetComponent(ground,
+      RigidBodyComponent, {
         .mass = 0,
-        .collisionShape = Physics.createBox(60, 1, 60),
+        .collisionShape = Physics.createBox(20, 1, 20),
       });
 
   return 0;
@@ -56,6 +76,7 @@ void ev_game_loop_physics(real dt)
 
 
   Physics.step_dt(dt);
+  World.progress();
   // ev_log_info("Physics Step. dt = %f", dt);
   /* ev_log_info("Iterations: %u", ++iterations); */
 
@@ -79,7 +100,7 @@ void spawn()
   unsigned int spawnrate = 50;
   double new;
 
-  int spawned = 0;
+  /* int spawned = 0; */
 
   while(!App.closeSystem)
   {
@@ -89,11 +110,13 @@ void spawn()
 
     if(remainingTime <= 0)
     {
+      World.lockSceneAccess();
       Entity sphere = CreateEntity();
+      Entity_SetComponent(sphere, EcsName, {"sphere_1"});
       Entity_SetComponent(sphere,
           TransformComponent, {
             .position = {0, 25, -20},
-            .rotation = {0, 45, 0},
+            .rotation = {0.146, 0.354, 0.354, 0.854},
             .scale    = {1, 1, 1},
           });
       Entity_SetComponent(sphere,
@@ -101,6 +124,7 @@ void spawn()
             .mass = 1,
             .collisionShape = Physics.createSphere(3),
           });
+      World.unlockSceneAccess();
       old = new;
       // ev_log_info("Spheres spawned: %d", spawned++);
     }
@@ -110,8 +134,8 @@ void spawn()
 
 static void ev_game_loop()
 {
-  pthread_t spawn_thread;
-  pthread_create(&spawn_thread, NULL, (void*)spawn, NULL);
+  /* pthread_t spawn_thread; */
+  /* pthread_create(&spawn_thread, NULL, (void*)spawn, NULL); */
   double old = Window.getTime();
   unsigned int physics_steprate = 60;
   double new;

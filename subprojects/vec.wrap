@@ -1,0 +1,6 @@
+[wrap-git]
+directory = vec
+url = https://github.com/rxi/vec
+revision = head
+
+patch_directory = vec
