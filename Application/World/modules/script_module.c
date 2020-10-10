@@ -1,3 +1,4 @@
+//TODO Comments / Logging
 #include "script_module.h"
 
 void RunOnUpdate(ecs_iter_t *it)

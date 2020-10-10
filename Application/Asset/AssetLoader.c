@@ -1,3 +1,4 @@
+//TODO Comments / Logging
 #include "AssetLoader.h"
 #include "AssetStore.h"
 #include <World/World.h>
@@ -5,6 +6,8 @@
 #include <World/modules/transform_module.h>
 #include <World/modules/geometry_module.h>
 #include <World/modules/physics_module.h>
+
+#include <ev_log/ev_log.h>
 
 #include <assert.h>
 
@@ -24,21 +27,16 @@ struct ev_AssetLoader AssetLoader = {
 
 
 struct ev_AssetLoader_Data {
-  cgltf_data *gltfScene;
+  unsigned int dummy;
 } AssetLoaderData;
 
 static int ev_assetloader_init()
 {
-  AssetLoaderData.gltfScene = 0;
-
   return 0;
 }
 
 static int ev_assetloader_deinit()
 {
-  if(AssetLoaderData.gltfScene)
-    cgltf_free(AssetLoaderData.gltfScene);
-
   return 0;
 }
 
@@ -79,6 +77,7 @@ static void ev_assetloader_load_gltf_node(cgltf_node curr_node, Entity parent)
         MeshComponent* meshComp = Entity_GetComponent_mut(curr, MeshComponent);
         meshComp->primitives_count = curr_node.mesh->primitives_count;
         meshComp->primitives = (MeshPrimitive*)malloc(meshComp->primitives_count * sizeof(MeshPrimitive));
+        ev_log_debug("Malloc'ed %u bytes", meshComp->primitives_count * sizeof(MeshPrimitive));
 
         for(int primitive_idx = 0; primitive_idx < meshComp->primitives_count; primitive_idx++)
         {
@@ -130,25 +129,25 @@ static void ev_assetloader_load_gltf_node(cgltf_node curr_node, Entity parent)
 
 static int ev_assetloader_load_gltf(const char *path)
 {
-
   cgltf_options options = {0};
-  AssetLoaderData.gltfScene = NULL;
-  cgltf_result result = cgltf_parse_file(&options, path, &AssetLoaderData.gltfScene);
+  cgltf_data *data = NULL;
+  cgltf_result result = cgltf_parse_file(&options, path, &data);
   assert(result == cgltf_result_success);
 
-  for(unsigned int buffer_idx = 0; buffer_idx < AssetLoaderData.gltfScene->buffers_count; buffer_idx++)
+  for(unsigned int buffer_idx = 0; buffer_idx < data->buffers_count; buffer_idx++)
   {
-    AssetStore.loadBuffer(AssetLoaderData.gltfScene->buffers[buffer_idx].uri);
-    printf("got here\n");
+    AssetStore.loadBuffer(data->buffers[buffer_idx].uri);
   }
 
-  for(unsigned int node_idx = 0; node_idx < AssetLoaderData.gltfScene->nodes_count; ++node_idx)
+  for(unsigned int node_idx = 0; node_idx < data->nodes_count; ++node_idx)
   {
-    cgltf_node curr_node = AssetLoaderData.gltfScene->nodes[node_idx];
+    cgltf_node curr_node = data->nodes[node_idx];
     if(curr_node.parent) continue;
 
     ev_assetloader_load_gltf_node(curr_node, 0);
   }
+
+  cgltf_free(data);
 
   return 0;
 }

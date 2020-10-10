@@ -1,3 +1,4 @@
+//TODO Comments / Logging
 #include "physics_module.h"
 #include "transform_module.h"
 
@@ -62,7 +63,7 @@ void PhysicsModuleImport(ecs_world_t *world)
   ECS_TRIGGER(world, AddRigidBody, EcsOnAdd, RigidBodyComponent);
   ECS_TRIGGER(world, RemoveRigidBody, EcsOnRemove, RigidBodyComponent);
 
-  ECS_SYSTEM(world, SetRigidBody, EcsOnSet, RigidBodyComponent, RigidBodyHandleComponent, TransformComponent);
+  ECS_SYSTEM(world, SetRigidBody, EcsOnSet, RigidBodyComponent, RigidBodyHandleComponent, transform.module.TransformComponent);
 
   ECS_IMPORT(world, FlecsMeta);
 

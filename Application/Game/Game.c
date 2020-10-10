@@ -1,3 +1,4 @@
+//TODO Comments / Logging
 #include "Game.h"
 #include "Physics.h"
 #include "World/World.h"
@@ -32,35 +33,35 @@ static int ev_game_init()
 
   AssetLoader.loadGLTF("CesiumMilkTruck.gltf");
 
-  ImportModule(TransformModule);
-  ImportModule(PhysicsModule);
+  /* ImportModule(TransformModule); */
+  /* ImportModule(PhysicsModule); */
 
-  CreateNamedEntity(sphere);
+  /* CreateNamedEntity(sphere); */
 
-  Entity_SetComponent(sphere,
-      TransformComponent, {
-        .position = {0, 25, -45},
-        .rotation = {0, 0.383, 0, 0.924},
-        .scale    = {1, 1, 1},
-      });
-  Entity_SetComponent(sphere,
-      RigidBodyComponent, {
-        .mass = 1,
-        .collisionShape = Physics.createSphere(3),
-      });
+  /* Entity_SetComponent(sphere, */
+  /*     TransformComponent, { */
+  /*       .position = {0, 25, -45}, */
+  /*       .rotation = {0, 0.383, 0, 0.924}, */
+  /*       .scale    = {1, 1, 1}, */
+  /*     }); */
+  /* Entity_SetComponent(sphere, */
+  /*     RigidBodyComponent, { */
+  /*       .mass = 1, */
+  /*       .collisionShape = Physics.createSphere(3), */
+  /*     }); */
 
-  Entity ground = CreateEntity();
-  Entity_SetComponent(ground, 
-      TransformComponent, {
-        .position = {0, -15, -30},
-        .rotation = {0.146, 0.354, 0.354, 0.854},
-        .scale    = {1, 1, 1},
-      });
-  Entity_SetComponent(ground,
-      RigidBodyComponent, {
-        .mass = 0,
-        .collisionShape = Physics.createBox(20, 1, 20),
-      });
+  /* Entity ground = CreateEntity(); */
+  /* Entity_SetComponent(ground, */ 
+  /*     TransformComponent, { */
+  /*       .position = {0, -15, -30}, */
+  /*       .rotation = {0.146, 0.354, 0.354, 0.854}, */
+  /*       .scale    = {1, 1, 1}, */
+  /*     }); */
+  /* Entity_SetComponent(ground, */
+  /*     RigidBodyComponent, { */
+  /*       .mass = 0, */
+  /*       .collisionShape = Physics.createBox(20, 1, 20), */
+  /*     }); */
 
   return 0;
 }

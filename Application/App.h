@@ -2,19 +2,24 @@
 #define EVOL_APP_H
 
 #include "Window/Window.h"
-#include "ev_log/ev_log.h"
-#include "EventSystem.h"
-#include "EventDebug/EventDebug.h"
-#include "World/World.h"
-#include "Scratchpad/Scratchpad.h"
 #include "Input/Input.h"
-#include "Game/Game.h"
+
 #include "Physics/Physics.h"
+
 #include "Vulkan/Vulkan.h"
 #include "Renderer/Renderer.h"
-#include "Asset/AssetLoader.h"
-#include "Asset/AssetStore.h"
+
+#include "World/World.h"
+#include "Game/Game.h"
+
+#include "Asset/Asset.h"
 #include "evolpthreads.h"
+#include "ev_log/ev_log.h"
+
+#include "EventSystem.h"
+#ifdef DEBUG
+# include "EventDebug/EventDebug.h"
+#endif
 
 extern struct ev_app_struct{
     const char *name;

@@ -1,7 +1,9 @@
+//TODO Comments / Logging
 #include "AssetStore.h"
 #include "stdio.h"
 #include <vec.h>
 #include <string.h>
+#include <ev_log/ev_log.h>
 
 static int ev_assetstore_init();
 static int ev_assetstore_deinit();
@@ -53,11 +55,13 @@ static unsigned int ev_assetstore_loadbuffer(const char* uri)
   fseek(file, 0, SEEK_SET);
 
   newBuffer.data = malloc(newBuffer.size);
+  ev_log_debug("Malloc'ed %u bytes", newBuffer.size);
 
   fread(newBuffer.data, 1, newBuffer.size, file);
   fclose(file);
 
   newBuffer.uri = malloc(strlen(uri) + 1);
+  ev_log_debug("Malloc'ed %u bytes", strlen(uri) + 1);
   strcpy(newBuffer.uri, uri);
 
   unsigned int idx = AssetStoreData.buffers.length;

@@ -3,7 +3,7 @@
 
 #include "flecs.h"
 #include "flecs_meta.h"
-#include "Asset/AssetLoader.h"
+#include "Asset/Asset.h"
 
 typedef struct
 {

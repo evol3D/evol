@@ -1,3 +1,4 @@
+//TODO Comments / Logging
 #include "App.h"
 #include <utils.h>
 
@@ -36,9 +37,9 @@ static int start(void)
     EventSystem.init();
   }
 
-  {
+#ifdef DEBUG
     EventDebug.init();
-  }
+#endif
 
   { // Window Initialization
     Window.init();
@@ -67,18 +68,17 @@ static int start(void)
     World.init();
   }
 
-  {
-    // Scripting initialization
+  /* { */
+  /*   // Scripting initialization */
+  /* } */
+
+  { // Asset system initialization
+    AssetStore.init();
+    AssetLoader.init();
   }
 
-  /* { */
-  /*     Scratchpad.execute(); */
-  /* } */
-  AssetStore.init();
-  AssetLoader.init();
-
   {
-      Game.init();
+    Game.init();
   }
 
   return game_loop();
@@ -147,15 +147,24 @@ static int destroy(void)
   }
 
   { // Terminating modules
+
+    Physics.deinit();
+
     AssetLoader.deinit();
     AssetStore.deinit();
-    Physics.deinit();
-    Input.deinit();
+
     Renderer.deinit();
     Vulkan.deinit();
+
+    Input.deinit();
     Window.deinit();
+
     World.deinit();
+
+#ifdef DEBUG
     EventDebug.deinit();
+#endif
+
     EventSystem.deinit();
   }
   return 0;

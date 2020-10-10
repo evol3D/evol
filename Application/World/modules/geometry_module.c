@@ -1,3 +1,4 @@
+//TODO Comments / Logging
 #include "geometry_module.h"
 
 void GeometryModuleImport(ecs_world_t *world)

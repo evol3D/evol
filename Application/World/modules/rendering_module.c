@@ -1,3 +1,4 @@
+//TODO Comments / Logging
 #include "rendering_module.h"
 
 void RenderingModuleImport(ecs_world_t *world)

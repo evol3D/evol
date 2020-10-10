@@ -1,7 +1,9 @@
+//TODO Comments / Logging
 // Evol's Vulkan module header
 #include "Vulkan.h"
 #include "Window.h"
 #include "vulkan_utils.h"
+#include <ev_log/ev_log.h>
 
 #include "stdio.h"
 #include "stdlib.h"
@@ -25,6 +27,7 @@ void ev_vulkan_create_swapchain_imageviews();
 void ev_vulkan_create_swapchain_depthbuffer();
 void ev_vulkan_create_swapchain_framebuffers();
 void ev_vulkan_allocate_swapchain_commandbuffers();
+void ev_vulkan_create_semaphores();
 void ev_vulkan_destroy_swapchain();
 
 void ev_vulkan_create_image(VkImageCreateInfo *imageCreateInfo, VmaAllocationCreateInfo *allocationCreateInfo, EvImage *image);
@@ -39,7 +42,7 @@ void ev_vulkan_unload_shader(VkShaderModule shader);
 void ev_vulkan_start_new_frame(void);
 void ev_vulkan_end_frame(void);
 
-void ev_vulkan_image_memory_erier(VkImage image, VkImageLayout oldLayout, VkImageLayout newLayout, 
+void ev_vulkan_image_memory_barrier(VkImage image, VkImageLayout oldLayout, VkImageLayout newLayout, 
   VkAccessFlags srcAccessMask, VkAccessFlags dstAccessMask, VkPipelineStageFlags srcStageMask, 
   VkPipelineStageFlags dstStageMask, VkDependencyFlags dependencyFlags);
 
@@ -217,6 +220,8 @@ void ev_vulkan_detect_physical_device()
     assert(!"No physical devices found");
 
 	VkPhysicalDevice *physicalDevices = malloc(physicalDeviceCount * sizeof(VkPhysicalDevice));
+  ev_log_debug("Malloc'ed %u bytes", physicalDeviceCount * sizeof(VkPhysicalDevice));
+  ev_log_debug("Malloc'ed %u bytes\n", physicalDeviceCount * sizeof(VkPhysicalDevice));
 	vkEnumeratePhysicalDevices( VulkanData.instance, &physicalDeviceCount, physicalDevices);
 
   VulkanData.physicalDevice = physicalDevices[0];
@@ -269,6 +274,7 @@ void ev_vulkan_detect_queue_family_indices()
 	uint32_t queueFamilyPropertiesCount = 0;
 	vkGetPhysicalDeviceQueueFamilyProperties(VulkanData.physicalDevice, &queueFamilyPropertiesCount, NULL);
 	VkQueueFamilyProperties *queueFamilyProperties = malloc(sizeof(VkQueueFamilyProperties) * queueFamilyPropertiesCount);
+  ev_log_debug("Malloc'ed %u bytes\n",queueFamilyPropertiesCount * sizeof(VkQueueFamilyProperties));
 	vkGetPhysicalDeviceQueueFamilyProperties(VulkanData.physicalDevice, &queueFamilyPropertiesCount, queueFamilyProperties);
 
 	for (int i = 0; i < queueFamilyPropertiesCount; ++i)
@@ -364,6 +370,7 @@ void ev_vulkan_create_swapchain(unsigned int *imageCount)
 
   vkGetSwapchainImagesKHR(VulkanData.logicalDevice, VulkanData.swapchain, &VulkanData.swapchainImageCount, NULL);
   VulkanData.swapchainImages = malloc(sizeof(VkImage) * VulkanData.swapchainImageCount);
+  ev_log_debug("Malloc'ed %u bytes", sizeof(VkImage) * VulkanData.swapchainImageCount);
   vkGetSwapchainImagesKHR(VulkanData.logicalDevice, VulkanData.swapchain, &VulkanData.swapchainImageCount, VulkanData.swapchainImages);
 
   ev_vulkan_create_swapchain_imageviews();
@@ -384,6 +391,7 @@ void ev_vulkan_create_semaphores()
 void ev_vulkan_create_swapchain_imageviews()
 {
   VulkanData.swapchainImageViews = malloc(sizeof(VkImageView) * (VulkanData.swapchainImageCount));
+  ev_log_debug("Malloc'ed %u bytes", sizeof(VkImageView) * (VulkanData.swapchainImageCount));
 	for (unsigned int i = 0; i < VulkanData.swapchainImageCount; ++i)
 	{
 		VkImageViewCreateInfo imageViewCreateInfo = {
@@ -455,6 +463,7 @@ void ev_vulkan_create_swapchain_depthbuffer()
 void ev_vulkan_create_swapchain_framebuffers()
 {
   VulkanData.framebuffers = malloc(sizeof(VkFramebuffer) * VulkanData.swapchainImageCount);
+  ev_log_debug("Malloc'ed %u bytes", sizeof(VkFramebuffer) * VulkanData.swapchainImageCount);
 
   unsigned int windowWidth, windowHeight;
   Window.getSize(&windowWidth, &windowHeight);
@@ -485,6 +494,7 @@ void ev_vulkan_allocate_swapchain_commandbuffers()
   VkCommandPool gPool = Vulkan.getCommandPool(GRAPHICS);
 
   VulkanData.swapchainCommandBuffers = malloc(sizeof(VkCommandBuffer) * VulkanData.swapchainImageCount);
+  ev_log_debug("Malloc'ed %u bytes", sizeof(VkCommandBuffer) * VulkanData.swapchainImageCount);
 
   VkCommandBufferAllocateInfo commandBuffersAllocateInfo =
   {
@@ -650,6 +660,8 @@ VkShaderModule ev_vulkan_load_shader(const char* shaderPath)
   fseek(file, 0, SEEK_SET);
 
   char *shaderCode = malloc(length);
+  ev_log_debug("Malloc'ed %u bytes", sizeof(char) * length);
+
   fread(shaderCode, 1, length, file);
   fclose(file);
 
@@ -663,6 +675,7 @@ VkShaderModule ev_vulkan_load_shader(const char* shaderPath)
   VK_ASSERT(vkCreateShaderModule(VulkanData.logicalDevice, &shaderModuleCreateInfo, NULL, &shaderModule));
 
   free(shaderCode);
+  ev_log_debug("Free'ed %u bytes", sizeof(char) * length);
   return shaderModule;
 }
 

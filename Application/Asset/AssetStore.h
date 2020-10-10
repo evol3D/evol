@@ -1,6 +1,8 @@
 #ifndef EVOL_ASSET_STORE_H
 #define EVOL_ASSET_STORE_H
 
+#include "AssetTypes.h"
+
 extern struct ev_AssetStore {
     int (*init)();
     int (*deinit)();
@@ -8,11 +10,4 @@ extern struct ev_AssetStore {
     unsigned int (*getBufferIndex)(const char*);
 } AssetStore;
 
-typedef struct Buffer
-{
-  void *data;
-  unsigned int size;
-  char *uri;
-} Buffer;
-
-#endif //EVOL_ASSET_LOADER_H
+#endif //EVOL_ASSET_STORE_H
