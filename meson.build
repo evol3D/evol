@@ -52,7 +52,6 @@ srcfiles = files('src/main.c',
             'Application/World/modules/physics_module.c',
             'Application/World/modules/geometry_module.c',
             'Application/Asset/AssetLoader.c',
-            'Application/Asset/AssetStore.c',
             )
 
 

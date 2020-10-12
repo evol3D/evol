@@ -9,6 +9,5 @@
 
 // Submodules
 #include "AssetLoader.h"
-#include "AssetStore.h"
 
 #endif //EVOL_ASSET_H

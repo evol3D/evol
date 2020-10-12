@@ -87,9 +87,6 @@ static int start(void)
   /* } */
 
   { // Asset system initialization
-    ev_log_debug("Initializing AssetStore");
-    AssetStore.init();
-    ev_log_debug("Initialized AssetStore");
     ev_log_debug("Initializing AssetLoader");
     AssetLoader.init();
     ev_log_debug("Initialized AssetLoader");
@@ -169,7 +166,6 @@ static int destroy(void)
     Physics.deinit();
 
     AssetLoader.deinit();
-    AssetStore.deinit();
 
     Renderer.deinit();
     Vulkan.deinit();
