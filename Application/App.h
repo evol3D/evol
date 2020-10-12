@@ -26,14 +26,13 @@ extern struct ev_app_struct{
     bool closeSystem;
     pthread_t eventsystem_thread;
     pthread_t gameloop_thread;
-    int (*start)();
+    int (*start)(int argc, char** argv);
     int (*destroy)();
     double lastFrameTime;
-    double lastWindowPollTime;
-    double lastEventSystemUpdate;
     unsigned int framerate;
     unsigned int windowPollRate;
     unsigned int eventSystemUpdateRate;
+    FILE *logs;
 } App;
 
 #endif //EVOL_APP_H

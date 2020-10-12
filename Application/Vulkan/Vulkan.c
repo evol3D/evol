@@ -221,7 +221,7 @@ void ev_vulkan_detect_physical_device()
 
 	VkPhysicalDevice *physicalDevices = malloc(physicalDeviceCount * sizeof(VkPhysicalDevice));
   ev_log_debug("Malloc'ed %u bytes", physicalDeviceCount * sizeof(VkPhysicalDevice));
-  ev_log_debug("Malloc'ed %u bytes\n", physicalDeviceCount * sizeof(VkPhysicalDevice));
+  ev_log_debug("Malloc'ed %u bytes", physicalDeviceCount * sizeof(VkPhysicalDevice));
 	vkEnumeratePhysicalDevices( VulkanData.instance, &physicalDeviceCount, physicalDevices);
 
   VulkanData.physicalDevice = physicalDevices[0];
@@ -274,9 +274,15 @@ void ev_vulkan_detect_queue_family_indices()
 	uint32_t queueFamilyPropertiesCount = 0;
 	vkGetPhysicalDeviceQueueFamilyProperties(VulkanData.physicalDevice, &queueFamilyPropertiesCount, NULL);
 	VkQueueFamilyProperties *queueFamilyProperties = malloc(sizeof(VkQueueFamilyProperties) * queueFamilyPropertiesCount);
-  ev_log_debug("Malloc'ed %u bytes\n",queueFamilyPropertiesCount * sizeof(VkQueueFamilyProperties));
+  ev_log_debug("Malloc'ed %u bytes",queueFamilyPropertiesCount * sizeof(VkQueueFamilyProperties));
 	vkGetPhysicalDeviceQueueFamilyProperties(VulkanData.physicalDevice, &queueFamilyPropertiesCount, queueFamilyProperties);
 
+	for (int i = 0; i < queueFamilyPropertiesCount; ++i)
+  {
+    printf("Queue Family index: %d\n", i);
+    printf("Queue Family Flags: %d\n", queueFamilyProperties[i].queueFlags);
+    printf("Queue Family queue count: %d\n", queueFamilyProperties[i].queueCount);
+  }
 	for (int i = 0; i < queueFamilyPropertiesCount; ++i)
 	{
 		if (queueFamilyProperties[i].queueFlags & (VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT | VK_QUEUE_TRANSFER_BIT | VK_QUEUE_SPARSE_BINDING_BIT))

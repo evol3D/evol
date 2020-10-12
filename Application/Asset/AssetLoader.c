@@ -47,9 +47,9 @@ static void ev_assetloader_load_gltf_node(cgltf_node curr_node, Entity parent, c
 
     Entity curr;
 
-    /* if(parent) */
-    /*   curr = Entity_AddChild(parent); */
-    /* else */
+    if(parent)
+      curr = Entity_AddChild(parent);
+    else
       curr = CreateEntity();
 
 #ifdef DEBUG
@@ -82,18 +82,21 @@ static void ev_assetloader_load_gltf_node(cgltf_node curr_node, Entity parent, c
     }
 
     // Pseudo-physics
+    // TODO: Currently, collision shapes are pure convex hulls around objects.
+    // Support should be added for CompoundShapes, PrimitiveShapes, and
+    // TriangleMeshes for static objects.
     if(curr_node.mesh)
     {
-      MeshComponent *meshComponent = Entity_GetComponent(curr, MeshComponent);
+      const MeshComponent *meshComponent = Entity_GetComponent(curr, MeshComponent);
       Entity_SetComponent(curr, RigidBodyComponent, {
         .mass = 0,
         .collisionShape =
           Physics.createStaticFromTriangleIndexVertex(
             meshComponent->primitives->indexCount / 3,
-            meshComponent->primitives->indexBuffer,
+            (int*) meshComponent->primitives->indexBuffer,
             sizeof(unsigned int), 
             meshComponent->primitives->vertexCount,
-            meshComponent->primitives->positionBuffer,
+            (real*)meshComponent->primitives->positionBuffer,
             sizeof(ev_Vector3)
           ),
       });
@@ -115,9 +118,9 @@ static int ev_assetloader_load_gltf(const char *path)
   cgltf_load_buffers(&options, data, path);
   assert(result == cgltf_result_success);
 
+  // Component Module Imports
   ImportModule(GeometryModule);
 
-  // TODO: add a BaseEntity tag so that it's ignored in systems
   Entity mesh_entities[data->meshes_count];
   for(unsigned int mesh_idx = 0; mesh_idx < data->meshes_count; ++mesh_idx)
   {
@@ -208,6 +211,7 @@ static int ev_assetloader_load_gltf(const char *path)
   World.lockSceneAccess();
   for(unsigned int node_idx = 0; node_idx < data->nodes_count; ++node_idx)
   {
+    // We're only loading root nodes. All children are then loaded recursively.
     cgltf_node curr_node = data->nodes[node_idx];
     if(curr_node.parent) continue;
 
