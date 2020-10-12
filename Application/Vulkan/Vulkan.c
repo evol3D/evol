@@ -730,7 +730,7 @@ void ev_vulkan_start_new_frame(void)
 			  .color = {0.33f, 0.22f, 0.37f, 1.f},
 		  },
 	  	{
-		  	.depthStencil = {1.0f, 1.0f},
+		  	.depthStencil = {1.0f, 0.0f},
 		  }
 	  };
 
@@ -801,9 +801,6 @@ void ev_vulkan_end_frame(void)
   presentInfo.pWaitSemaphores = &VulkanData.signalSemaphore;
 
   VK_ASSERT(vkQueuePresentKHR(VulkanData.queues[GRAPHICS], &presentInfo));
-
-
-
 
   //assert(!"Not implemented");
 }

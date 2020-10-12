@@ -13,6 +13,8 @@ enum {EV_LOG_TRACE, EV_LOG_DEBUG, EV_LOG_INFO, EV_LOG_WARN, EV_LOG_ERROR, EV_LOG
 #define ev_log_error(...) log_log(EV_LOG_ERROR, __FILE__, __LINE__, __VA_ARGS__)
 #define ev_log_fatal(...) log_log(EV_LOG_FATAL, __FILE__, __LINE__, __VA_ARGS__)
 
+#define ev_log_setlevel(...) log_set_level(__VA_ARGS__)
+
 #else
 
 #define ev_log_trace(...)
@@ -21,6 +23,8 @@ enum {EV_LOG_TRACE, EV_LOG_DEBUG, EV_LOG_INFO, EV_LOG_WARN, EV_LOG_ERROR, EV_LOG
 #define ev_log_warn(...)
 #define ev_log_error(...)
 #define ev_log_fatal(...)
+
+#define ev_log_setlevel(...)
 
 #endif
 

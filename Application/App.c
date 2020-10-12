@@ -19,14 +19,18 @@ struct ev_app_struct App = {
   .lastEventSystemUpdate = 0,
   .framerate = 144,
   .windowPollRate = 1000,
-  .eventSystemUpdateRate = 500,
+  .eventSystemUpdateRate = 1000,
 };
 
 //TODO: Fix the need for this
 int result;
 
+FILE *logFile;
 static int start(void)
 {
+  logFile = fopen("evol.logs", "w");
+  log_add_fp(logFile, EV_LOG_TRACE);
+  /* ev_log_setlevel(EV_LOG_TRACE); */
   ev_log_info("Application Started");
 
   { // EventSystem Initialization
@@ -49,23 +53,33 @@ static int start(void)
   }
 
   {
+    ev_log_debug("Initializing Vulkan");
     Vulkan.init();
+    ev_log_debug("Initialized Vulkan");
   }
 
   {
+    ev_log_debug("Initializing Renderer");
     Renderer.init();
+    ev_log_debug("Initialized Renderer");
   }
 
   {
+    ev_log_debug("Initializing Input");
     Input.init();
+    ev_log_debug("Initialized Input");
   }
 
   {
+    ev_log_debug("Initializing Physics");
     Physics.init();
+    ev_log_debug("Initialized Physics");
   }
 
   {
+    ev_log_debug("Initializing World");
     World.init();
+    ev_log_debug("Initialized World");
   }
 
   /* { */
@@ -73,17 +87,23 @@ static int start(void)
   /* } */
 
   { // Asset system initialization
+    ev_log_debug("Initializing AssetStore");
     AssetStore.init();
+    ev_log_debug("Initialized AssetStore");
+    ev_log_debug("Initializing AssetLoader");
     AssetLoader.init();
+    ev_log_debug("Initialized AssetLoader");
   }
 
   {
+    ev_log_debug("Initializing Game");
     Game.init();
+    ev_log_debug("Initialized Game");
   }
 
+  ev_log_debug("Starting the game loop");
   return game_loop();
 }
-
 
 static void* event_system_loop()
 {
@@ -115,8 +135,6 @@ static int game_loop()
 
   while(!Window.shouldClose())
   {
-
-
     double time = Window.getTime();
     double timeStep = time - App.lastWindowPollTime;
     double remainingTime = (1.f/(double)App.windowPollRate) - timeStep;
@@ -167,5 +185,6 @@ static int destroy(void)
 
     EventSystem.deinit();
   }
+  fclose(logFile);
   return 0;
 }

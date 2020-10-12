@@ -2,15 +2,20 @@
 #include "Game.h"
 #include "Physics.h"
 #include "World/World.h"
+#include "flecs.h"
 #include "World/modules/transform_module.h"
 #include "World/modules/script_module.h"
 #include "World/modules/physics_module.h"
+#include "World/modules/geometry_module.h"
 
 #include "EventSystem.h"
-#include "events/KeyEvent.h"
 
 #include "utils.h"
 
+// Game Systems
+void SyncWorldToRenderer(SystemArgs *args);
+
+// API functions
 static int ev_game_init();
 static int ev_game_deinit();
 static void ev_game_loop();
@@ -25,44 +30,40 @@ struct ev_Game_Data {
   int placeholder;
 } GameData;
 
-#include "flecs.h"
+DECLARE_EVENT_HANDLER( SceneUpdatedEventHandler, (SceneUpdatedEvent *event) {
+    // TODO: Call callable system to sync renderer
+    /* ecs_run(World.getInstance(), SyncWorldToRenderer, 0, NULL); */
+});
 
 static int ev_game_init()
 {
+  ev_log_trace("Started initializing the game");
+
+  ev_log_trace("Activating event handlers");
+  ACTIVATE_EVENT_HANDLER(SceneUpdatedEventHandler, SceneUpdatedEvent);
+  ev_log_trace("Activated event handlers");
+
+  ev_log_trace("Starting a new scene");
   World.newScene();
+  ev_log_trace("New scene started");
 
-  AssetLoader.loadGLTF("CesiumMilkTruck.gltf");
+  ev_log_trace("Registering systems");
+  RegisterCallableSystem(SyncWorldToRenderer, SHARED: MeshComponent);
+  ev_log_trace("Registered systems");
 
-  /* ImportModule(TransformModule); */
-  /* ImportModule(PhysicsModule); */
+  ev_log_trace("Loading GLTF file");
+  /* AssetLoader.loadGLTF("Triangle.gltf"); */
+  /* AssetLoader.loadGLTF("Cube.gltf"); */
+  /* AssetLoader.loadGLTF("InterpolationTest.gltf"); */
+  /* AssetLoader.loadGLTF("CesiumMilkTruck.gltf"); */
+  AssetLoader.loadGLTF("Duck.gltf");
+  ev_log_trace("Loaded GLTF file");
 
-  /* CreateNamedEntity(sphere); */
+  ev_log_trace("Dispatching SceneUpdatedEvent");
+  DISPATCH_EVENT( SceneUpdatedEvent, {});
+  ev_log_trace("Dispatched SceneUpdatedEvent");
 
-  /* Entity_SetComponent(sphere, */
-  /*     TransformComponent, { */
-  /*       .position = {0, 25, -45}, */
-  /*       .rotation = {0, 0.383, 0, 0.924}, */
-  /*       .scale    = {1, 1, 1}, */
-  /*     }); */
-  /* Entity_SetComponent(sphere, */
-  /*     RigidBodyComponent, { */
-  /*       .mass = 1, */
-  /*       .collisionShape = Physics.createSphere(3), */
-  /*     }); */
-
-  /* Entity ground = CreateEntity(); */
-  /* Entity_SetComponent(ground, */ 
-  /*     TransformComponent, { */
-  /*       .position = {0, -15, -30}, */
-  /*       .rotation = {0.146, 0.354, 0.354, 0.854}, */
-  /*       .scale    = {1, 1, 1}, */
-  /*     }); */
-  /* Entity_SetComponent(ground, */
-  /*     RigidBodyComponent, { */
-  /*       .mass = 0, */
-  /*       .collisionShape = Physics.createBox(20, 1, 20), */
-  /*     }); */
-
+  ev_log_trace("Finished initializing the game");
   return 0;
 }
 
@@ -77,7 +78,6 @@ void ev_game_loop_physics(real dt)
 
 
   Physics.step_dt(dt);
-  World.progress();
   // ev_log_info("Physics Step. dt = %f", dt);
   /* ev_log_info("Iterations: %u", ++iterations); */
 
@@ -142,6 +142,7 @@ static void ev_game_loop()
   double new;
   while(!App.closeSystem)
   {
+    World.progress();
     new = Window.getTime();
     double timeStep = new - old;
     double remainingTime = (1.f/(double)physics_steprate) - timeStep;
@@ -153,8 +154,20 @@ static void ev_game_loop()
     }
     else
     {
-      sleep_ms(remainingTime * 1000);
+      /* sleep_ms(remainingTime * 1000); */
     }
   }
-  ev_log_info("Exiting game loop");
+  ev_log_debug("Exiting game loop");
 }
+
+void SyncWorldToRenderer(SystemArgs *args)
+{
+  MeshComponent *meshes = ecs_column(args, MeshComponent, 1);
+  printf("SyncWorldToRenderer\n");
+
+  for (int i = 0; i < args->count; ++i)
+  {
+    meshes[i];
+  }
+}
+

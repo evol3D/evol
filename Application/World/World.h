@@ -42,6 +42,8 @@ extern struct ev_World {
 #define RegisterSystem_PreStore(sys, ...)   ECS_SYSTEM(World.getInstance(), sys, EcsPreStore  , __VA_ARGS__)
 #define RegisterSystem_OnStore(sys, ...)    ECS_SYSTEM(World.getInstance(), sys, EcsOnStore   , __VA_ARGS__)
 
+#define RegisterCallableSystem(sys, ...)    ECS_SYSTEM(World.getInstance(), sys, 0 , __VA_ARGS__)
+
 #define CreateEntity() ecs_new(World.getInstance(), 0)
 #define CreateNamedEntity(name) ECS_ENTITY(World.getInstance(), name, 0)
 

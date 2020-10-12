@@ -4,6 +4,7 @@
 #include <vec.h>
 #include <string.h>
 #include <ev_log/ev_log.h>
+#include <types.h>
 
 static int ev_assetstore_init();
 static int ev_assetstore_deinit();
@@ -22,6 +23,16 @@ typedef vec_t(Buffer) buffer_vec_t;
 
 struct ev_AssetStore_Data {
   buffer_vec_t buffers;
+  unsigned int* indices;
+
+  ev_Vector3 ** positions;
+  unsigned int *positions_counts;
+
+  ev_Vector3 ** normals;
+  unsigned int *normals_counts;
+
+  ev_Vector2 ** uv;
+  unsigned int *uv_counts;
 } AssetStoreData;
 
 static int ev_assetstore_init()

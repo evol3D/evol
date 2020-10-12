@@ -1,5 +1,8 @@
 #include "Renderer.h"
 #include "Vulkan/Vulkan.h"
+#include "EventSystem.h"
+#include "events/events.h"
+#include "World/modules/geometry_module.h"
 
 static int ev_renderer_init();
 static int ev_renderer_deinit();
@@ -10,6 +13,7 @@ static inline void ev_renderer_load_base_shaders();
 static inline void ev_renderer_unload_base_shaders();
 
 static void ev_renderer_bind();
+
 
 #define SET_SHADER(id, path) RendererData.baseShaderPaths[id] = path;
 
@@ -53,6 +57,7 @@ struct ev_Renderer_Data {
 
 static int ev_renderer_init()
 {
+
   RendererData.bufferCount = 3;
   Vulkan.createSwapchain(&RendererData.bufferCount);
 
@@ -60,7 +65,7 @@ static int ev_renderer_init()
 
   ev_renderer_load_base_shaders();
   ev_renderer_prepare_graphics_pipelines();
-
+  
   Vulkan.startNewFrame();
   ev_renderer_bind();
   Vulkan.endFrame();
@@ -329,12 +334,17 @@ static void ev_renderer_bind()
     // VkDeviceSize offsets[] = { 0 };
     // vkCmdBindVertexBuffers(Vulkan.getCurrentFrameCommandBuffer(), 0, ARRAYSIZE(vertexBuffers), vertexBuffers, offsets);
     //TODO SUPPORT HAVING A MODEL WITH NO VERTEX BUFFER ?
-    //vkCmdBindIndexBuffer(Vulkan.getCurrentFrameCommandBuffer(), indexBuffer.buffer, 0, VK_INDEX_TYPE_UINT32);
+    /* vkCmdBindIndexBuffer(Vulkan.getCurrentFrameCommandBuffer(), indexBuffer.buffer, 0, VK_INDEX_TYPE_UINT32); */
   }
 
   //TODO DRAW LOOP HERE nad also look into supporting shaders with no indexes
   {
     //vkCmdDrawIndexed(Vulkan.getCurrentFrameCommandBuffer(), indices_counts[TYPE][i], 1, indices_offsets[TYPE][i], vertices_offsets[TYPE][i], 0);
     vkCmdDraw(Vulkan.getCurrentFrameCommandBuffer(), 3, 1, 0, 0);
+
   }
+}
+
+static void ev_renderer_update_resources(MeshComponent* meshes, unsigned int meshes_count)
+{
 }

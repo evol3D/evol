@@ -4,14 +4,17 @@
 #include "flecs.h"
 #include "flecs_meta.h"
 #include "Asset/Asset.h"
+#include "types.h"
 
 typedef struct
 {
-  BufferView positionBuffer;
-  BufferView normalBuffer;
-  BufferView indexBuffer;
+  ev_Vector3 *positionBuffer;
+  ev_Vector3 *normalBuffer;
+
+  unsigned int *indexBuffer;
 
   unsigned int indexCount;
+  unsigned int vertexCount;
 } MeshPrimitive;
 
 static EcsMetaType __MeshPrimitive__ = {
@@ -20,10 +23,11 @@ static EcsMetaType __MeshPrimitive__ = {
     .alignment = ECS_ALIGNOF(MeshPrimitive),
     .descriptor =
       "{"
-      "uint32_t positionBuffer_idx; uint32_t positionBuffer_offset; uint32_t positionBuffer_size;"
-      "uint32_t normalBuffer_idx; uint32_t normalBuffer_offset; uint32_t normalBuffer_size;"
-      "uint32_t indexBuffer_idx; uint32_t indexBuffer_offset; uint32_t indexBuffer_size;"
+      "uint64_t positionBuffer;"
+      "uint64_t normalBuffer;"
+      "uint64_t indexBuffer;"
       "uint32_t indexCount;"
+      "uint32_t vertexCount;"
       "}"
       ,
     .alias = NULL

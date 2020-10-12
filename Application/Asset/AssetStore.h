@@ -10,4 +10,5 @@ extern struct ev_AssetStore {
     unsigned int (*getBufferIndex)(const char*);
 } AssetStore;
 
+k;
 #endif //EVOL_ASSET_STORE_H

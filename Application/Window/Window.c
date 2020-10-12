@@ -95,6 +95,7 @@ static int ev_window_create_window()
 {
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
     WindowData.windowHandle = glfwCreateWindow(WindowData.width, WindowData.height, WindowData.windowTitle, NULL, NULL);
+    assert(WindowData.windowHandle);
     WindowData.created = true;
 
     ev_window_set_callbacks();

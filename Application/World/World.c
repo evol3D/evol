@@ -84,6 +84,7 @@ static int ev_world_deinit()
     ev_log_trace("World has an active scene, destroying the scene");
     //TODO: There should be a dedicated function for destroying a scene
     ecs_fini(WorldData.activeScene->instance);
+    free(WorldData.activeScene);
     ev_log_trace("Active scene destroyed");
   }
 
@@ -139,20 +140,22 @@ static int ev_world_progress()
 
 static void inline ev_world_unlocksceneaccess()
 {
-  ev_log_trace("Requesting scene access lock");
-  ecs_lock(WorldData.activeScene->instance);
-  ev_log_trace("Scene locked");
-}
-
-static void inline ev_world_locksceneaccess()
-{
   ev_log_trace("Requesting scene access unlock");
   ecs_unlock(WorldData.activeScene->instance);
   ev_log_trace("Scene unlocked");
 }
 
+static void inline ev_world_locksceneaccess()
+{
+  ev_log_trace("Requesting scene access lock");
+  ecs_lock(WorldData.activeScene->instance);
+  ev_log_trace("Scene locked");
+}
+
 static SceneInstance inline ev_world_getinstance()
 {
+  assert(WorldData.activeScene && WorldData.activeScene->instance);
+
   return WorldData.activeScene->instance;
 }
 
@@ -163,24 +166,24 @@ static SceneInstance inline ev_world_getinstance()
 # include "World/modules/geometry_module.h"
 void ev_flecs_dash_init()
 {
-  ECS_IMPORT(WorldData.activeScene->instance, FlecsMeta);
-  ECS_IMPORT(WorldData.activeScene->instance, FlecsSystemsCivetweb);
-  ECS_IMPORT(WorldData.activeScene->instance, FlecsDash);
+  ECS_IMPORT(World.getInstance(), FlecsMeta);
+  ECS_IMPORT(World.getInstance(), FlecsSystemsCivetweb);
+  ECS_IMPORT(World.getInstance(), FlecsDash);
 
-  ECS_META(WorldData.activeScene->instance, TransformComponent);
+  ECS_META(World.getInstance(), TransformComponent);
   ev_log_trace("FlecsMeta Entry: TransformComponent");
-  ECS_META(WorldData.activeScene->instance, RigidBodyComponent);
+  ECS_META(World.getInstance(), RigidBodyComponent);
   ev_log_trace("FlecsMeta Entry: RigidBodyComponent");
-  ECS_META(WorldData.activeScene->instance, RigidBodyHandleComponent);
+  ECS_META(World.getInstance(), RigidBodyHandleComponent);
   ev_log_trace("FlecsMeta Entry: RigidBodyHandleComponent");
 
-  ECS_META(WorldData.activeScene->instance, MeshPrimitive);
+  ECS_META(World.getInstance(), MeshPrimitive);
   ev_log_trace("FlecsMeta Entry: MeshPrimitive");
-  ECS_META(WorldData.activeScene->instance, MeshComponent);
+  ECS_META(World.getInstance(), MeshComponent);
   ev_log_trace("FlecsMeta Entry: MeshComponent");
 
-  short port = 8080;
-  ecs_set(WorldData.activeScene->instance, 0, EcsDashServer, {.port = port});
+  short port = 8001;
+  ecs_set(World.getInstance(), 0, EcsDashServer, {.port = port});
   ev_log_debug("Set Flecs Dashboard server to port: %d", port);
 }
 #endif
