@@ -15,6 +15,7 @@ static inline void ev_physics_set_gravity(real x, real y, real z);
 static inline RigidBodyHandle ev_physics_add_rigidbody(RigidBody *rb);
 static inline void ev_physics_remove_rigidbody(RigidBodyHandle handle);
 static inline void ev_physics_update_rigidbody(RigidBodyHandle handle, RigidBody *rb);
+static inline CollisionShape ev_physics_generateconvexhull(int vertexCount, ev_Vector3* vertices);
 
 struct ev_Physics_Data {
   PhysicsState *state;
@@ -36,6 +37,7 @@ static int ev_physics_init()
   Physics.createBox       = ev_physics_create_box;
   Physics.createSphere    = ev_physics_create_sphere;
   Physics.createStaticFromTriangleIndexVertex = ev_physics_create_mesh_from_index_vertex;
+  Physics.generateConvexHull = ev_physics_generateconvexhull;
 
   PhysicsData.state = new BulletState;
   PhysicsData.state->visualize();
@@ -93,3 +95,7 @@ static inline void ev_physics_update_rigidbody(RigidBodyHandle handle, RigidBody
   PhysicsData.state->updateRigidBody(handle, rb);
 }
 
+static inline CollisionShape ev_physics_generateconvexhull(int vertexCount, ev_Vector3* vertices)
+{
+  return PhysicsData.state->generateConvexHull(vertexCount, vertices);
+}

@@ -92,6 +92,16 @@ CollisionShape BulletState::createStaticFromTriangleIndexVertex(int numTriangles
   return mesh;
 }
 
+CollisionShape BulletState::generateConvexHull(int vertexCount, ev_Vector3* vertices)
+{
+  btCollisionShape* hull = new btConvexHullShape(reinterpret_cast<real*>(vertices), vertexCount, sizeof(ev_Vector3));
+  collision_shapes_mutex.lock();
+  collisionShapes.push_back(hull);
+  collision_shapes_mutex.unlock();
+
+  return hull;
+}
+
 
 RigidBodyHandle BulletState::addRigidBody(RigidBody *rb)
 {

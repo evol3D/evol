@@ -16,4 +16,5 @@ class PhysicsState {
     virtual CollisionShape createBox(real x, real y, real z) = 0;
     virtual CollisionShape createSphere(real r) = 0;
     virtual CollisionShape createStaticFromTriangleIndexVertex(int numTriangles, int *triangleIndexBase, int triangleIndexStride, int numVertices, real *vertexBase, int vertexStride) = 0;
+    virtual CollisionShape generateConvexHull(int vertexCount, ev_Vector3* vertices) = 0;
 };

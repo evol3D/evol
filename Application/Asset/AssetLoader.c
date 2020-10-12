@@ -78,34 +78,34 @@ static void ev_assetloader_load_gltf_node(cgltf_node curr_node, Entity parent, c
       ev_log_trace("Creating MeshComponent for entity: %s", curr_node.name);
       unsigned int mesh_idx = curr_node.mesh - data->meshes;
       ev_log_trace("Entity's mesh maps to MeshEntity #%d", mesh_idx);
-      ecs_add_entity(World.getInstance(), curr, ECS_INSTANCEOF | mesh_entities[mesh_idx]);
+      Entity_InheritComponents(curr, mesh_entities[mesh_idx]);
+      ev_log_trace("Added MeshComponent to entity: %s", curr_node.name);
     }
 
     // Pseudo-physics
     // TODO: Currently, collision shapes are pure convex hulls around objects.
     // Support should be added for CompoundShapes, PrimitiveShapes, and
     // TriangleMeshes for static objects.
+    // TODO: Not all objects that have meshes need collision shapes
     if(curr_node.mesh)
     {
       const MeshComponent *meshComponent = Entity_GetComponent(curr, MeshComponent);
       Entity_SetComponent(curr, RigidBodyComponent, {
-        .mass = 0,
+        .mass = 1,
         .collisionShape =
-          Physics.createStaticFromTriangleIndexVertex(
-            meshComponent->primitives->indexCount / 3,
-            (int*) meshComponent->primitives->indexBuffer,
-            sizeof(unsigned int), 
+          Physics.generateConvexHull(
             meshComponent->primitives->vertexCount,
-            (real*)meshComponent->primitives->positionBuffer,
-            sizeof(ev_Vector3)
+            meshComponent->primitives->positionBuffer
           ),
       });
+      ev_log_trace("Added RigidBodyComponent to entity: %s", curr_node.name);
     }
 
 
     { // Texture Component
     }
 
+    ev_log_trace("Starting to loop on children of entity: %s", curr_node.name);
     for(int child_idx = 0; child_idx < curr_node.children_count; ++child_idx)
       ev_assetloader_load_gltf_node(*curr_node.children[child_idx], curr, data, mesh_entities);
 }
