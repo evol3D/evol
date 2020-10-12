@@ -1,0 +1,6 @@
+[wrap-git]
+directory = flecs-rest
+url = https://github.com/flecs-hub/flecs-rest.git
+revision = head
+
+patch_directory = flecs-rest

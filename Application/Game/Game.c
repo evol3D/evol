@@ -1,15 +1,21 @@
+//TODO Comments / Logging
 #include "Game.h"
 #include "Physics.h"
 #include "World/World.h"
+#include "flecs.h"
 #include "World/modules/transform_module.h"
 #include "World/modules/script_module.h"
 #include "World/modules/physics_module.h"
+#include "World/modules/geometry_module.h"
 
 #include "EventSystem.h"
-#include "events/KeyEvent.h"
 
 #include "utils.h"
 
+// Game Systems
+void SyncWorldToRenderer(SystemArgs *args);
+
+// API functions
 static int ev_game_init();
 static int ev_game_deinit();
 static void ev_game_loop();
@@ -24,24 +30,40 @@ struct ev_Game_Data {
   int placeholder;
 } GameData;
 
+DECLARE_EVENT_HANDLER( SceneUpdatedEventHandler, (SceneUpdatedEvent *event) {
+    // TODO: Call callable system to sync renderer
+    /* ecs_run(World.getInstance(), SyncWorldToRenderer, 0, NULL); */
+});
+
 static int ev_game_init()
 {
-  ImportModule(TransformModule);
-  ImportModule(PhysicsModule);
+  ev_log_trace("Started initializing the game");
 
-  Entity sphere = CreateEntity();
-  Entity_SetComponent(sphere, 
-      TransformComponent, {
-        .position = {0, -15, 0},
-        .rotation = {0, 45, 0},
-        .scale    = {1, 1, 1},
-      });
-  Entity_SetComponent(sphere,
-      RigidBodyComponent, {
-        .mass = 0,
-        .collisionShape = Physics.createBox(60, 1, 60),
-      });
+  ev_log_trace("Activating event handlers");
+  ACTIVATE_EVENT_HANDLER(SceneUpdatedEventHandler, SceneUpdatedEvent);
+  ev_log_trace("Activated event handlers");
 
+  ev_log_trace("Starting a new scene");
+  World.newScene();
+  ev_log_trace("New scene started");
+
+  ev_log_trace("Registering systems");
+  RegisterCallableSystem(SyncWorldToRenderer, SHARED: MeshComponent);
+  ev_log_trace("Registered systems");
+
+  ev_log_trace("Loading GLTF file");
+  /* AssetLoader.loadGLTF("Triangle.gltf"); */
+  /* AssetLoader.loadGLTF("Cube.gltf"); */
+  /* AssetLoader.loadGLTF("InterpolationTest.gltf"); */
+  /* AssetLoader.loadGLTF("CesiumMilkTruck.gltf"); */
+  AssetLoader.loadGLTF("Duck.gltf");
+  ev_log_trace("Loaded GLTF file");
+
+  ev_log_trace("Dispatching SceneUpdatedEvent");
+  DISPATCH_EVENT( SceneUpdatedEvent, {});
+  ev_log_trace("Dispatched SceneUpdatedEvent");
+
+  ev_log_trace("Finished initializing the game");
   return 0;
 }
 
@@ -56,7 +78,7 @@ void ev_game_loop_physics(real dt)
 
 
   Physics.step_dt(dt);
-  ev_log_info("Physics Step. dt = %f", dt);
+  // ev_log_info("Physics Step. dt = %f", dt);
   /* ev_log_info("Iterations: %u", ++iterations); */
 
 }
@@ -79,7 +101,7 @@ void spawn()
   unsigned int spawnrate = 50;
   double new;
 
-  int spawned = 0;
+  /* int spawned = 0; */
 
   while(!App.closeSystem)
   {
@@ -89,11 +111,13 @@ void spawn()
 
     if(remainingTime <= 0)
     {
+      World.lockSceneAccess();
       Entity sphere = CreateEntity();
+      Entity_SetComponent(sphere, EcsName, {"sphere_1"});
       Entity_SetComponent(sphere,
           TransformComponent, {
             .position = {0, 25, -20},
-            .rotation = {0, 45, 0},
+            .rotation = {0.146, 0.354, 0.354, 0.854},
             .scale    = {1, 1, 1},
           });
       Entity_SetComponent(sphere,
@@ -101,8 +125,9 @@ void spawn()
             .mass = 1,
             .collisionShape = Physics.createSphere(3),
           });
+      World.unlockSceneAccess();
       old = new;
-      ev_log_info("Spheres spawned: %d", spawned++);
+      // ev_log_info("Spheres spawned: %d", spawned++);
     }
   }
 }
@@ -110,13 +135,14 @@ void spawn()
 
 static void ev_game_loop()
 {
-  pthread_t spawn_thread;
-  pthread_create(&spawn_thread, NULL, (void*)spawn, NULL);
+  /* pthread_t spawn_thread; */
+  /* pthread_create(&spawn_thread, NULL, (void*)spawn, NULL); */
   double old = Window.getTime();
   unsigned int physics_steprate = 60;
   double new;
   while(!App.closeSystem)
   {
+    World.progress();
     new = Window.getTime();
     double timeStep = new - old;
     double remainingTime = (1.f/(double)physics_steprate) - timeStep;
@@ -128,8 +154,20 @@ static void ev_game_loop()
     }
     else
     {
-      sleep_ms(remainingTime * 1000);
+      /* sleep_ms(remainingTime * 1000); */
     }
   }
-  ev_log_info("Exiting game loop");
+  ev_log_debug("Exiting game loop");
 }
+
+void SyncWorldToRenderer(SystemArgs *args)
+{
+  MeshComponent *meshes = ecs_column(args, MeshComponent, 1);
+  printf("SyncWorldToRenderer\n");
+
+  for (int i = 0; i < args->count; ++i)
+  {
+    meshes[i];
+  }
+}
+

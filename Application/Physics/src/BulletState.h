@@ -35,4 +35,6 @@ class BulletState: public PhysicsState
     RigidBodyHandle addRigidBody(RigidBody *rb);
     void removeRigidBody(RigidBodyHandle handle);
     void updateRigidBody(RigidBodyHandle handle, RigidBody *rb);
+    CollisionShape createStaticFromTriangleIndexVertex(int numTriangles, int *triangleIndexBase, int triangleIndexStride, int numVertices, real *vertexBase, int vertexStride);
+    CollisionShape generateConvexHull(int vertexCount, ev_Vector3* vertices);
 };

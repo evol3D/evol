@@ -1,3 +1,4 @@
+//TODO Comments / Logging
 #include "Window.h"
 #include "GLFW/glfw3.h"
 #include "string.h"
@@ -19,6 +20,8 @@ static bool ev_window_should_close();
 static inline bool ev_window_is_created();
 static inline double ev_window_get_time();
 static inline void ev_window_set_should_close(bool flag);
+static VkResult ev_create_vulkan_surface(VkInstance instance, VkSurfaceKHR* surface);
+static void ev_window_get_size(unsigned int *width, unsigned int *height);
 
 static inline void *ev_get_window_handle();
 
@@ -44,6 +47,8 @@ struct _ev_Window Window = {
         .isCreated = ev_window_is_created,
         .getTime = ev_window_get_time,
         .setShouldClose = ev_window_set_should_close,
+        .createVulkanSurface = ev_create_vulkan_surface,
+        .getSize = ev_window_get_size,
 };
 
 // Did the window receive a closing event?
@@ -90,6 +95,7 @@ static int ev_window_create_window()
 {
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
     WindowData.windowHandle = glfwCreateWindow(WindowData.width, WindowData.height, WindowData.windowTitle, NULL, NULL);
+    assert(WindowData.windowHandle);
     WindowData.created = true;
 
     ev_window_set_callbacks();
@@ -155,4 +161,15 @@ static inline bool ev_window_is_created()
 static inline void ev_window_set_should_close(bool flag)
 {
   glfwSetWindowShouldClose(Window.getWindowHandle(), flag);
+}
+
+VkResult ev_create_vulkan_surface(VkInstance instance, VkSurfaceKHR* surface)
+{
+    return glfwCreateWindowSurface(instance, WindowData.windowHandle, NULL, surface);
+}
+
+static void ev_window_get_size(unsigned int *width, unsigned int *height)
+{
+    *width = WindowData.width;
+    *height = WindowData.height;
 }

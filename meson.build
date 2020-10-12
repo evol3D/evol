@@ -2,18 +2,21 @@ project('evol', 'c', version: '0.1', default_options : ['default_library=static'
 
 cc = meson.get_compiler('c')
 
+global_incdir = include_directories( './include', './Application', '.')
+
 if get_option('buildtype').startswith('debug')
   add_project_arguments('-DDEBUG', language : 'c')
   add_project_arguments('-DLOG_USE_COLOR', language : 'c')
 endif
 
+vulk_dep = dependency('Vulkan')
+
 cmake = import('cmake')
 
-glfw_proj = cmake.subproject('glfw')
-glfw_dep = glfw_proj.dependency('glfw')
-
-flecs_proj = subproject('flecs')
-flecs_dep = flecs_proj.get_variable('flecs_dep')
+flecs_dep = dependency('flecs')
+flecs_meta_dep = dependency('flecs-meta')
+flecs_dash_dep = dependency('flecs-dash')
+flecs_systems_civetweb_dep = dependency('flecs-systems-civetweb')
 
 evol_eventsystem_proj = subproject('evol-eventsystem')
 evol_eventsystem_dep = evol_eventsystem_proj.get_variable('eventsystem_dependency')
@@ -23,32 +26,59 @@ evol_thread_dep = evol_threads_proj.get_variable('evol_thread_dep')
 
 dl_dep = cc.find_library('dl', required: false)
 
+cgltf_dep = dependency('cgltf')
+
+cglm_dep = dependency('cglm')
+
+vec_dep = dependency('vec')
+
+
+subdir('Application/Window')
+subdir('Application/Vulkan')
 subdir('Application/Physics')
 
 srcfiles = files('src/main.c',
             'src/utils.c',
             'Application/App.c',
             'include/ev_log/rxi_logger/log.c',
-            'Application/Window/Window.c',
             'Application/Input/Input.c',
             'Application/World/World.c',
+            'Application/World/flecs_threads.c',
             'Application/EventDebug/EventDebug.c',
             'Application/Game/Game.c',
+            'Application/Renderer/Renderer.c',
             'Application/World/modules/transform_module.c',
             'Application/World/modules/script_module.c',
             'Application/World/modules/physics_module.c',
+            'Application/World/modules/geometry_module.c',
+            'Application/Asset/AssetLoader.c',
             )
 
-incdir = include_directories( './include', './Application', '.')
 
 evol_exe = executable( 'evol', srcfiles,
-  include_directories: incdir,
+  include_directories: global_incdir,
   dependencies: [
-    glfw_dep,
     dl_dep,
     evol_eventsystem_dep,
     evol_thread_dep,
-    flecs_dep,
     evphys_dep,
+    ev_window_dep,
+    ev_vulk_dep,
+    flecs_dep,
+    cgltf_dep,
+    cglm_dep,
+    vec_dep,
+    # debug
+    flecs_meta_dep,
+    flecs_dash_dep,
+    flecs_systems_civetweb_dep,
     ],
+  )
+
+custom_target(
+  'env_setup',
+  depends: evol_exe,
+  output: 'dummy',
+  command: [meson.current_source_dir() + '/baseshaders.sh', meson.current_source_dir(), meson.current_build_dir()],
+  build_by_default: true,
   )

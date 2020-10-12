@@ -11,3 +11,6 @@
 
 subprojects/*
 !*.wrap
+!subprojects/packagefiles
+
+tags

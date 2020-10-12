@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include "App.h"
 
-int main()
+int main(int argc, char **argv)
 {
-	return App.start();
+	return App.start(argc, argv);
 }

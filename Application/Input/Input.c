@@ -1,3 +1,4 @@
+//TODO Comments / Logging
 #include "Input.h"
 #include "Window/Window.h"
 #include "assert.h"

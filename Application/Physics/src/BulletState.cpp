@@ -80,6 +80,28 @@ CollisionShape BulletState::createSphere(real r)
   return sphere;
 }
 
+CollisionShape BulletState::createStaticFromTriangleIndexVertex(int numTriangles, int *triangleIndexBase, int triangleIndexStride, int numVertices, real *vertexBase, int vertexStride)
+{
+  /* btStridingMeshInterface* buffer_interface = new btTriangleIndexVertexArray(numTriangles, triangleIndexBase, triangleIndexStride, numVertices, vertexBase, vertexStride); */
+  /* btCollisionShape* mesh = new btBvhTriangleMeshShape(buffer_interface, true); */
+  btCollisionShape* mesh = new btConvexHullShape(vertexBase, numVertices, vertexStride);
+  collision_shapes_mutex.lock();
+  collisionShapes.push_back(mesh);
+  collision_shapes_mutex.unlock();
+
+  return mesh;
+}
+
+CollisionShape BulletState::generateConvexHull(int vertexCount, ev_Vector3* vertices)
+{
+  btCollisionShape* hull = new btConvexHullShape(reinterpret_cast<real*>(vertices), vertexCount, sizeof(ev_Vector3));
+  collision_shapes_mutex.lock();
+  collisionShapes.push_back(hull);
+  collision_shapes_mutex.unlock();
+
+  return hull;
+}
+
 
 RigidBodyHandle BulletState::addRigidBody(RigidBody *rb)
 {
@@ -130,21 +152,22 @@ void BulletState::updateRigidBody(RigidBodyHandle handle, RigidBody *rb)
 
   unsigned int entt_id = ((EvMotionState *)((btRigidBody*)handle)->getMotionState())->entt_id;
 
-  const ev_Vector3 *ev_PositionVector = entity_get_position(entt_id);
-  const ev_Vector3 *ev_RotationVector = entity_get_rotation(entt_id);
+  const ev_Vector4 *ev_PositionVector = entity_get_position(entt_id);
+  const ev_Vector4 *ev_RotationVector = entity_get_rotation(entt_id);
 
   btTransform newTransform;
   newTransform.setIdentity();
   newTransform.setOrigin(ev2btVector3(ev_PositionVector));
-  btQuaternion rot;
-
-  rot.setEulerZYX(
-      btScalar(ANG2RAD(ev_RotationVector->z)), 
-      btScalar(ANG2RAD(ev_RotationVector->y)), 
-      btScalar(ANG2RAD(ev_RotationVector->x))
+  /* btQuaternion rot(ev_RotationVector->x, ev_RotationVector->y, ev_RotationVector->z, ev_RotationVector->w); */
+  /* newTransform.setRotation(rot); */
+  newTransform.setRotation(
+    btQuaternion(
+      ev_RotationVector->x,
+      ev_RotationVector->y,
+      ev_RotationVector->z,
+      ev_RotationVector->w
+    )
   );
-
-  newTransform.setRotation(rot);
 
   ((btRigidBody*)handle)->setWorldTransform(newTransform);
 }
