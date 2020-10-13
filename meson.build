@@ -2,6 +2,10 @@ project('evol', 'c', version: '0.1', default_options : ['default_library=static'
 
 cc = meson.get_compiler('c')
 
+# Options: ['VULKAN']
+RENDERING_BACKEND = 'VULKAN'
+add_project_arguments('-DVULKAN_BACKEND', language : 'c')
+
 global_incdir = include_directories( './include', './Application', '.')
 
 if get_option('buildtype').startswith('debug')
@@ -32,7 +36,6 @@ cglm_dep = dependency('cglm')
 
 vec_dep = dependency('vec')
 
-
 subdir('Application/Window')
 subdir('Application/Vulkan')
 subdir('Application/Physics')
@@ -44,7 +47,6 @@ srcfiles = files('src/main.c',
             'Application/Input/Input.c',
             'Application/World/World.c',
             'Application/World/flecs_threads.c',
-            'Application/EventDebug/EventDebug.c',
             'Application/Game/Game.c',
             'Application/Renderer/Renderer.c',
             'Application/World/modules/transform_module.c',
@@ -52,7 +54,14 @@ srcfiles = files('src/main.c',
             'Application/World/modules/physics_module.c',
             'Application/World/modules/geometry_module.c',
             'Application/Asset/AssetLoader.c',
+            'Application/EventDebug/EventDebug.c',
             )
+
+if RENDERING_BACKEND == 'VULKAN'
+  srcfiles += 'Application/Renderer/backends/VulkanRendererBackend.c'
+endif
+
+
 
 
 evol_exe = executable( 'evol', srcfiles,
