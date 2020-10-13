@@ -117,6 +117,8 @@ static int ev_world_newscene()
 #endif
 
   ev_log_trace("Finished creating a new scene");
+
+  return 0;
 }
 
 

@@ -163,11 +163,12 @@ static void ev_game_loop()
 void SyncWorldToRenderer(SystemArgs *args)
 {
   MeshComponent *meshes = ecs_column(args, MeshComponent, 1);
+  (void)meshes;
   printf("SyncWorldToRenderer\n");
 
   for (int i = 0; i < args->count; ++i)
   {
-    meshes[i];
+    /* meshes[i]; */
   }
 }
 

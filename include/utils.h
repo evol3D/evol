@@ -7,22 +7,22 @@
 void sleep_ms(double milliseconds);
 
 // Get size of array that was declared in same scope
-#ifndef ARRAYSIZE(x)
+#ifndef ARRAYSIZE
 #define ARRAYSIZE(x) sizeof(x)/sizeof(x[0])
 #endif
 
-#ifndef MIN(a,b)
+#ifndef MIN
 #define MIN(a,b) a>b?b:a
 #endif
-#ifndef MAX(a,b)
+#ifndef MAX
 #define MAX(a,b) a<b?b:a
 #endif
 
 // ECS Related
-extern inline ev_Vector3* entity_get_position_mut(unsigned int entt);
-extern inline const ev_Vector3* entity_get_position(unsigned int entt);
+extern ev_Vector4* entity_get_position_mut(unsigned int entt);
+extern const ev_Vector4* entity_get_position(unsigned int entt);
 
-extern inline ev_Vector3* entity_get_rotation_mut(unsigned int entt);
-extern inline const ev_Vector3* entity_get_rotation(unsigned int entt);
+extern ev_Vector4* entity_get_rotation_mut(unsigned int entt);
+extern const ev_Vector4* entity_get_rotation(unsigned int entt);
 
 #endif

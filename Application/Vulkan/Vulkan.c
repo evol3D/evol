@@ -3,6 +3,7 @@
 #include "Vulkan.h"
 #include "Window.h"
 #include "vulkan_utils.h"
+#include "VulkanQueueManager.h"
 #include <ev_log/ev_log.h>
 
 #include "stdio.h"
@@ -13,7 +14,6 @@ static int ev_vulkan_deinit();
 
 void ev_vulkan_create_instance();
 void ev_vulkan_detect_physical_device();
-void ev_vulkan_detect_queue_family_indices();
 void ev_vulkan_create_logical_device();
 
 void ev_vulkan_init_vma();
@@ -49,13 +49,15 @@ void ev_vulkan_image_memory_barrier(VkImage image, VkImageLayout oldLayout, VkIm
 //getters
 static inline VkDevice ev_vulkan_get_logical_device();
 static inline VkRenderPass ev_vulkan_get_renderpass();
-static inline unsigned int ev_vulkan_get_commandpool(QueueType type);
+static inline VkCommandPool ev_vulkan_get_commandpool(QueueType type);
 static inline VkCommandBuffer ev_vulkan_get_current_frame_commandbuffer(void);
 static inline unsigned int ev_vulkan_get_queuefamily_index(QueueType type);
 
 struct ev_Vulkan Vulkan = {
   .init = ev_vulkan_init,
   .deinit = ev_vulkan_deinit,
+
+  .createSurface = ev_vulkan_create_surface,
 
   .createSwapchain = ev_vulkan_create_swapchain,
   .destroySwapchain = ev_vulkan_destroy_swapchain,
@@ -71,11 +73,10 @@ struct ev_Vulkan Vulkan = {
   .startNewFrame = ev_vulkan_start_new_frame,
   .endFrame = ev_vulkan_end_frame,
 
-  //getters
+  // Getters
   .getDevice = ev_vulkan_get_logical_device,
   .getRenderPass = ev_vulkan_get_renderpass,
   .getCommandPool = ev_vulkan_get_commandpool,
-  .getQueueFamilyIndex = ev_vulkan_get_queuefamily_index,
   .getCurrentFrameCommandBuffer = ev_vulkan_get_current_frame_commandbuffer,
 };
 
@@ -112,9 +113,6 @@ struct ev_Vulkan_Data {
 
   VkSemaphore imageSemaphore;
   VkSemaphore signalSemaphore;
-
-  VkQueue queues[QUEUE_TYPE_COUNT];
-
 } VulkanData;
 
 static int ev_vulkan_init()
@@ -132,22 +130,24 @@ static int ev_vulkan_init()
 
 
   // Create the vulkan instance
+  ev_log_debug("Creating Vulkan Instance");
   ev_vulkan_create_instance();
+  ev_log_debug("Created Vulkan Instance Successfully");
 
   // Detect the physical device
+  ev_log_debug("Detecting Vulkan Physical Device");
   ev_vulkan_detect_physical_device();
-
-  // Detect indices of various queue families
-  ev_vulkan_detect_queue_family_indices();
+  ev_log_debug("Detected Vulkan Physical Device");
 
   // Create the logical device
+  ev_log_debug("Creating Vulkan Logical Device");
   ev_vulkan_create_logical_device();
-
-  // TODO: Remove
-  vkGetDeviceQueue(VulkanData.logicalDevice, VulkanData.queueFamilyIndices[GRAPHICS], 0, &VulkanData.queues[GRAPHICS]);
+  ev_log_debug("Created Vulkan Logical Device");
 
   // Initialize VMA
+  ev_log_debug("Initializing VMA");
   ev_vulkan_init_vma();
+  ev_log_debug("Initialized VMA");
 
   // Create the vulkan surface, then detect the surface's capabilities
   ev_vulkan_create_surface();
@@ -179,7 +179,7 @@ static int ev_vulkan_deinit()
 
 void ev_vulkan_create_instance()
 {
-  char *extensions[] = {
+  const char *extensions[] = {
     "VK_KHR_surface",
     #ifdef _WIN32
     "VK_KHR_win32_surface",
@@ -188,7 +188,7 @@ void ev_vulkan_create_instance()
     #endif
   };
 
-  char *validation_layers[] = {
+  const char *validation_layers[] = {
 		"VK_LAYER_KHRONOS_validation",
   };
 
@@ -246,57 +246,22 @@ void ev_vulkan_create_logical_device()
     VK_KHR_SWAPCHAIN_EXTENSION_NAME,
   };
 
-  float dummyPriority = 1.0;
-  VkDeviceQueueCreateInfo deviceQueueCreateInfos[] =
-  {
-    {
-			.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
-			.queueFamilyIndex = VulkanData.queueFamilyIndices[GRAPHICS],
-			.queueCount = 1,
-			.pQueuePriorities = &dummyPriority,
-		},
-  };
+  VkDeviceQueueCreateInfo *deviceQueueCreateInfos = NULL;
+  unsigned int queueCreateInfoCount = 0;
+  VulkanQueueManager.init(VulkanData.physicalDevice, &deviceQueueCreateInfos, &queueCreateInfoCount);
 
   VkDeviceCreateInfo deviceCreateInfo = 
   {
     .sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
     .enabledExtensionCount = ARRAYSIZE(deviceExtensions),
     .ppEnabledExtensionNames = deviceExtensions,
-    .queueCreateInfoCount = ARRAYSIZE(deviceQueueCreateInfos),
+    .queueCreateInfoCount = queueCreateInfoCount,
     .pQueueCreateInfos = deviceQueueCreateInfos,
   };
 
   VK_ASSERT(vkCreateDevice(VulkanData.physicalDevice, &deviceCreateInfo, NULL, &VulkanData.logicalDevice));
-}
 
-void ev_vulkan_detect_queue_family_indices()
-{
-	uint32_t queueFamilyPropertiesCount = 0;
-	vkGetPhysicalDeviceQueueFamilyProperties(VulkanData.physicalDevice, &queueFamilyPropertiesCount, NULL);
-	VkQueueFamilyProperties *queueFamilyProperties = malloc(sizeof(VkQueueFamilyProperties) * queueFamilyPropertiesCount);
-  ev_log_debug("Malloc'ed %u bytes",queueFamilyPropertiesCount * sizeof(VkQueueFamilyProperties));
-	vkGetPhysicalDeviceQueueFamilyProperties(VulkanData.physicalDevice, &queueFamilyPropertiesCount, queueFamilyProperties);
-
-	for (int i = 0; i < queueFamilyPropertiesCount; ++i)
-  {
-    printf("Queue Family index: %d\n", i);
-    printf("Queue Family Flags: %d\n", queueFamilyProperties[i].queueFlags);
-    printf("Queue Family queue count: %d\n", queueFamilyProperties[i].queueCount);
-  }
-	for (int i = 0; i < queueFamilyPropertiesCount; ++i)
-	{
-		if (queueFamilyProperties[i].queueFlags & (VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT | VK_QUEUE_TRANSFER_BIT | VK_QUEUE_SPARSE_BINDING_BIT))
-		{
-			VulkanData.queueFamilyIndices[GRAPHICS] = i;
-			VulkanData.queueFamilyIndices[TRANSFER] = i;
-			VulkanData.queueFamilyIndices[COMPUTE] = i;
-			VulkanData.queueFamilyIndices[SPARSE_BINDING] = i;
-			free(queueFamilyProperties);
-			return;
-		}
-	}
-  free(queueFamilyProperties);
-	assert(!"Looks like you'll need to implement a better way for queue families now :D\n");
+  VulkanQueueManager.retrieveQueues(VulkanData.logicalDevice, deviceQueueCreateInfos, &queueCreateInfoCount);
 }
 
 void ev_vulkan_create_surface()
@@ -695,7 +660,7 @@ static inline unsigned int ev_vulkan_get_queuefamily_index(QueueType type)
   return VulkanData.queueFamilyIndices[type];
 }
 
-static inline unsigned int ev_vulkan_get_commandpool(QueueType type)
+static inline VkCommandPool ev_vulkan_get_commandpool(QueueType type)
 {
   if(!VulkanData.commandPools[type])
   {
@@ -724,7 +689,7 @@ void ev_vulkan_start_new_frame(void)
 	  VK_ASSERT(vkBeginCommandBuffer(VulkanData.swapchainCommandBuffers[VulkanData.currentFrameIndex], &commandBufferBeginInfo));
   }
 
-  ev_vulkan_image_memory_barrier(VulkanData.swapchainImages[VulkanData.currentFrameIndex], VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, NULL, VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, VK_DEPENDENCY_BY_REGION_BIT);
+  ev_vulkan_image_memory_barrier(VulkanData.swapchainImages[VulkanData.currentFrameIndex], VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, 0, VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, VK_DEPENDENCY_BY_REGION_BIT);
 
   unsigned int width, height;
   Window.getSize(&width, &height);
@@ -733,7 +698,9 @@ void ev_vulkan_start_new_frame(void)
   {
     VkClearValue clearValues[] = {
 		  {
-			  .color = {0.33f, 0.22f, 0.37f, 1.f},
+			  .color = {
+          {0.33f, 0.22f, 0.37f, 1.f}
+        },
 		  },
 	  	{
 		  	.depthStencil = {1.0f, 0.0f},
@@ -782,7 +749,7 @@ void ev_vulkan_end_frame(void)
 {
   vkCmdEndRenderPass(Vulkan.getCurrentFrameCommandBuffer());
 
-  ev_vulkan_image_memory_barrier(VulkanData.swapchainImages[VulkanData.currentFrameIndex], VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR, VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT, NULL, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_DEPENDENCY_BY_REGION_BIT);
+  ev_vulkan_image_memory_barrier(VulkanData.swapchainImages[VulkanData.currentFrameIndex], VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR, VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT, 0, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_DEPENDENCY_BY_REGION_BIT);
 
   VK_ASSERT(vkEndCommandBuffer(Vulkan.getCurrentFrameCommandBuffer()));
 
@@ -797,7 +764,7 @@ void ev_vulkan_end_frame(void)
   submitInfo.signalSemaphoreCount = 1;
   submitInfo.pSignalSemaphores = &VulkanData.signalSemaphore;
 
-  VK_ASSERT(vkQueueSubmit(VulkanData.queues[GRAPHICS], 1, &submitInfo, VK_NULL_HANDLE));
+  VK_ASSERT(vkQueueSubmit(VulkanQueueManager.getQueue(GRAPHICS), 1, &submitInfo, VK_NULL_HANDLE));
 
   VkPresentInfoKHR presentInfo = {VK_STRUCTURE_TYPE_PRESENT_INFO_KHR};
   presentInfo.swapchainCount = 1;
@@ -806,7 +773,7 @@ void ev_vulkan_end_frame(void)
   presentInfo.waitSemaphoreCount = 1;
   presentInfo.pWaitSemaphores = &VulkanData.signalSemaphore;
 
-  VK_ASSERT(vkQueuePresentKHR(VulkanData.queues[GRAPHICS], &presentInfo));
+  VK_ASSERT(vkQueuePresentKHR(VulkanQueueManager.getQueue(GRAPHICS), &presentInfo));
 
   //assert(!"Not implemented");
 }

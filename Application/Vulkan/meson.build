@@ -1,6 +1,7 @@
 vulk_mod_src = [
     'Vulkan.c',
-    'vk_mem_alloc.cpp'
+    'vk_mem_alloc.cpp',
+    'VulkanQueueManager.c',
 ]
 
 vulk_mod_incdir = include_directories(

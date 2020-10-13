@@ -82,9 +82,8 @@ CollisionShape BulletState::createSphere(real r)
 
 CollisionShape BulletState::createStaticFromTriangleIndexVertex(int numTriangles, int *triangleIndexBase, int triangleIndexStride, int numVertices, real *vertexBase, int vertexStride)
 {
-  /* btStridingMeshInterface* buffer_interface = new btTriangleIndexVertexArray(numTriangles, triangleIndexBase, triangleIndexStride, numVertices, vertexBase, vertexStride); */
-  /* btCollisionShape* mesh = new btBvhTriangleMeshShape(buffer_interface, true); */
-  btCollisionShape* mesh = new btConvexHullShape(vertexBase, numVertices, vertexStride);
+  btStridingMeshInterface* buffer_interface = new btTriangleIndexVertexArray(numTriangles, triangleIndexBase, triangleIndexStride, numVertices, vertexBase, vertexStride);
+  btCollisionShape* mesh = new btBvhTriangleMeshShape(buffer_interface, true);
   collision_shapes_mutex.lock();
   collisionShapes.push_back(mesh);
   collision_shapes_mutex.unlock();

@@ -131,7 +131,6 @@ static void ev_renderer_prepare_descriptorset_layouts()
 static void ev_renderer_prepare_graphics_pipelines()
 {
   //TODO when you implement multiple pipelines take a look at input attributes , this pipeline should be a rigging pipeline
-  VkPipeline simplePipeline;
   VkPipelineLayout pipelineLayout;
 
   VkPipelineShaderStageCreateInfo pipelineShaderStages[] = 

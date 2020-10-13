@@ -6,6 +6,7 @@
 #include "vk_mem_alloc.h"
 
 #include "vulkan_utils.h"
+#include "VulkanQueueManager.h"
 
 typedef unsigned int VkApiVersion;
 
@@ -23,19 +24,12 @@ typedef struct
   VmaAllocationInfo allocationInfo;
 } EvBuffer;
 
-typedef enum
-{
-    GRAPHICS,
-    TRANSFER,
-    COMPUTE,
-    SPARSE_BINDING,
-
-    QUEUE_TYPE_COUNT
-} QueueType;
-
 extern struct ev_Vulkan {
     int (*init)(void);
     int (*deinit)(void);
+
+    void (*createSurface)(void);
+
     void (*createSwapchain)(unsigned int*);
     void (*destroySwapchain)(void);
     void (*createImage)(VkImageCreateInfo *, VmaAllocationCreateInfo *, EvImage *);
@@ -46,15 +40,12 @@ extern struct ev_Vulkan {
     void (*startNewFrame)(void);
     void (*endFrame)(void);
     VkCommandBuffer (*getCurrentFrameCommandBuffer)(void);
-    
-    
 
     VkShaderModule (*loadShader)(const char *);
     void (*unloadShader)(VkShaderModule);
 
     VkDevice (*getDevice)(void);
     VkRenderPass (*getRenderPass)(void);
-    unsigned int (*getQueueFamilyIndex)(QueueType);
     VkCommandPool (*getCommandPool)(QueueType);
 
 } Vulkan;
