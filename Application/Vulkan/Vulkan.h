@@ -40,17 +40,21 @@ extern struct ev_Vulkan {
     void (*createBuffer)(VkBufferCreateInfo *, VmaAllocationCreateInfo *, EvBuffer *);
     void (*destroyBuffer)(EvBuffer *);
 
+    void (*allocateMemoryPool)(VmaPoolCreateInfo *poolCreateInfo, VmaPool* pool);
+    void (*allocateBufferInPool)(VkBufferCreateInfo *bufferCreateInfo, VmaPool pool, EvBuffer *buffer);
+
+    void (*memoryDump)();
+
     void (*createImageViews)(unsigned int imageCount, VkFormat imageFormat, VkImage *images, VkImageView **views);
     void (*createFramebuffer)(VkImageView* attachments, unsigned int attachmentCount, VkRenderPass renderPass, VkFramebuffer *framebuffer);
 
     void (*startNewFrame)(void);
     void (*endFrame)(void);
 
-    VkShaderModule (*loadShader)(const char *);
-    void (*unloadShader)(VkShaderModule);
-
     VkDevice (*getDevice)(void);
     VkCommandPool (*getCommandPool)(QueueType);
+
+    VmaAllocator (*getAllocator)();
 
 } Vulkan;
 

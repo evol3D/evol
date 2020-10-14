@@ -8,11 +8,10 @@ static int ev_renderer_deinit();
 static void ev_renderer_prepare_descriptorset_layouts();
 static void ev_renderer_prepare_graphics_pipelines();
 
-static inline void ev_renderer_load_base_shaders();
-static inline void ev_renderer_unload_base_shaders();
+static inline void ev_renderer_loadbaseshaders();
+static inline void ev_renderer_unloadbaseshaders();
 
 static void ev_renderer_bind();
-
 
 #define SET_SHADER(id, path) RendererData.baseShaderPaths[id] = path;
 
@@ -51,27 +50,34 @@ struct ev_Renderer_Data {
   GraphicsPipeline graphicsPipelines[GRAPHICS_PIPELINES_COUNT];
   const char * baseShaderPaths[EV_BASE_SHADER_COUNT];
   ShaderModule baseShaders[EV_BASE_SHADER_COUNT];
+  MemoryPool resourcePool;
 } RendererData;
 
 static int ev_renderer_init()
 {
   RendererBackend.init();
+  RendererBackend.createResourceMemoryPool(128ull * 1024 * 1024, 1, 4, &RendererData.resourcePool);
+
+  MemoryBuffer vertexBuffer;
+  RendererBackend.allocateBufferInPool(RendererData.resourcePool, 32 * 1024 * 1024, EV_USAGEFLAGS_RESOURCE_BUFFER, &vertexBuffer);
 
   ev_renderer_prepare_descriptorset_layouts();
 
-  ev_renderer_load_base_shaders();
+  ev_renderer_loadbaseshaders();
   ev_renderer_prepare_graphics_pipelines();
 
   RendererBackend.startNewFrame();
   ev_renderer_bind();
   RendererBackend.endFrame();
 
+  RendererBackend.memoryDump();
+
   return 0;
 }
 
 static int ev_renderer_deinit()
 {
-  ev_renderer_unload_base_shaders();
+  ev_renderer_unloadbaseshaders();
 
   return 0;
 }
@@ -276,21 +282,21 @@ static void ev_renderer_prepare_graphics_pipelines()
       RendererData.graphicsPipelines));
 }
 
-static inline void ev_renderer_load_base_shaders()
+static inline void ev_renderer_loadbaseshaders()
 {
   #include "baseshaderpaths.txt"
 
   for(int i = 0; i < EV_BASE_SHADER_COUNT; ++i)
   {
-    RendererData.baseShaders[i] = Vulkan.loadShader(RendererData.baseShaderPaths[i]);
+    RendererData.baseShaders[i] = RendererBackend.loadShader(RendererData.baseShaderPaths[i]);
   }
 }
 
-static inline void ev_renderer_unload_base_shaders()
+static inline void ev_renderer_unloadbaseshaders()
 {
   for(int i = 0; i < EV_BASE_SHADER_COUNT; ++i)
   {
-    Vulkan.unloadShader(RendererData.baseShaders[i]);
+    RendererBackend.unloadShader(RendererData.baseShaders[i]);
   }
 }
 

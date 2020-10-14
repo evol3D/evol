@@ -8,8 +8,16 @@ static int ev_rendererbackend_deinit();
 static void ev_rendererbackend_startnewframe();
 static void ev_rendererbackend_endframe();
 
+ShaderModule ev_rendererbackend_loadshader(const char* shaderPath);
+void ev_rendererbackend_unloadshader(ShaderModule shader);
+
 static VkCommandBuffer ev_rendererbackend_getcurrentframecommandbuffer();
 static VkRenderPass ev_rendererbackend_getrenderpass();
+
+static void ev_rendererbackend_createresourcememorypool(unsigned long long blockSize, unsigned int minBlockCount, unsigned int maxBlockCount, MemoryPool *pool);
+static void ev_rendererbackend_allocatebufferinpool(MemoryPool pool, unsigned long long bufferSize, unsigned long long usageFlags, MemoryBuffer *buffer);
+
+static void ev_rendererbackend_memorydump();
 
 struct ev_RendererBackend RendererBackend = 
 {
@@ -17,6 +25,13 @@ struct ev_RendererBackend RendererBackend =
   .deinit = ev_rendererbackend_deinit,
   .startNewFrame = ev_rendererbackend_startnewframe,
   .endFrame = ev_rendererbackend_endframe,
+
+  .loadShader = ev_rendererbackend_loadshader,
+  .unloadShader = ev_rendererbackend_unloadshader,
+
+  .createResourceMemoryPool = ev_rendererbackend_createresourcememorypool,
+  .allocateBufferInPool = ev_rendererbackend_allocatebufferinpool,
+  .memoryDump = ev_rendererbackend_memorydump,
 
   // TODO Remove
   .getCurrentFrameCommandBuffer = ev_rendererbackend_getcurrentframecommandbuffer,
@@ -434,3 +449,74 @@ static VkRenderPass ev_rendererbackend_getrenderpass()
 /*   free(VulkanData.swapchainImages); */
 /* } */
 
+#include <stdio.h>
+#include <ev_log/ev_log.h>
+
+ShaderModule ev_rendererbackend_loadshader(const char* shaderPath)
+{
+  FILE* file = fopen(shaderPath, "rb");
+  if(!file) return VK_NULL_HANDLE;
+
+  fseek(file, 0, SEEK_END);
+  long length = ftell(file);
+  fseek(file, 0, SEEK_SET);
+
+  char *shaderCode = malloc(length);
+
+  fread(shaderCode, 1, length, file);
+  fclose(file);
+
+  VkShaderModuleCreateInfo shaderModuleCreateInfo = {
+    .sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO,
+    .codeSize = length,
+    .pCode = (const unsigned int *)shaderCode,
+  };
+
+  VkShaderModule shaderModule;
+  VK_ASSERT(vkCreateShaderModule(Vulkan.getDevice(), &shaderModuleCreateInfo, NULL, &shaderModule));
+
+  free(shaderCode);
+  return shaderModule;
+}
+
+void ev_rendererbackend_unloadshader(ShaderModule shader)
+{
+  vkDestroyShaderModule(Vulkan.getDevice(), shader, NULL);
+}
+
+static void ev_rendererbackend_createresourcememorypool(unsigned long long blockSize, unsigned int minBlockCount, unsigned int maxBlockCount, MemoryPool *pool)
+{
+  unsigned int memoryType;
+
+  { // Detecting memorytype index
+    VkBufferCreateInfo sampleBufferCreateInfo = {VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO};
+    /* sampleBufferCreateInfo.size = 1024; */
+    sampleBufferCreateInfo.usage = EV_USAGEFLAGS_RESOURCE_BUFFER;
+
+    VmaAllocationCreateInfo allocationCreateInfo = {};
+    allocationCreateInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
+    vmaFindMemoryTypeIndexForBufferInfo(Vulkan.getAllocator(), &sampleBufferCreateInfo, &allocationCreateInfo, &memoryType);
+  }
+
+  VmaPoolCreateInfo poolCreateInfo = {};
+  poolCreateInfo.memoryTypeIndex   = memoryType;
+  poolCreateInfo.blockSize         = blockSize;
+  poolCreateInfo.minBlockCount     = minBlockCount;
+  poolCreateInfo.maxBlockCount     = maxBlockCount;
+
+  Vulkan.allocateMemoryPool(&poolCreateInfo, pool);
+}
+
+static void ev_rendererbackend_allocatebufferinpool(MemoryPool pool, unsigned long long bufferSize, unsigned long long usageFlags, MemoryBuffer *buffer)
+{
+  VkBufferCreateInfo bufferCreateInfo = {VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO};
+  bufferCreateInfo.size = bufferSize;
+  bufferCreateInfo.usage = usageFlags;
+
+  Vulkan.allocateBufferInPool(&bufferCreateInfo, pool, buffer);
+}
+
+static void ev_rendererbackend_memorydump()
+{
+  Vulkan.memoryDump();
+}

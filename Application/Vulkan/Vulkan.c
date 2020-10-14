@@ -35,8 +35,10 @@ void ev_vulkan_destroy_image(EvImage *image);
 void ev_vulkan_create_buffer(VkBufferCreateInfo *bufferCreateInfo, VmaAllocationCreateInfo *allocationCreateInfo, EvBuffer *buffer);
 void ev_vulkan_destroy_buffer(EvBuffer *buffer);
 
-VkShaderModule ev_vulkan_load_shader(const char* shaderPath);
-void ev_vulkan_unload_shader(VkShaderModule shader);
+void ev_vulkan_allocatememorypool(VmaPoolCreateInfo *poolCreateInfo, VmaPool* pool);
+void ev_vulkan_allocatebufferinpool(VkBufferCreateInfo *bufferCreateInfo, VmaPool pool, EvBuffer *buffer);
+
+void ev_vulkan_memorydump();
 
 void ev_vulkan_image_memory_barrier(VkImage image, VkImageLayout oldLayout, VkImageLayout newLayout, 
   VkAccessFlags srcAccessMask, VkAccessFlags dstAccessMask, VkPipelineStageFlags srcStageMask, 
@@ -44,36 +46,39 @@ void ev_vulkan_image_memory_barrier(VkImage image, VkImageLayout oldLayout, VkIm
 
 //getters
 static inline VkDevice ev_vulkan_get_logical_device();
-static inline VkRenderPass ev_vulkan_get_renderpass();
 static inline VkCommandPool ev_vulkan_get_commandpool(QueueType type);
-static inline VkCommandBuffer ev_vulkan_get_current_frame_commandbuffer(void);
-static inline unsigned int ev_vulkan_get_queuefamily_index(QueueType type);
+static inline VmaAllocator ev_vulkan_getallocator();
 
 struct ev_Vulkan Vulkan = {
-  .init                         = ev_vulkan_init,
-  .deinit                       = ev_vulkan_deinit,
+  .init                    = ev_vulkan_init,
+  .deinit                  = ev_vulkan_deinit,
 
-  .createSurface                = ev_vulkan_createsurface,
-  .destroySurface               = ev_vulkan_destroysurface,
+  .createSurface           = ev_vulkan_createsurface,
+  .destroySurface          = ev_vulkan_destroysurface,
 
-  .createSwapchain              = ev_vulkan_createswapchain,
-  .retrieveSwapchainImages      = ev_vulkan_retrieveswapchainimages,
+  .createSwapchain         = ev_vulkan_createswapchain,
+  .retrieveSwapchainImages = ev_vulkan_retrieveswapchainimages,
 
   // Memory
-  .createImage                  = ev_vulkan_create_image,
-  .destroyImage                 = ev_vulkan_destroy_image,
-  .createBuffer                 = ev_vulkan_create_buffer,
-  .destroyBuffer                = ev_vulkan_destroy_buffer,
+  .createImage             = ev_vulkan_create_image,
+  .destroyImage            = ev_vulkan_destroy_image,
+  .createBuffer            = ev_vulkan_create_buffer,
+  .destroyBuffer           = ev_vulkan_destroy_buffer,
 
-  .createImageViews             = ev_vulkan_createimageviews,
-  .createFramebuffer            =  ev_vulkan_createframebuffer,
+  .allocateMemoryPool      = ev_vulkan_allocatememorypool,
+  .allocateBufferInPool    = ev_vulkan_allocatebufferinpool,
 
-  .loadShader                   = ev_vulkan_load_shader,
-  .unloadShader                 = ev_vulkan_unload_shader,
+  .createImageViews        = ev_vulkan_createimageviews,
+  .createFramebuffer       =  ev_vulkan_createframebuffer,
 
   // Getters
-  .getDevice                    = ev_vulkan_get_logical_device,
-  .getCommandPool               = ev_vulkan_get_commandpool,
+  .getDevice               = ev_vulkan_get_logical_device,
+  .getCommandPool          = ev_vulkan_get_commandpool,
+  .getAllocator            = ev_vulkan_getallocator,
+
+
+  // Debug
+  .memoryDump              = ev_vulkan_memorydump,
 };
 
 struct ev_Vulkan_Data {
@@ -88,8 +93,6 @@ struct ev_Vulkan_Data {
   unsigned int queueFamilyIndices[QUEUE_TYPE_COUNT];
 
   unsigned int currentFrameIndex;
-
-  VkRenderPass renderPass;
 
   VkCommandPool commandPools[QUEUE_TYPE_COUNT];
 } VulkanData;
@@ -173,11 +176,11 @@ void ev_vulkan_create_instance()
   };
 
   VkInstanceCreateInfo instanceCreateInfo = {
-    .sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO,
-    .pApplicationInfo = &applicationInfo,
-    .enabledLayerCount = ARRAYSIZE(validation_layers),
-    .ppEnabledLayerNames = validation_layers,
-    .enabledExtensionCount = ARRAYSIZE(extensions),
+    .sType                   = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO,
+    .pApplicationInfo        = &applicationInfo,
+    .enabledLayerCount       = ARRAYSIZE(validation_layers),
+    .ppEnabledLayerNames     = validation_layers,
+    .enabledExtensionCount   = ARRAYSIZE(extensions),
     .ppEnabledExtensionNames = extensions
   };
 
@@ -193,8 +196,6 @@ void ev_vulkan_detect_physical_device()
     assert(!"No physical devices found");
 
   VkPhysicalDevice *physicalDevices = malloc(physicalDeviceCount * sizeof(VkPhysicalDevice));
-  ev_log_debug("Malloc'ed %u bytes", physicalDeviceCount * sizeof(VkPhysicalDevice));
-  ev_log_debug("Malloc'ed %u bytes", physicalDeviceCount * sizeof(VkPhysicalDevice));
   vkEnumeratePhysicalDevices( VulkanData.instance, &physicalDeviceCount, physicalDevices);
 
   VulkanData.physicalDevice = physicalDevices[0];
@@ -327,7 +328,7 @@ void ev_vulkan_destroy_image(EvImage *image)
 
 void ev_vulkan_create_buffer(VkBufferCreateInfo *bufferCreateInfo, VmaAllocationCreateInfo *allocationCreateInfo, EvBuffer *buffer)
 {
-  vmaCreateBuffer(VulkanData.allocator, bufferCreateInfo, allocationCreateInfo, &(buffer->buffer), &(buffer->allocation), &(buffer->allocationInfo));
+  VK_ASSERT(vmaCreateBuffer(VulkanData.allocator, bufferCreateInfo, allocationCreateInfo, &(buffer->buffer), &(buffer->allocation), &(buffer->allocationInfo)));
 }
 
 void ev_vulkan_destroy_buffer(EvBuffer *buffer)
@@ -338,40 +339,6 @@ void ev_vulkan_destroy_buffer(EvBuffer *buffer)
 static inline VkDevice ev_vulkan_get_logical_device()
 {
   return VulkanData.logicalDevice;
-}
-
-VkShaderModule ev_vulkan_load_shader(const char* shaderPath)
-{
-  FILE* file = fopen(shaderPath, "rb");
-  if(!file) return VK_NULL_HANDLE;
-
-  fseek(file, 0, SEEK_END);
-  long length = ftell(file);
-  fseek(file, 0, SEEK_SET);
-
-  char *shaderCode = malloc(length);
-  ev_log_debug("Malloc'ed %u bytes", sizeof(char) * length);
-
-  fread(shaderCode, 1, length, file);
-  fclose(file);
-
-  VkShaderModuleCreateInfo shaderModuleCreateInfo = {
-    .sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO,
-    .codeSize = length,
-    .pCode = (const unsigned int *)shaderCode,
-  };
-
-  VkShaderModule shaderModule;
-  VK_ASSERT(vkCreateShaderModule(VulkanData.logicalDevice, &shaderModuleCreateInfo, NULL, &shaderModule));
-
-  free(shaderCode);
-  ev_log_debug("Free'ed %u bytes", sizeof(char) * length);
-  return shaderModule;
-}
-
-void ev_vulkan_unload_shader(VkShaderModule shader)
-{
-  vkDestroyShaderModule(VulkanData.logicalDevice, shader, NULL);
 }
 
 static inline VkCommandPool ev_vulkan_get_commandpool(QueueType type)
@@ -465,3 +432,40 @@ void ev_vulkan_createframebuffer(VkImageView* attachments, unsigned int attachme
   };
   VK_ASSERT(vkCreateFramebuffer(VulkanData.logicalDevice, &swapchainFramebufferCreateInfo, NULL, framebuffer));
 }
+
+void ev_vulkan_allocatememorypool(VmaPoolCreateInfo *poolCreateInfo, VmaPool* pool)
+{
+  VK_ASSERT(vmaCreatePool(VulkanData.allocator, poolCreateInfo, pool));
+}
+
+void ev_vulkan_freememorypool(VmaPool pool)
+{
+  vmaDestroyPool(VulkanData.allocator, pool);
+}
+
+void ev_vulkan_allocatebufferinpool(VkBufferCreateInfo *bufferCreateInfo, VmaPool pool, EvBuffer *buffer)
+{
+  VmaAllocationCreateInfo allocationCreateInfo = {
+    .pool = pool,
+  };
+
+  ev_vulkan_create_buffer(bufferCreateInfo, &allocationCreateInfo, buffer);
+}
+
+static inline VmaAllocator ev_vulkan_getallocator()
+{
+  return VulkanData.allocator;
+}
+
+void ev_vulkan_memorydump()
+{
+  char* vmaDump;
+  vmaBuildStatsString(VulkanData.allocator, &vmaDump, VK_TRUE);
+
+  FILE *dumpFile = fopen("vmadump.json", "w+");
+  fputs(vmaDump, dumpFile);
+  fclose(dumpFile);
+
+  vmaFreeStatsString(VulkanData.allocator, vmaDump);
+}
+
