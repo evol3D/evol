@@ -2,5 +2,6 @@
 directory = flecs-player
 url = https://github.com/flecs-hub/flecs-player.git
 revision = head
+depth = 1
 
 patch_directory = flecs-player

@@ -2,5 +2,6 @@
 directory = flecs-dash
 url = https://github.com/flecs-hub/flecs-dash.git
 revision = head
+depth = 1
 
 patch_directory = flecs-dash

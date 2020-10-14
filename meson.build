@@ -7,6 +7,7 @@ RENDERING_BACKEND = 'VULKAN'
 add_project_arguments('-DVULKAN_BACKEND', language : 'c')
 
 global_incdir = include_directories( './include', './Application', '.')
+add_global_arguments('-Dc_std=c99', language: 'c')
 
 if get_option('buildtype').startswith('debug')
   add_project_arguments('-DDEBUG', language : 'c')
@@ -77,6 +78,7 @@ evol_exe = executable( 'evol', srcfiles,
     cgltf_dep,
     cglm_dep,
     vec_dep,
+    vma_dep,
     # debug
     flecs_meta_dep,
     flecs_dash_dep,

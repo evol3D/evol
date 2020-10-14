@@ -1,6 +1,5 @@
 vulk_mod_src = [
     'Vulkan.c',
-    'vk_mem_alloc.cpp',
     'VulkanQueueManager.c',
 ]
 
@@ -8,12 +7,15 @@ vulk_mod_incdir = include_directories(
     '.'
 )
 
-ev_vulk_lib = library('ev_vulk', 
-    vulk_mod_src, 
-    include_directories: [vulk_mod_incdir, global_incdir], 
-    dependencies: [ 
-      vulk_dep, 
+vma_dep = dependency('vma')
+
+ev_vulk_lib = library('ev_vulk',
+    vulk_mod_src,
+    include_directories: [vulk_mod_incdir, global_incdir],
+    dependencies: [
+      vulk_dep,
       ev_window_dep,
+      vma_dep,
       ]
 )
 

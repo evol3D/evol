@@ -2,5 +2,6 @@
 directory = cgltf
 url = https://github.com/jkuhlmann/cgltf
 revision = head
+depth = 1
 
 patch_directory = cgltf

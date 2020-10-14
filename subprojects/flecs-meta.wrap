@@ -2,3 +2,4 @@
 directory = flecs-meta
 url = https://github.com/flecs-hub/flecs-meta.git
 revision = head
+depth = 1
