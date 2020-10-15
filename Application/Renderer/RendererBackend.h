@@ -2,7 +2,7 @@
 #define EVOL_RENDERERBACKEND_H
 
 #ifdef VULKAN_BACKEND
-#include <Vulkan/Vulkan.h>
+#include <Vulkan.h>
 
 typedef VkShaderModule        ShaderModule;
 typedef VkPipeline            GraphicsPipeline;

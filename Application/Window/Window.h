@@ -8,7 +8,7 @@
 
 #include "stdbool.h"
 
-#include "vulkan/vulkan.h"
+#include <vulkan/vulkan.h>
 
 extern struct _ev_Window {
     int (*init)();

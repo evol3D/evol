@@ -493,16 +493,19 @@ static void ev_rendererbackend_createresourcememorypool(unsigned long long block
     /* sampleBufferCreateInfo.size = 1024; */
     sampleBufferCreateInfo.usage = EV_USAGEFLAGS_RESOURCE_BUFFER;
 
-    VmaAllocationCreateInfo allocationCreateInfo = {};
-    allocationCreateInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
+    VmaAllocationCreateInfo allocationCreateInfo = {
+		.usage = VMA_MEMORY_USAGE_GPU_ONLY,
+    };
+
     vmaFindMemoryTypeIndexForBufferInfo(Vulkan.getAllocator(), &sampleBufferCreateInfo, &allocationCreateInfo, &memoryType);
   }
 
-  VmaPoolCreateInfo poolCreateInfo = {};
-  poolCreateInfo.memoryTypeIndex   = memoryType;
-  poolCreateInfo.blockSize         = blockSize;
-  poolCreateInfo.minBlockCount     = minBlockCount;
-  poolCreateInfo.maxBlockCount     = maxBlockCount;
+  VmaPoolCreateInfo poolCreateInfo = {
+	  .memoryTypeIndex   = memoryType,
+	  .blockSize         = blockSize,
+	  .minBlockCount     = minBlockCount,
+	  .maxBlockCount     = maxBlockCount,
+  };
 
   Vulkan.allocateMemoryPool(&poolCreateInfo, pool);
 }

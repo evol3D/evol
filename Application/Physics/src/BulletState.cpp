@@ -118,6 +118,7 @@ RigidBodyHandle BulletState::addRigidBody(RigidBody *rb)
   motionState->entt_id = (unsigned int)rb->entt_id;
 
   btRigidBody::btRigidBodyConstructionInfo rbInfo(rb->mass, motionState, (btCollisionShape*)rb->collisionShape, localInertia);
+  rbInfo.m_restitution = rb->restitution;
 
   btRigidBody* body = new btRigidBody(rbInfo);
 

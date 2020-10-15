@@ -1,6 +1,6 @@
 //TODO Comments / Logging
 #include "AssetLoader.h"
-#include <World/World.h>
+#include "World/World.h"
 #include <Physics/Physics.h>
 #include <World/modules/transform_module.h>
 #include <World/modules/geometry_module.h>
@@ -62,7 +62,7 @@ static void ev_assetloader_load_gltf_node(cgltf_node curr_node, Entity parent, c
 #endif
 
     // Transform
-    Entity_SetComponent(curr, TransformComponent, {});
+    Entity_SetComponent(curr, TransformComponent, {0});
     TransformComponent *tr = Entity_GetComponent_mut(curr, TransformComponent);
 
     {
@@ -97,6 +97,7 @@ static void ev_assetloader_load_gltf_node(cgltf_node curr_node, Entity parent, c
             meshComponent->primitives->vertexCount,
             meshComponent->primitives->positionBuffer
           ),
+	    .restitution = 1,
       });
       ev_log_trace("Added RigidBodyComponent to entity: %s", curr_node.name);
     }
@@ -121,7 +122,7 @@ static int ev_assetloader_load_gltf(const char *path)
   // Component Module Imports
   ImportModule(GeometryModule);
 
-  Entity mesh_entities[data->meshes_count];
+  Entity *mesh_entities = malloc(sizeof(Entity) * data->meshes_count);
   for(unsigned int mesh_idx = 0; mesh_idx < data->meshes_count; ++mesh_idx)
   {
     mesh_entities[mesh_idx] = CreateEntity();
@@ -221,5 +222,6 @@ static int ev_assetloader_load_gltf(const char *path)
 
   cgltf_free(data);
 
+  free(mesh_entities);
   return 0;
 }

@@ -60,7 +60,7 @@ extern struct ev_World {
 #define Entity_AddTag(entt, tag)    ecs_add(World.getInstance(), entt, tag)
 #define Entity_RemoveTag(entt, tag) ecs_remove(World.getInstance(), entt, tag)
 
-#define Entity_AddComponent(...)              ecs_add(World.getInstance(), __VA_ARGS__)
+#define Entity_AddComponent(entt, cmp)              ecs_add(World.getInstance(), entt, cmp)
 #define Entity_RemoveComponent(entt, cmp)     ecs_remove(World.getInstance(), entt, cmp)
 #define Entity_SetComponent(entt, cmp, ...)   ecs_set(World.getInstance(), entt, cmp, __VA_ARGS__)
 #define Entity_GetComponent(entt, cmp)        ecs_get(World.getInstance(), entt, cmp)
