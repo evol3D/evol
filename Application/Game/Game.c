@@ -56,7 +56,7 @@ static int ev_game_init()
   /* AssetLoader.loadGLTF("Cube.gltf"); */
   /* AssetLoader.loadGLTF("InterpolationTest.gltf"); */
   /* AssetLoader.loadGLTF("CesiumMilkTruck.gltf"); */
-  // AssetLoader.loadGLTF("Duck.gltf");
+  AssetLoader.loadGLTF("Duck.gltf");
   ev_log_trace("Loaded GLTF file");
 
   /* ev_log_trace("Dispatching SceneUpdatedEvent"); */
@@ -78,7 +78,7 @@ void ev_game_loop_physics(real dt)
 
 
   Physics.step_dt(dt);
-  ev_log_info("Physics Step. dt = %f", dt);
+  /* ev_log_info("Physics Step. dt = %f", dt); */
   /* ev_log_info("Iterations: %u", ++iterations); */
 
 }
@@ -94,52 +94,52 @@ void fixedUpdate()
 
 void spawn()
 {
-  World.lockSceneAccess();
-  ImportModule(TransformModule);
-  ImportModule(PhysicsModule);
-  World.unlockSceneAccess();
+  /* World.lockSceneAccess(); */
+  /* ImportModule(TransformModule); */
+  /* ImportModule(PhysicsModule); */
+  /* World.unlockSceneAccess(); */
 
-  double old = Window.getTime();
-  unsigned int spawnrate = 50;
-  double new;
+  /* double old = Window.getTime(); */
+  /* unsigned int spawnrate = 50; */
+  /* double new; */
 
-  /* int spawned = 0; */
+  /* /1* int spawned = 0; *1/ */
 
-  while(!App.closeSystem)
-  {
-    new = Window.getTime();
-    double timeStep = new - old;
-    double remainingTime = (1.f/(double)spawnrate) - timeStep;
+  /* while(!App.closeSystem) */
+  /* { */
+  /*   new = Window.getTime(); */
+  /*   double timeStep = new - old; */
+  /*   double remainingTime = (1.f/(double)spawnrate) - timeStep; */
 
-    if(remainingTime <= 0)
-    {
-      World.lockSceneAccess();
-      Entity sphere = CreateEntity();
-      Entity_SetComponent(sphere, EcsName, {"sphere_1"});
-      Entity_SetComponent(sphere,
-          TransformComponent, {
-            .position = {0, 0, 0, 0},
-            .rotation = {0, 0, 0, 1},
-            .scale    = {1, 1, 1},
-          });
-      Entity_SetComponent(sphere,
-          RigidBodyComponent, {
-            .mass = 1,
-            .restitution = 0.5,
-            .collisionShape = Physics.createSphere(1),
-          });
-      World.unlockSceneAccess();
-      old = new;
-      // ev_log_info("Spheres spawned: %d", spawned++);
-    }
-  }
+  /*   if(remainingTime <= 0) */
+  /*   { */
+  /*     World.lockSceneAccess(); */
+  /*     Entity sphere = CreateEntity(); */
+  /*     Entity_SetComponent(sphere, EcsName, {"sphere_1"}); */
+  /*     Entity_SetComponent(sphere, */
+  /*         TransformComponent, { */
+  /*           .position = {0, 0, 0, 0}, */
+  /*           .rotation = {0, 0, 0, 1}, */
+  /*           .scale    = {1, 1, 1}, */
+  /*         }); */
+  /*     Entity_SetComponent(sphere, */
+  /*         RigidBodyComponent, { */
+  /*           .mass = 1, */
+  /*           .restitution = 0.5, */
+  /*           .collisionShape = Physics.createSphere(1), */
+  /*         }); */
+  /*     World.unlockSceneAccess(); */
+  /*     old = new; */
+  /*     // ev_log_info("Spheres spawned: %d", spawned++); */
+  /*   } */
+  /* } */
 }
 
 
 static void ev_game_loop()
 {
-  pthread_t spawn_thread;
-  pthread_create(&spawn_thread, NULL, (void*)spawn, NULL);
+  /* pthread_t spawn_thread; */
+  /* pthread_create(&spawn_thread, NULL, (void*)spawn, NULL); */
 
   World.lockSceneAccess();
   ImportModule(TransformModule);
@@ -148,17 +148,17 @@ static void ev_game_loop()
   Entity sphere = CreateEntity();
   Entity_SetComponent(sphere, EcsName, {"sphere_1"});
   Entity_SetComponent(sphere,
-	  TransformComponent, {
-		.position = {0, -10, 0, 0},
-		.rotation = {0, 0, 0, 1},
-		.scale    = {1, 1, 1},
-	  });
+    TransformComponent, {
+    .position = {0, -10, 0, 0},
+    .rotation = {0, 0, 0, 1},
+    .scale    = {1, 1, 1},
+    });
   Entity_SetComponent(sphere,
-	  RigidBodyComponent, {
-		.mass = 0,
-		.restitution = 1.5,
-		.collisionShape = Physics.createBox(2, 2, 2),
-	  });
+    RigidBodyComponent, {
+    .mass = 0,
+    .restitution = 1.5,
+    .collisionShape = Physics.createBox(2, 2, 2),
+    });
   World.unlockSceneAccess();
 
   double old = Window.getTime();
@@ -166,22 +166,23 @@ static void ev_game_loop()
   double new;
   while(!App.closeSystem)
   {
+    ev_log_trace("Starting gameloop iteration");
     new = Window.getTime();
     double timeStep = new - old;
     double remainingTime = (1.f/(double)physics_steprate) - timeStep;
 
     if(remainingTime<=0)
     {
-      World.lockSceneAccess();
       World.progress();
-      World.unlockSceneAccess();
       ev_game_loop_physics(timeStep);
       old = new;
     }
     else
     {
-      /* sleep_ms(remainingTime * 1000); */
+      ev_log_trace("Gameloop going to sleep for %f milliseconds", remainingTime * 1000);
+      sleep_ms(remainingTime * 1000);
     }
+    ev_log_trace("Finished gameloop iteration");
   }
   ev_log_debug("Exiting game loop");
 }

@@ -175,7 +175,9 @@ static int destroy(void)
 
   // Waiting for the other threads to finish
   pthread_join(App.eventsystem_thread, 0);
+  ev_log_debug("EventSystem thread finished");
   pthread_join(App.gameloop_thread, 0);
+  ev_log_debug("GameLoop thread finished");
 
   {
     ev_log_debug("Destroying Game");

@@ -23,7 +23,7 @@ struct ev_VulkanQueueManager VulkanQueueManager = {
 
 const float priorityOne = 1.0f;
 
-struct ev_VulkanQueueManager_Data {
+struct ev_VulkanQueueManagerData {
 
   VkQueueFamilyProperties *queueFamilyProperties;
   unsigned int queueFamilyCount;

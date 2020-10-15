@@ -89,7 +89,7 @@ custom_target(
   'env_setup',
   depends: evol_exe,
   output: 'dummy',
-  command: [meson.current_source_dir() + 'scripts/baseshaders.sh', meson.current_source_dir(), meson.current_build_dir()],
+  command: [meson.current_source_dir() + '/scripts/baseshaders.sh', meson.current_source_dir(), meson.current_build_dir()],
   build_by_default: true,
 )
 
@@ -98,7 +98,7 @@ if build_machine.system() == 'windows'
     'dllcopy',
     depends: evol_exe,
     output: 'dummy',
-    command: [meson.current_source_dir() + 'scripts/dllcopy.sh', meson.current_source_dir(), meson.current_build_dir()],
+    command: [meson.current_source_dir() + '/scripts/dllcopy.sh', meson.current_source_dir(), meson.current_build_dir()],
     build_by_default: true,
   )
 endif
