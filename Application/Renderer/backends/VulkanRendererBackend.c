@@ -21,6 +21,8 @@ static void ev_rendererbackend_allocatebufferinpool(MemoryPool pool, unsigned lo
 static void ev_rendererbackend_allocatestagingbuffer(unsigned long long bufferSize, MemoryBuffer *buffer);
 static void ev_rendererbackend_updatestagingbuffer(MemoryBuffer *buffer, unsigned long long bufferSize, const void *data);
 
+static void ev_rendererbackend_copybuffer(unsigned long long size, MemoryBuffer *src, MemoryBuffer *dst);
+
 static void ev_rendererbackend_memorydump();
 
 struct ev_RendererBackend RendererBackend = 
@@ -38,6 +40,8 @@ struct ev_RendererBackend RendererBackend =
   
   .allocateStagingBuffer = ev_rendererbackend_allocatestagingbuffer,
   .updateStagingBuffer = ev_rendererbackend_updatestagingbuffer,
+
+  .copyBuffer = ev_rendererbackend_copybuffer,
 
 
 
@@ -64,6 +68,8 @@ struct ev_RendererBackendData
   EvImage depthBufferImage;
   VkImageView depthBufferImageView;
   VkCommandBuffer *swapchainCommandBuffers;
+
+  VkCommandPool transferCommandPool;
 
   unsigned int currentFrameIndex;
 
@@ -166,6 +172,13 @@ static int ev_rendererbackend_init()
   {
     VK_ASSERT(vkCreateSemaphore(Vulkan.getDevice(), &semaphoreCreateInfo, NULL, SEMAPHORES + i));
   }
+
+  // Creating a commandpool for transfer operations
+  VkCommandPoolCreateInfo transferCommandPoolCreateInfo = {VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO};
+  transferCommandPoolCreateInfo.flags = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT;
+  transferCommandPoolCreateInfo.queueFamilyIndex = VulkanQueueManager.getFamilyIndex(TRANSFER);
+
+  vkCreateCommandPool(Vulkan.getDevice(), &transferCommandPoolCreateInfo, NULL, &DATA(transferCommandPool));
 
   return 0;
 }
@@ -555,4 +568,46 @@ static void ev_rendererbackend_updatestagingbuffer(MemoryBuffer *buffer, unsigne
   vmaMapMemory(Vulkan.getAllocator(), buffer->allocation, &mapped);
   memcpy(mapped, data, bufferSize);
   vmaUnmapMemory(Vulkan.getAllocator(), buffer->allocation);
+}
+
+static void ev_rendererbackend_copybuffer(unsigned long long size, MemoryBuffer *src, MemoryBuffer *dst)
+{
+  VkCommandBuffer tempCommandBuffer;
+  VkCommandBufferAllocateInfo tempCommandBufferAllocateInfo = {VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO};
+  tempCommandBufferAllocateInfo.commandPool = DATA(transferCommandPool);
+  tempCommandBufferAllocateInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+  tempCommandBufferAllocateInfo.commandBufferCount = 1;
+  vkAllocateCommandBuffers(Vulkan.getDevice(), &tempCommandBufferAllocateInfo, &tempCommandBuffer);
+
+  VkCommandBufferBeginInfo tempCommandBufferBeginInfo = {VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO};
+  tempCommandBufferBeginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+
+  vkBeginCommandBuffer(tempCommandBuffer, &tempCommandBufferBeginInfo);
+
+  VkBufferCopy copyRegion;
+  copyRegion.srcOffset = 0;
+  copyRegion.dstOffset = 0;
+  copyRegion.size = size;
+  vkCmdCopyBuffer(tempCommandBuffer, src->buffer, dst->buffer, 1, &copyRegion);
+
+  vkEndCommandBuffer(tempCommandBuffer);
+
+  VkPipelineStageFlags stageMask = VK_PIPELINE_STAGE_TRANSFER_BIT;
+
+  VkSubmitInfo submitInfo         = {VK_STRUCTURE_TYPE_SUBMIT_INFO};
+  submitInfo.pWaitDstStageMask    = &stageMask;
+  submitInfo.commandBufferCount   = 1;
+  submitInfo.pCommandBuffers      = &tempCommandBuffer;
+  submitInfo.waitSemaphoreCount   = 0;
+  submitInfo.pWaitSemaphores      = NULL;
+  submitInfo.signalSemaphoreCount = 0;
+  submitInfo.pSignalSemaphores    = NULL;
+
+  VkQueue transferQueue = VulkanQueueManager.getQueue(TRANSFER);
+  VK_ASSERT(vkQueueSubmit(transferQueue, 1, &submitInfo, VK_NULL_HANDLE));
+
+  //TODO Change this to take advantage of fences
+  vkQueueWaitIdle(transferQueue);
+
+  vkFreeCommandBuffers(Vulkan.getDevice(), DATA(transferCommandPool), 1, &tempCommandBuffer);
 }

@@ -21,6 +21,7 @@ extern struct ev_VulkanQueueManager {
     VkQueue (*getQueue)(QueueType type);
     int (*deinit)(void);
     void (*retrieveQueues)(VkDevice logicalDevice, VkDeviceQueueCreateInfo* queueCreateInfos, unsigned int *queueCreateInfosCount);
+    unsigned int (*getFamilyIndex)(QueueType type);
 } VulkanQueueManager;
 
 #endif //EVOL_VULKANQUEUEMANAGER_H 

@@ -86,12 +86,13 @@ static int ev_renderer_init()
     MemoryBuffer stagingBuffer;
     RendererBackend.allocateStagingBuffer(sizeof(ev_Vector3) * ARRAYSIZE(vertices), &stagingBuffer);
     RendererBackend.updateStagingBuffer(&stagingBuffer, sizeof(ev_Vector3) * ARRAYSIZE(vertices), vertices); 
+    RendererBackend.copyBuffer(sizeof(ev_Vector3) * ARRAYSIZE(vertices), &stagingBuffer, &vertexBuffer);
 
     VkDescriptorPool pool;
     VkDescriptorSet descriptorSet;
 
     VkDescriptorPoolSize poolSize = {
-      .type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+      .type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, // TODO: Measure performance difference of using VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER vs VK_DESCRIPTOR_TYPE_STORAGE_BUFFER
       .descriptorCount = 1,
     };
 
@@ -114,7 +115,7 @@ static int ev_renderer_init()
     write.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
     write.dstSet = descriptorSet;
 
-    VkDescriptorBufferInfo bufferinfo = { stagingBuffer.buffer , 0 , VK_WHOLE_SIZE };
+    VkDescriptorBufferInfo bufferinfo = { vertexBuffer.buffer , 0 , VK_WHOLE_SIZE };
 
     write.pBufferInfo = &bufferinfo;
 
@@ -122,7 +123,6 @@ static int ev_renderer_init()
 
 
     RendererBackend.startNewFrame();
-
 
     vkCmdBindDescriptorSets(RendererBackend.getCurrentFrameCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, RendererData.graphicsPipelinesLayouts[EV_GRAPHICS_PIPELINE_PBR], 0, 1, &descriptorSet, 0, 0);
     vkCmdBindPipeline(RendererBackend.getCurrentFrameCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, RendererData.graphicsPipelines[EV_GRAPHICS_PIPELINE_PBR]);

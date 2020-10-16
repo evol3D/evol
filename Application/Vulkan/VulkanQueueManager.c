@@ -12,12 +12,14 @@
 static int ev_vulkanqueuemanager_init(VkPhysicalDevice physicalDevice, VkDeviceQueueCreateInfo** queueCreateInfos, unsigned int *queueCreateInfosCount);
 static void ev_vulkanqueuemanager_retrievequeues(VkDevice logicalDevice, VkDeviceQueueCreateInfo* queueCreateInfos, unsigned int *queueCreateInfosCount);
 static VkQueue ev_vulkanqueuemanager_getqueue(QueueType type);
+static unsigned int ev_vulkanqueuemanager_getfamilyindex(QueueType type);
 static int ev_vulkanqueuemanager_deinit();
 
 struct ev_VulkanQueueManager VulkanQueueManager = {
   .init = ev_vulkanqueuemanager_init,
   .deinit = ev_vulkanqueuemanager_deinit,
   .getQueue = ev_vulkanqueuemanager_getqueue,
+  .getFamilyIndex = ev_vulkanqueuemanager_getfamilyindex,
   .retrieveQueues = ev_vulkanqueuemanager_retrievequeues,
 };
 
@@ -122,6 +124,7 @@ static int ev_vulkanqueuemanager_deinit()
   return 0;
 }
 
+// TODO Change this when time comes
 static VkQueue ev_vulkanqueuemanager_getqueue(QueueType type)
 {
   // TODO: A real search and return approach should be implemented.
@@ -131,6 +134,19 @@ static VkQueue ev_vulkanqueuemanager_getqueue(QueueType type)
       
   ev_log_error("Couldn't find Queue of type: %d. Returning VK_NULL_HANDLE.", type);
   return VK_NULL_HANDLE;
+}
+
+// TODO Change this when time comes
+static unsigned int ev_vulkanqueuemanager_getfamilyindex(QueueType type)
+{
+  // TODO: A real search and return approach should be implemented.
+  for(int i = 0; i < DATA(queueFamilyCount); ++i)
+    if((PROPERTIES[i].queueFlags & type) && QUEUES_USE_COUNT[i])
+      return i;
+      
+  ev_log_error("Couldn't find Queue of type: %d. Returning VK_NULL_HANDLE.", type);
+  return -1;
+
 }
 
 static void ev_vulkanqueuemanager_retrievequeues(VkDevice logicalDevice, VkDeviceQueueCreateInfo* queueCreateInfos, unsigned int *queueCreateInfosCount)
@@ -147,3 +163,4 @@ static void ev_vulkanqueuemanager_retrievequeues(VkDevice logicalDevice, VkDevic
 
   free(queueCreateInfos);
 }
+

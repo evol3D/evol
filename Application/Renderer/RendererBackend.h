@@ -33,6 +33,8 @@ extern struct ev_RendererBackend {
     void (*allocateStagingBuffer)(unsigned long long bufferSize, MemoryBuffer *buffer);
     void (*updateStagingBuffer)(MemoryBuffer *buffer, unsigned long long bufferSize, const void *data);
 
+    void (*copyBuffer)(unsigned long long size, MemoryBuffer *src, MemoryBuffer *dst);
+
     void (*memoryDump)();
 
     //TODO fix the need for these
