@@ -11,7 +11,9 @@ static void ev_renderer_prepare_graphics_pipelines();
 static inline void ev_renderer_loadbaseshaders();
 static inline void ev_renderer_unloadbaseshaders();
 
+//delete these
 static void ev_renderer_bind();
+static void ev_renderer_create_descriptors();
 
 #define SET_SHADER(id, path) RendererData.baseShaderPaths[id] = path;
 
@@ -51,24 +53,87 @@ struct ev_Renderer_Data {
   const char * baseShaderPaths[EV_BASE_SHADER_COUNT];
   ShaderModule baseShaders[EV_BASE_SHADER_COUNT];
   MemoryPool resourcePool;
+
+
+
+  // ********************************
+  VkPipelineLayout graphicsPipelinesLayouts[GRAPHICS_PIPELINES_COUNT];
 } RendererData;
 
 static int ev_renderer_init()
 {
   RendererBackend.init();
-  RendererBackend.createResourceMemoryPool(128ull * 1024 * 1024, 1, 4, &RendererData.resourcePool);
-
-  MemoryBuffer vertexBuffer;
-  RendererBackend.allocateBufferInPool(RendererData.resourcePool, 32 * 1024 * 1024, EV_USAGEFLAGS_RESOURCE_BUFFER, &vertexBuffer);
 
   ev_renderer_prepare_descriptorset_layouts();
 
   ev_renderer_loadbaseshaders();
   ev_renderer_prepare_graphics_pipelines();
 
-  RendererBackend.startNewFrame();
-  ev_renderer_bind();
-  RendererBackend.endFrame();
+  ev_renderer_create_descriptors();
+  RendererBackend.createResourceMemoryPool(128ull * 1024 * 1024, 1, 4, &RendererData.resourcePool);
+
+  {
+    const ev_Vector3 vertices[] = 
+    {
+        {    0,  0.5, 0, 1},
+        { -0.5, -0.5, 0, 1},
+        {  0.5, -0.5, 0, 1},
+    };
+
+    MemoryBuffer vertexBuffer;
+    RendererBackend.allocateBufferInPool(RendererData.resourcePool, sizeof(ev_Vector3) * ARRAYSIZE(vertices), EV_USAGEFLAGS_RESOURCE_BUFFER, &vertexBuffer);
+
+    MemoryBuffer stagingBuffer;
+    RendererBackend.allocateStagingBuffer(sizeof(ev_Vector3) * ARRAYSIZE(vertices), &stagingBuffer);
+    RendererBackend.updateStagingBuffer(&stagingBuffer, sizeof(ev_Vector3) * ARRAYSIZE(vertices), vertices); 
+
+    VkDescriptorPool pool;
+    VkDescriptorSet descriptorSet;
+
+    VkDescriptorPoolSize poolSize = {
+      .type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+      .descriptorCount = 1,
+    };
+
+    VkDescriptorPoolCreateInfo descriptorPoolCreateInfo = {VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO};
+
+    descriptorPoolCreateInfo.maxSets = 1;
+    descriptorPoolCreateInfo.poolSizeCount = 1;
+    descriptorPoolCreateInfo.pPoolSizes = &poolSize;
+    
+    vkCreateDescriptorPool(Vulkan.getDevice(), &descriptorPoolCreateInfo, NULL, &pool);
+
+    VkDescriptorSetAllocateInfo setAllocateInfo = { VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO };
+    setAllocateInfo.descriptorPool = pool;
+    setAllocateInfo.descriptorSetCount = 1;
+    setAllocateInfo.pSetLayouts = &RendererData.descriptorSetLayouts[EV_DESCRIPTOR_SET_LAYOUT_TEXTURE];
+    vkAllocateDescriptorSets(Vulkan.getDevice(),&setAllocateInfo,&descriptorSet);
+
+    VkWriteDescriptorSet write = {VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET};
+    write.descriptorCount = 1;
+    write.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+    write.dstSet = descriptorSet;
+
+    VkDescriptorBufferInfo bufferinfo = { stagingBuffer.buffer , 0 , VK_WHOLE_SIZE };
+
+    write.pBufferInfo = &bufferinfo;
+
+    vkUpdateDescriptorSets(Vulkan.getDevice(), 1 ,&write,0,NULL);
+
+
+    RendererBackend.startNewFrame();
+
+
+    vkCmdBindDescriptorSets(RendererBackend.getCurrentFrameCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, RendererData.graphicsPipelinesLayouts[EV_GRAPHICS_PIPELINE_PBR], 0, 1, &descriptorSet, 0, 0);
+    vkCmdBindPipeline(RendererBackend.getCurrentFrameCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, RendererData.graphicsPipelines[EV_GRAPHICS_PIPELINE_PBR]);
+    vkCmdDraw(RendererBackend.getCurrentFrameCommandBuffer(), 3, 1, 0, 0);
+
+    RendererBackend.endFrame();
+  }
+
+  /* RendererBackend.startNewFrame(); */
+  /* ev_renderer_bind(); */
+  /* RendererBackend.endFrame(); */
 
   RendererBackend.memoryDump();
 
@@ -91,9 +156,9 @@ static void ev_renderer_prepare_descriptorset_layouts()
       {
         .binding = 0,
         .descriptorCount = 1,
-        .descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+        .descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
         .pImmutableSamplers = NULL,
-        .stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT
+        .stageFlags = VK_SHADER_STAGE_VERTEX_BIT
       }
     };
 
@@ -133,7 +198,6 @@ static void ev_renderer_prepare_descriptorset_layouts()
 static void ev_renderer_prepare_graphics_pipelines()
 {
   //TODO when you implement multiple pipelines take a look at input attributes , this pipeline should be a rigging pipeline
-  VkPipelineLayout pipelineLayout;
 
   VkPipelineShaderStageCreateInfo pipelineShaderStages[] = 
   {
@@ -250,7 +314,7 @@ static void ev_renderer_prepare_graphics_pipelines()
     .pPushConstantRanges = &pc
   };
 
-  VK_ASSERT(vkCreatePipelineLayout(Vulkan.getDevice(), &pipelineLayoutCreateInfo, NULL, &pipelineLayout));
+  VK_ASSERT(vkCreatePipelineLayout(Vulkan.getDevice(), &pipelineLayoutCreateInfo, NULL, &RendererData.graphicsPipelinesLayouts[EV_GRAPHICS_PIPELINE_PBR]));
 
   // The graphicsPipelinesCreateInfos array should follow the order set by
   // the GraphicsPipelineUsage enum.
@@ -268,7 +332,7 @@ static void ev_renderer_prepare_graphics_pipelines()
       .pDepthStencilState = &pipelineDepthStencilState,
       .pColorBlendState = &pipelineColorBlendState,
       .pDynamicState = &pipelineDynamicState,
-      .layout = pipelineLayout,
+      .layout = RendererData.graphicsPipelinesLayouts[EV_GRAPHICS_PIPELINE_PBR],
       .renderPass = RendererBackend.getRenderPass(),
       .subpass = 0, // TODO Read more about the graphics pipelines and what this number represents (first subpass to run?)
     } 
@@ -324,6 +388,45 @@ static void ev_renderer_bind() // TODO
     vkCmdDraw(RendererBackend.getCurrentFrameCommandBuffer(), 3, 1, 0, 0);
 
   }
+}
+static void ev_renderer_create_descriptors()
+{
+  /* VkDescriptorPool pool; */
+  /* VkDescriptorSet descriptorSet; */
+
+  /* VkDescriptorPoolSize poolSize = { */
+  /*   .type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, */
+  /*   .descriptorCount = 1, */
+  /* }; */
+
+  /* VkDescriptorPoolCreateInfo descriptorPoolCreateInfo = {VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO}; */
+  /* /1* VkDescriptorPoolCreateFlags    flags; *1/ */
+  /* /1* uint32_t                       maxSets; *1/ */
+  /* /1* uint32_t                       poolSizeCount; *1/ */
+  /* /1* const VkDescriptorPoolSize*    pPoolSizes; *1/ */
+
+  /* descriptorPoolCreateInfo.maxSets = 1; */
+  /* descriptorPoolCreateInfo.poolSizeCount = 1; */
+  /* descriptorPoolCreateInfo.pPoolSizes = &poolSize; */
+  
+  /* vkCreateDescriptorPool(Vulkan.getDevice(), &descriptorPoolCreateInfo, NULL, &pool); */
+
+  /* VkDescriptorSetAllocateInfo setAllocateInfo = { VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO }; */
+  /* setAllocateInfo.descriptorPool = pool; */
+  /* setAllocateInfo.descriptorSetCount = 1; */
+  /* setAllocateInfo.pSetLayouts = &RendererData.descriptorSetLayouts[EV_DESCRIPTOR_SET_LAYOUT_TEXTURE]; */
+  /* vkAllocateDescriptorSets(Vulkan.getDevice(),&setAllocateInfo,&descriptorSet); */
+
+  /* VkWriteDescriptorSet write = {VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET}; */
+  /* write.descriptorCount = 1; */
+  /* write.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER; */
+  /* write.dstSet = descriptorSet; */
+
+  /* VkDescriptorBufferInfo bufferinfo = { buffer , 0 , VK_WHOLE_SIZE }; */
+
+  /* write.pBufferInfo = &bufferinfo; */
+
+  /* vkUpdateDescriptorSets(Vulkan.getDevice(), 1 ,&write,0,NULL); */
 }
 
 static void ev_renderer_update_resources(MeshComponent* meshes, unsigned int meshes_count)

@@ -30,6 +30,9 @@ extern struct ev_RendererBackend {
     void (*createResourceMemoryPool)(unsigned long long blockSize, unsigned int minBlockCount, unsigned int maxBlockCount, MemoryPool *pool);
     void (*allocateBufferInPool)(MemoryPool pool, unsigned long long bufferSize, unsigned long long usageFlags, MemoryBuffer *buffer);
 
+    void (*allocateStagingBuffer)(unsigned long long bufferSize, MemoryBuffer *buffer);
+    void (*updateStagingBuffer)(MemoryBuffer *buffer, unsigned long long bufferSize, const void *data);
+
     void (*memoryDump)();
 
     //TODO fix the need for these

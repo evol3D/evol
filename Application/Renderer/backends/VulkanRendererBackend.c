@@ -1,6 +1,7 @@
 #include <Renderer/RendererBackend.h>
 #include <Window.h>
 #include <Vulkan.h>
+#include <string.h>
 #include <stdlib.h>
 
 static int ev_rendererbackend_init();
@@ -17,6 +18,9 @@ static VkRenderPass ev_rendererbackend_getrenderpass();
 static void ev_rendererbackend_createresourcememorypool(unsigned long long blockSize, unsigned int minBlockCount, unsigned int maxBlockCount, MemoryPool *pool);
 static void ev_rendererbackend_allocatebufferinpool(MemoryPool pool, unsigned long long bufferSize, unsigned long long usageFlags, MemoryBuffer *buffer);
 
+static void ev_rendererbackend_allocatestagingbuffer(unsigned long long bufferSize, MemoryBuffer *buffer);
+static void ev_rendererbackend_updatestagingbuffer(MemoryBuffer *buffer, unsigned long long bufferSize, const void *data);
+
 static void ev_rendererbackend_memorydump();
 
 struct ev_RendererBackend RendererBackend = 
@@ -31,6 +35,13 @@ struct ev_RendererBackend RendererBackend =
 
   .createResourceMemoryPool = ev_rendererbackend_createresourcememorypool,
   .allocateBufferInPool = ev_rendererbackend_allocatebufferinpool,
+  
+  .allocateStagingBuffer = ev_rendererbackend_allocatestagingbuffer,
+  .updateStagingBuffer = ev_rendererbackend_updatestagingbuffer,
+
+
+
+
   .memoryDump = ev_rendererbackend_memorydump,
 
   // TODO Remove
@@ -522,4 +533,26 @@ static void ev_rendererbackend_allocatebufferinpool(MemoryPool pool, unsigned lo
 static void ev_rendererbackend_memorydump()
 {
   Vulkan.memoryDump();
+}
+
+static void ev_rendererbackend_allocatestagingbuffer(unsigned long long bufferSize, MemoryBuffer *buffer)
+{
+  VmaAllocationCreateInfo allocationCreateInfo = {
+    .usage = VMA_MEMORY_USAGE_CPU_ONLY, // TODO: Experiment with VMA_MEMORY_USAGE_CPU_TO_GPU
+  };
+
+  VkBufferCreateInfo bufferCreateInfo = { VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO };
+  bufferCreateInfo.size = bufferSize;
+  bufferCreateInfo.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+  bufferCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+
+  Vulkan.createBuffer(&bufferCreateInfo, &allocationCreateInfo, buffer);
+}
+
+static void ev_rendererbackend_updatestagingbuffer(MemoryBuffer *buffer, unsigned long long bufferSize, const void *data)
+{
+  void *mapped;
+  vmaMapMemory(Vulkan.getAllocator(), buffer->allocation, &mapped);
+  memcpy(mapped, data, bufferSize);
+  vmaUnmapMemory(Vulkan.getAllocator(), buffer->allocation);
 }
