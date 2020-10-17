@@ -43,27 +43,23 @@ static int ev_renderer_init()
   DescriptorSet descriptorSet;
   RendererBackend.allocateDescriptorSet(EV_DESCRIPTOR_SET_LAYOUT_TEXTURE, &descriptorSet);
 
-  { // TODO: RendererBackend.pushDescriptorsToSet(set, descriptors, count)
-    VkWriteDescriptorSet write = {VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET};
-    write.descriptorCount = 1;
-    write.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-    write.dstSet = descriptorSet;
+  Descriptor descriptors[] = 
+  {
+    {EV_DESCRIPTOR_TYPE_UNIFORM_BUFFER, &vertexBuffer},
+  };
 
-    VkDescriptorBufferInfo bufferinfo = {vertexBuffer.buffer, 0, VK_WHOLE_SIZE};
+  RendererBackend.pushDescriptorsToSet(descriptorSet, descriptors, ARRAYSIZE(descriptors));
 
-    write.pBufferInfo = &bufferinfo;
+  RendererBackend.startNewFrame();
 
-    vkUpdateDescriptorSets(Vulkan.getDevice(), 1 , &write, 0, NULL);
+  RendererBackend.bindPipeline(EV_GRAPHICS_PIPELINE_PBR);
+  RendererBackend.bindDescriptorSets(&descriptorSet, 1);
 
-
-    RendererBackend.startNewFrame();
-
-    RendererBackend.bindPipeline(EV_GRAPHICS_PIPELINE_PBR);
-    RendererBackend.bindDescriptorSets(&descriptorSet, 1);
+  {
     vkCmdDraw(RendererBackend.getCurrentFrameCommandBuffer(), 3, 1, 0, 0);
-
-    RendererBackend.endFrame();
   }
+
+  RendererBackend.endFrame();
 
   RendererBackend.memoryDump();
 
@@ -101,6 +97,6 @@ static int ev_renderer_deinit()
 /*   } */
 /* } */
 
-static void ev_renderer_update_resources(MeshComponent* meshes, unsigned int meshes_count)
+static void EV_UNUSED ev_renderer_update_resources(MeshComponent* meshes, unsigned int meshes_count)
 {
 }

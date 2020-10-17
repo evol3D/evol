@@ -25,4 +25,12 @@ extern const ev_Vector4* entity_get_position(unsigned int entt);
 extern ev_Vector4* entity_get_rotation_mut(unsigned int entt);
 extern const ev_Vector4* entity_get_rotation(unsigned int entt);
 
+#ifdef __GNUC__
+# define EV_UNUSED   __attribute__((unused))
+# define EV_ALIGN(x) __attribute__((align(x)))
+#elif _MSC_BUILD
+# define EV_UNUSED
+# define EV_ALIGN(x) __declspec(align(x))
+#endif
+
 #endif

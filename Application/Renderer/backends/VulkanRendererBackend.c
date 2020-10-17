@@ -24,6 +24,7 @@ static int ev_rendererbackend_bindpipeline(GraphicsPipelineType type);
 
 static int ev_rendererbackend_binddescriptorsets(DescriptorSet *descriptorSets, unsigned int count);
 static int ev_rendererbackend_allocatedescriptorset(DescriptorSetLayoutType setLayoutType, DescriptorSet *descriptorSet);
+static int ev_rendererbackend_pushdescriptorstoset(DescriptorSet descriptorSet, Descriptor *descriptors, unsigned int descriptorsCount);
 
 
 static void ev_rendererbackend_createresourcememorypool(unsigned long long blockSize, unsigned int minBlockCount, unsigned int maxBlockCount, MemoryPool *pool);
@@ -58,6 +59,7 @@ struct ev_RendererBackend RendererBackend =
 
   .bindDescriptorSets = ev_rendererbackend_binddescriptorsets,
   .allocateDescriptorSet = ev_rendererbackend_allocatedescriptorset,
+  .pushDescriptorsToSet = ev_rendererbackend_pushdescriptorstoset,
 
   .loadShader = ev_rendererbackend_loadshader,
   .unloadShader = ev_rendererbackend_unloadshader,
@@ -909,5 +911,52 @@ static int ev_rendererbackend_allocatedescriptorset(DescriptorSetLayoutType setL
   setAllocateInfo.pSetLayouts = &BASE_DESCRIPTOR_SET_LAYOUTS[EV_DESCRIPTOR_SET_LAYOUT_TEXTURE];
 
   vkAllocateDescriptorSets(Vulkan.getDevice(), &setAllocateInfo, descriptorSet);
+  return 0;
+}
+
+static int ev_rendererbackend_pushdescriptorstoset(DescriptorSet descriptorSet, Descriptor *descriptors, unsigned int descriptorsCount)
+{
+  VkWriteDescriptorSet *setWrites = malloc(descriptorsCount * sizeof(VkWriteDescriptorSet));
+  VkDescriptorBufferInfo *bufferInfos = malloc(descriptorsCount * sizeof(VkDescriptorBufferInfo));
+
+  for(unsigned int i = 0; i < descriptorsCount; ++i)
+  {
+    switch(descriptors[i].type)
+    {
+      case EV_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER:
+      case EV_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER:
+      case EV_DESCRIPTOR_TYPE_UNIFORM_BUFFER:
+      case EV_DESCRIPTOR_TYPE_STORAGE_BUFFER:
+        bufferInfos[i] = (VkDescriptorBufferInfo){
+          .buffer = ((MemoryBuffer*)descriptors[i].descriptorData)->buffer,
+          .offset = 0,
+          .range = VK_WHOLE_SIZE,
+        };
+        setWrites[i] = (VkWriteDescriptorSet){
+          .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+          .descriptorCount = 1,
+          .descriptorType = (VkDescriptorType)descriptors[i].type,
+          .dstSet = descriptorSet,
+          .pBufferInfo = &bufferInfos[i],
+        };
+        break;
+
+      case EV_DESCRIPTOR_TYPE_SAMPLED_IMAGE:
+      case EV_DESCRIPTOR_TYPE_STORAGE_IMAGE:
+        break;
+
+      case EV_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC:
+      case EV_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC:
+      case EV_DESCRIPTOR_TYPE_SAMPLER:
+      case EV_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER:
+      case EV_DESCRIPTOR_TYPE_INPUT_ATTACHMENT:
+      default:
+        ;
+    }
+  }
+
+  vkUpdateDescriptorSets(Vulkan.getDevice(), descriptorsCount, setWrites, 0, NULL);
+
+  free(setWrites);
   return 0;
 }

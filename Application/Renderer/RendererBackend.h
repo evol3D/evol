@@ -19,6 +19,26 @@ typedef unsigned int          MemoryType;
 
 #define EV_USAGEFLAGS_RESOURCE_BUFFER VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT
 
+typedef enum DescriptorType {
+   EV_DESCRIPTOR_TYPE_SAMPLER                = VK_DESCRIPTOR_TYPE_SAMPLER,
+   EV_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+   EV_DESCRIPTOR_TYPE_SAMPLED_IMAGE          = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE,
+   EV_DESCRIPTOR_TYPE_STORAGE_IMAGE          = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE,
+   EV_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER   = VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER,
+   EV_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER   = VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER,
+   EV_DESCRIPTOR_TYPE_UNIFORM_BUFFER         = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+   EV_DESCRIPTOR_TYPE_STORAGE_BUFFER         = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+   EV_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC,
+   EV_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC,
+   EV_DESCRIPTOR_TYPE_INPUT_ATTACHMENT       = VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT,
+} DescriptorType;
+
+typedef struct Descriptor
+{
+  DescriptorType type;
+  void *descriptorData;
+} Descriptor;
+
 #endif
 
 extern struct ev_RendererBackend {
@@ -42,6 +62,8 @@ extern struct ev_RendererBackend {
     int (*bindDescriptorSets)(DescriptorSet *descriptorSets, unsigned int count);
 
     int (*allocateDescriptorSet)(DescriptorSetLayoutType setLayoutType, DescriptorSet *descriptorSet);
+
+    int (*pushDescriptorsToSet)(DescriptorSet descriptorSet, Descriptor *descriptors, unsigned int descriptorsCount);
 
 
     ShaderModule (*loadShader)(const char *);

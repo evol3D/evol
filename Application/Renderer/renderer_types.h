@@ -7,7 +7,7 @@ typedef enum
   EV_DESCRIPTOR_SET_LAYOUT_RIG,
 
   // Add before this line
-  DESCRIPTOR_SET_LAYOUT_COUNT,
+  DESCRIPTOR_SET_LAYOUT_COUNT
 } DescriptorSetLayoutType;
 
 typedef enum
@@ -23,7 +23,7 @@ typedef enum
   EV_GRAPHICS_PIPELINE_PBR,
 
   // Add before this line
-  GRAPHICS_PIPELINES_COUNT,
+  GRAPHICS_PIPELINES_COUNT
 } GraphicsPipelineType;
 
 #endif
