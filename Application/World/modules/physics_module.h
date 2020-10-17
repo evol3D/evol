@@ -22,7 +22,7 @@ ECS_UNUSED
 static EcsMetaType __RigidBodyComponent__ = {
     .kind = EcsStructType,
     .size = sizeof(RigidBodyComponent),
-    .alignment = ECS_ALIGNOF(RigidBodyComponent),
+    .alignment = 8, //ECS_ALIGNOF(RigidBodyComponent),
     .descriptor = 
       "{"
       "float linearVelocity_x; float linearVelocity_y; float linearVelocity_z; float linearVelocity_w;"

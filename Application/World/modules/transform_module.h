@@ -7,15 +7,15 @@
 
 typedef struct
 {
-  ev_Vector4 position;
-  ev_Vector4 rotation;
-  ev_Vector4 scale;
-} TransformComponent;
+  ev_Vector4 position EV_ALIGN(16);
+  ev_Vector4 rotation EV_ALIGN(16);
+  ev_Vector3 scale    EV_ALIGN(16);
+} EV_PACKED TransformComponent  EV_ALIGN(16);
 
 static ECS_UNUSED EcsMetaType __TransformComponent__ = {
     .kind = EcsStructType,
     .size = sizeof(TransformComponent),
-    .alignment = ECS_ALIGNOF(TransformComponent),
+    .alignment = 4, //ECS_ALIGNOF(TransformComponent),
     .descriptor = 
       "{"
       "float pos_x; float pos_y; float pos_z; float pos_w;"

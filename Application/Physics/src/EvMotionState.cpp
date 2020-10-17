@@ -25,8 +25,8 @@ void EvMotionState::getWorldTransform(btTransform & centerOfMassWorldTrans) cons
 
 void EvMotionState::setWorldTransform(const btTransform & centerOfMassWorldTrans)
 {
-  ev_Vector3 *ev_PositionVector = entity_get_position_mut(entt_id);
-  ev_Vector3 *ev_RotationVector = entity_get_rotation_mut(entt_id);
+  ev_Vector4 *ev_PositionVector = entity_get_position_mut(entt_id);
+  ev_Vector4 *ev_RotationVector = entity_get_rotation_mut(entt_id);
   if(ev_PositionVector)
   {
     const btVector3 pos = centerOfMassWorldTrans.getOrigin();

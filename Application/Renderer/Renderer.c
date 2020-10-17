@@ -25,12 +25,12 @@ static int ev_renderer_init()
 
   RendererBackend.createResourceMemoryPool(128ull * 1024 * 1024, 1, 4, &RendererData.resourcePool);
 
-  const ev_Vector3 vertices[] = 
-  {
-      {    0,  0.5, 0, 1},
-      { -0.5, -0.5, 0, 1},
-      {  0.5, -0.5, 0, 1},
+  ev_Vector3 vertices[] = {
+    {    0,  0.5, 0},
+    { -0.5, -0.5, 0},
+    {  0.5, -0.5, 0},
   };
+  
 
   MemoryBuffer vertexBuffer;
   RendererBackend.allocateBufferInPool(RendererData.resourcePool, sizeof(ev_Vector3) * ARRAYSIZE(vertices), EV_USAGEFLAGS_RESOURCE_BUFFER, &vertexBuffer);

@@ -1,17 +1,11 @@
 #version 450
 
-/* const vec3 vertices[] = */ 
-/* { */
-/*     vec3(0, 0.5, 0), */
-/*     vec3(-0.5, -0.5, 0), */
-/*     vec3(0.5, -0.5, 0), */
-/* }; */
 layout (binding = 0) buffer Vertices
 {
-  vec4 vertices[];
+  layout (align = 16) vec3 vertices[];
 };
 
 void main() 
 {
-  gl_Position = vertices[gl_VertexIndex];
+  gl_Position = vec4(vertices[gl_VertexIndex], 1);
 }
