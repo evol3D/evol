@@ -8,7 +8,7 @@
 #elif _MSC_BUILD
 # define EV_UNUSED
 # define EV_ALIGN(x) __declspec(align(x))
-# define EV_PACKED
+# define EV_PACKED   __pragma(pack(1))
 #endif
 
 typedef float real;
