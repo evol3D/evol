@@ -19,6 +19,7 @@ typedef struct
 
   CollisionShape collisionShape;
   real mass;
+  real restitution;
 } RigidBody;
 
 #ifdef __cplusplus

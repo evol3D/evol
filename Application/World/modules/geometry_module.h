@@ -17,7 +17,7 @@ typedef struct
   unsigned int vertexCount;
 } MeshPrimitive;
 
-static EcsMetaType __MeshPrimitive__ = {
+static ECS_UNUSED EcsMetaType __MeshPrimitive__ = {
     .kind = EcsStructType,
     .size = sizeof(MeshPrimitive),
     .alignment = ECS_ALIGNOF(MeshPrimitive),
@@ -39,7 +39,7 @@ typedef struct
   unsigned int primitives_count;
 } MeshComponent;
 
-static EcsMetaType __MeshComponent__ = {
+static ECS_UNUSED EcsMetaType __MeshComponent__ = {
     .kind = EcsStructType,
     .size = sizeof(MeshComponent),
     .alignment = ECS_ALIGNOF(MeshComponent),

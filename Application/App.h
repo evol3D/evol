@@ -6,7 +6,7 @@
 
 #include "Physics/Physics.h"
 
-#include "Vulkan/Vulkan.h"
+#include "Vulkan.h"
 #include "Renderer/Renderer.h"
 
 #include "World/World.h"

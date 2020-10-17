@@ -1,8 +1,13 @@
-project('evol', 'c', version: '0.1', default_options : ['default_library=static'])
+project('evol', ['c'], version: '0.1', default_options : ['default_library=static'])
 
 cc = meson.get_compiler('c')
 
+# Options: ['VULKAN']
+RENDERING_BACKEND = 'VULKAN'
+add_project_arguments('-DVULKAN_BACKEND', language : 'c')
+
 global_incdir = include_directories( './include', './Application', '.')
+add_global_arguments('-Dc_std=c99', language: 'c')
 
 if get_option('buildtype').startswith('debug')
   add_project_arguments('-DDEBUG', language : 'c')
@@ -27,11 +32,8 @@ evol_thread_dep = evol_threads_proj.get_variable('evol_thread_dep')
 dl_dep = cc.find_library('dl', required: false)
 
 cgltf_dep = dependency('cgltf')
-
-cglm_dep = dependency('cglm')
-
-vec_dep = dependency('vec')
-
+cglm_dep  = dependency('cglm')
+vec_dep   = dependency('vec')
 
 subdir('Application/Window')
 subdir('Application/Vulkan')
@@ -44,7 +46,6 @@ srcfiles = files('src/main.c',
             'Application/Input/Input.c',
             'Application/World/World.c',
             'Application/World/flecs_threads.c',
-            'Application/EventDebug/EventDebug.c',
             'Application/Game/Game.c',
             'Application/Renderer/Renderer.c',
             'Application/World/modules/transform_module.c',
@@ -52,7 +53,15 @@ srcfiles = files('src/main.c',
             'Application/World/modules/physics_module.c',
             'Application/World/modules/geometry_module.c',
             'Application/Asset/AssetLoader.c',
+            'Application/EventDebug/EventDebug.c',
             )
+
+if RENDERING_BACKEND == 'VULKAN'
+  srcfiles += 'Application/Renderer/backends/VulkanRendererBackend.c'
+endif
+
+vma_dep = dependency('vma')
+
 
 
 evol_exe = executable( 'evol', srcfiles,
@@ -68,6 +77,7 @@ evol_exe = executable( 'evol', srcfiles,
     cgltf_dep,
     cglm_dep,
     vec_dep,
+    vma_dep,
     # debug
     flecs_meta_dep,
     flecs_dash_dep,
@@ -79,6 +89,16 @@ custom_target(
   'env_setup',
   depends: evol_exe,
   output: 'dummy',
-  command: [meson.current_source_dir() + '/baseshaders.sh', meson.current_source_dir(), meson.current_build_dir()],
+  command: [meson.current_source_dir() + '/scripts/baseshaders.sh', meson.current_source_dir(), meson.current_build_dir()],
   build_by_default: true,
+)
+
+if build_machine.system() == 'windows'
+  custom_target(
+    'dllcopy',
+    depends: evol_exe,
+    output: 'dummy',
+    command: [meson.current_source_dir() + '/scripts/dllcopy.sh', meson.current_source_dir(), meson.current_build_dir()],
+    build_by_default: true,
   )
+endif

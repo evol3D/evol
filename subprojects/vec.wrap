@@ -2,5 +2,6 @@
 directory = vec
 url = https://github.com/rxi/vec
 revision = head
+depth = 1
 
 patch_directory = vec

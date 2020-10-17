@@ -2,3 +2,4 @@
 directory = cglm
 url = https://github.com/recp/cglm
 revision = head
+depth = 1

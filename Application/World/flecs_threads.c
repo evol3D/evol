@@ -1,7 +1,6 @@
-
 #include "flecs_threads.h"
 
-static ecs_os_thread_t ev_flecs_thread_new(ecs_os_thread_callback_t callback, void *arg)
+ecs_os_thread_t ev_flecs_thread_new(ecs_os_thread_callback_t callback, void *arg)
 {
   pthread_t thread;
   int r;
@@ -12,14 +11,14 @@ static ecs_os_thread_t ev_flecs_thread_new(ecs_os_thread_callback_t callback, vo
   return (ecs_os_thread_t)thread;
 }
 
-static void * ev_flecs_thread_join(ecs_os_thread_t thread)
+void * ev_flecs_thread_join(ecs_os_thread_t thread)
 {
   void *arg;
   pthread_join((pthread_t)thread, &arg);
   return arg;
 }
 
-static ecs_os_mutex_t ev_flecs_mutex_new(void)
+ecs_os_mutex_t ev_flecs_mutex_new(void)
 {
   pthread_mutex_t *mutex = ecs_os_malloc(sizeof(pthread_mutex_t));
   if (pthread_mutex_init(mutex, NULL)) {
@@ -28,14 +27,14 @@ static ecs_os_mutex_t ev_flecs_mutex_new(void)
   return (ecs_os_mutex_t)(uintptr_t)mutex;
 }
 
-static void ev_flecs_mutex_free(ecs_os_mutex_t m)
+void ev_flecs_mutex_free(ecs_os_mutex_t m)
 {
   pthread_mutex_t *mutex = (pthread_mutex_t*)(intptr_t)m;
   pthread_mutex_destroy(mutex);
   ecs_os_free(mutex);
 }
 
-static void ev_flecs_mutex_lock(ecs_os_mutex_t m)
+void ev_flecs_mutex_lock(ecs_os_mutex_t m)
 {
   pthread_mutex_t *mutex = (pthread_mutex_t*)(intptr_t)m;
   if (pthread_mutex_lock(mutex)) {
@@ -43,7 +42,7 @@ static void ev_flecs_mutex_lock(ecs_os_mutex_t m)
   }
 }
 
-static void ev_flecs_mutex_unlock(ecs_os_mutex_t m)
+void ev_flecs_mutex_unlock(ecs_os_mutex_t m)
 {
   pthread_mutex_t *mutex = (pthread_mutex_t*)(intptr_t)m;
   if (pthread_mutex_unlock(mutex)) {
@@ -51,7 +50,7 @@ static void ev_flecs_mutex_unlock(ecs_os_mutex_t m)
   }
 }
 
-static ecs_os_cond_t ev_flecs_cond_new(void)
+ecs_os_cond_t ev_flecs_cond_new(void)
 {
   pthread_cond_t *cond = ecs_os_malloc(sizeof(pthread_cond_t));
   if (pthread_cond_init(cond, NULL)) {
@@ -60,7 +59,7 @@ static ecs_os_cond_t ev_flecs_cond_new(void)
   return (ecs_os_cond_t)(uintptr_t)cond;
 }
 
-static void ev_flecs_cond_free(ecs_os_cond_t c)
+void ev_flecs_cond_free(ecs_os_cond_t c)
 {
   pthread_cond_t *cond = (pthread_cond_t*)(intptr_t)c;
   if (pthread_cond_destroy(cond)) {
@@ -69,7 +68,7 @@ static void ev_flecs_cond_free(ecs_os_cond_t c)
   ecs_os_free(cond);
 }
 
-static void ev_flecs_cond_signal(ecs_os_cond_t c)
+void ev_flecs_cond_signal(ecs_os_cond_t c)
 {
   pthread_cond_t *cond = (pthread_cond_t*)(intptr_t)c;
   if (pthread_cond_signal(cond)) {
@@ -77,7 +76,7 @@ static void ev_flecs_cond_signal(ecs_os_cond_t c)
   }
 }
 
-static void ev_flecs_cond_broadcast(ecs_os_cond_t c)
+void ev_flecs_cond_broadcast(ecs_os_cond_t c)
 {
   pthread_cond_t *cond = (pthread_cond_t*)(intptr_t)c;
   if (pthread_cond_broadcast(cond)) {
@@ -85,7 +84,7 @@ static void ev_flecs_cond_broadcast(ecs_os_cond_t c)
   }
 }
 
-static void ev_flecs_cond_wait(ecs_os_cond_t c, ecs_os_mutex_t m)
+void ev_flecs_cond_wait(ecs_os_cond_t c, ecs_os_mutex_t m)
 {
   pthread_cond_t *cond = (pthread_cond_t*)(intptr_t)c;
   pthread_mutex_t *mutex = (pthread_mutex_t*)(intptr_t)m;

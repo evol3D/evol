@@ -12,7 +12,7 @@ typedef struct
   ev_Vector4 scale;
 } TransformComponent;
 
-static EcsMetaType __TransformComponent__ = {
+static ECS_UNUSED EcsMetaType __TransformComponent__ = {
     .kind = EcsStructType,
     .size = sizeof(TransformComponent),
     .alignment = ECS_ALIGNOF(TransformComponent),

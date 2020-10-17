@@ -2,5 +2,6 @@
 directory = flecs-components-http
 url = https://github.com/flecs-hub/flecs-components-http.git
 revision = head
+depth = 1
 
 patch_directory = flecs-components-http

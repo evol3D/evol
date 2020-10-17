@@ -17,6 +17,7 @@ void SetRigidBody(ecs_iter_t *it) {
   rb_phys.entt_id = *it->entities;
   rb_phys.mass = rb->mass;
   rb_phys.collisionShape = rb->collisionShape;
+  rb_phys.restitution = rb->restitution;
 
   // If the handle points to an existing rigidbody, then the rigidbody is updated
   // with the new values. Otherwise, it creates a new rigidbody in the simulation
@@ -63,8 +64,11 @@ void PhysicsModuleImport(ecs_world_t *world)
   ECS_TRIGGER(world, AddRigidBody, EcsOnAdd, RigidBodyComponent);
   ECS_TRIGGER(world, RemoveRigidBody, EcsOnRemove, RigidBodyComponent);
 
+#ifdef _WIN32
+  ECS_SYSTEM(world, SetRigidBody, EcsOnSet, RigidBodyComponent, RigidBodyHandleComponent, TransformComponent);
+#else
   ECS_SYSTEM(world, SetRigidBody, EcsOnSet, RigidBodyComponent, RigidBodyHandleComponent, transform.module.TransformComponent);
+#endif
 
   ECS_IMPORT(world, FlecsMeta);
-
 }

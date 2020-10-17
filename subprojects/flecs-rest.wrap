@@ -2,5 +2,6 @@
 directory = flecs-rest
 url = https://github.com/flecs-hub/flecs-rest.git
 revision = head
+depth = 1
 
 patch_directory = flecs-rest

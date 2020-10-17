@@ -13,4 +13,7 @@ subprojects/*
 !*.wrap
 !subprojects/packagefiles
 
-tags
+**/tags
+
+**/*.ignore
+**/*.png
