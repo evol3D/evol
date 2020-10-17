@@ -22,6 +22,8 @@ void ev_rendererbackend_unloadshader(ShaderModule shader);
 
 static int ev_rendererbackend_bindpipeline(GraphicsPipelineType type);
 
+static int ev_rendererbackend_bindindexbuffer(MemoryBuffer *indexBuffer);
+
 static int ev_rendererbackend_binddescriptorsets(DescriptorSet *descriptorSets, unsigned int count);
 static int ev_rendererbackend_allocatedescriptorset(DescriptorSetLayoutType setLayoutType, DescriptorSet *descriptorSet);
 static int ev_rendererbackend_pushdescriptorstoset(DescriptorSet descriptorSet, Descriptor *descriptors, unsigned int descriptorsCount);
@@ -56,6 +58,8 @@ struct ev_RendererBackend RendererBackend =
   .loadBaseDescriptorSetLayouts = ev_rendererbackend_loadbasedescriptorsetlayouts,
 
   .bindPipeline = ev_rendererbackend_bindpipeline,
+
+  .bindIndexBuffer = ev_rendererbackend_bindindexbuffer,
 
   .bindDescriptorSets = ev_rendererbackend_binddescriptorsets,
   .allocateDescriptorSet = ev_rendererbackend_allocatedescriptorset,
@@ -958,5 +962,11 @@ static int ev_rendererbackend_pushdescriptorstoset(DescriptorSet descriptorSet, 
   vkUpdateDescriptorSets(Vulkan.getDevice(), descriptorsCount, setWrites, 0, NULL);
 
   free(setWrites);
+  return 0;
+}
+
+static int ev_rendererbackend_bindindexbuffer(MemoryBuffer *indexBuffer)
+{
+  vkCmdBindIndexBuffer(CMDBUFFERS[FRAME], indexBuffer->buffer, 0, VK_INDEX_TYPE_UINT32);
   return 0;
 }

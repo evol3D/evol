@@ -12,8 +12,8 @@
 
 #include "utils.h"
 
-/* // Game Systems */
-/* void SyncWorldToRenderer(SystemArgs *args); */
+// Game Systems
+void SyncWorldToRenderer(SystemArgs *args);
 
 // API functions
 static int ev_game_init();
@@ -30,26 +30,26 @@ struct ev_Game_Data {
   int placeholder;
 } GameData;
 
-/* DECLARE_EVENT_HANDLER( SceneUpdatedEventHandler, (SceneUpdatedEvent *event) { */
-/*     // TODO: Call callable system to sync renderer */
-/*     /1* ecs_run(World.getInstance(), SyncWorldToRenderer, 0, NULL); *1/ */
-/* }); */
+DECLARE_EVENT_HANDLER( SceneUpdatedEventHandler, (SceneUpdatedEvent *event) {
+    // TODO: Call callable system to sync renderer
+    /* ecs_run(World.getInstance(), SyncWorldToRenderer, 0, NULL); */
+});
 
 static int ev_game_init()
 {
   ev_log_trace("Started initializing the game");
 
-  /* ev_log_trace("Activating event handlers"); */
-  /* ACTIVATE_EVENT_HANDLER(SceneUpdatedEventHandler, SceneUpdatedEvent); */
-  /* ev_log_trace("Activated event handlers"); */
+  ev_log_trace("Activating event handlers");
+  ACTIVATE_EVENT_HANDLER(SceneUpdatedEventHandler, SceneUpdatedEvent);
+  ev_log_trace("Activated event handlers");
 
   ev_log_trace("Starting a new scene");
   World.newScene();
   ev_log_trace("New scene started");
 
-  /* ev_log_trace("Registering systems"); */
-  /* RegisterCallableSystem(SyncWorldToRenderer, SHARED: MeshComponent); */
-  /* ev_log_trace("Registered systems"); */
+  ev_log_trace("Registering systems");
+  RegisterCallableSystem(SyncWorldToRenderer, SHARED: MeshComponent);
+  ev_log_trace("Registered systems");
 
   ev_log_trace("Loading GLTF file");
   /* AssetLoader.loadGLTF("Triangle.gltf"); */
@@ -59,9 +59,9 @@ static int ev_game_init()
   AssetLoader.loadGLTF("Duck.gltf");
   ev_log_trace("Loaded GLTF file");
 
-  /* ev_log_trace("Dispatching SceneUpdatedEvent"); */
-  /* DISPATCH_EVENT( SceneUpdatedEvent, {}); */
-  /* ev_log_trace("Dispatched SceneUpdatedEvent"); */
+  ev_log_trace("Dispatching SceneUpdatedEvent");
+  DISPATCH_EVENT( SceneUpdatedEvent, {});
+  ev_log_trace("Dispatched SceneUpdatedEvent");
 
   ev_log_trace("Finished initializing the game");
   return 0;

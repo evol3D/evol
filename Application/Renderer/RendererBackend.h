@@ -61,6 +61,8 @@ extern struct ev_RendererBackend {
 
     int (*bindDescriptorSets)(DescriptorSet *descriptorSets, unsigned int count);
 
+    int (*bindIndexBuffer)(MemoryBuffer *indexBuffer);
+
     int (*allocateDescriptorSet)(DescriptorSetLayoutType setLayoutType, DescriptorSet *descriptorSet);
 
     int (*pushDescriptorsToSet)(DescriptorSet descriptorSet, Descriptor *descriptors, unsigned int descriptorsCount);

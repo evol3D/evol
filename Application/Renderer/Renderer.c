@@ -30,15 +30,24 @@ static int ev_renderer_init()
     { -0.5, -0.5, 0},
     {  0.5, -0.5, 0},
   };
-  
+
+  unsigned int indices[] = {0, 1, 2};
 
   MemoryBuffer vertexBuffer;
   RendererBackend.allocateBufferInPool(RendererData.resourcePool, sizeof(ev_Vector3) * ARRAYSIZE(vertices), EV_USAGEFLAGS_RESOURCE_BUFFER, &vertexBuffer);
 
-  MemoryBuffer stagingBuffer;
-  RendererBackend.allocateStagingBuffer(sizeof(ev_Vector3) * ARRAYSIZE(vertices), &stagingBuffer);
-  RendererBackend.updateStagingBuffer(&stagingBuffer, sizeof(ev_Vector3) * ARRAYSIZE(vertices), vertices); 
-  RendererBackend.copyBuffer(sizeof(ev_Vector3) * ARRAYSIZE(vertices), &stagingBuffer, &vertexBuffer);
+  MemoryBuffer indexBuffer;
+  RendererBackend.allocateBufferInPool(RendererData.resourcePool, sizeof(unsigned int) * ARRAYSIZE(indices), EV_USAGEFLAGS_RESOURCE_BUFFER, &indexBuffer);
+
+  MemoryBuffer vertexStagingBuffer;
+  RendererBackend.allocateStagingBuffer(sizeof(ev_Vector3) * ARRAYSIZE(vertices), &vertexStagingBuffer);
+  RendererBackend.updateStagingBuffer(&vertexStagingBuffer, sizeof(ev_Vector3) * ARRAYSIZE(vertices), vertices); 
+  RendererBackend.copyBuffer(sizeof(ev_Vector3) * ARRAYSIZE(vertices), &vertexStagingBuffer, &vertexBuffer);
+
+  MemoryBuffer indexStagingBuffer;
+  RendererBackend.allocateStagingBuffer(sizeof(unsigned int) * ARRAYSIZE(indices), &indexStagingBuffer);
+  RendererBackend.updateStagingBuffer(&indexStagingBuffer, sizeof(unsigned int) * ARRAYSIZE(indices), indices); 
+  RendererBackend.copyBuffer(sizeof(unsigned int) * ARRAYSIZE(indices), &indexStagingBuffer, &indexBuffer);
 
   DescriptorSet descriptorSet;
   RendererBackend.allocateDescriptorSet(EV_DESCRIPTOR_SET_LAYOUT_TEXTURE, &descriptorSet);
@@ -55,8 +64,10 @@ static int ev_renderer_init()
   RendererBackend.bindPipeline(EV_GRAPHICS_PIPELINE_PBR);
   RendererBackend.bindDescriptorSets(&descriptorSet, 1);
 
+  RendererBackend.bindIndexBuffer(&indexBuffer);
+
   {
-    vkCmdDraw(RendererBackend.getCurrentFrameCommandBuffer(), 3, 1, 0, 0);
+    vkCmdDrawIndexed(RendererBackend.getCurrentFrameCommandBuffer(), ARRAYSIZE(indices), 1, 0, 0, 0);
   }
 
   RendererBackend.endFrame();
