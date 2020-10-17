@@ -1,12 +1,15 @@
 #ifndef EVOL_RENDERERBACKEND_H
 #define EVOL_RENDERERBACKEND_H
 
+#include "renderer_types.h"
+
 #ifdef VULKAN_BACKEND
 #include <Vulkan.h>
 
 typedef VkShaderModule        ShaderModule;
 typedef VkPipeline            GraphicsPipeline;
 typedef VkDescriptorSetLayout DescriptorSetLayout;
+typedef VkDescriptorSet       DescriptorSet;
 typedef VkRenderPass          RenderPass;
 
 typedef EvBuffer              MemoryBuffer;
@@ -23,6 +26,23 @@ extern struct ev_RendererBackend {
     int (*deinit)();
     void (*startNewFrame)();
     void (*endFrame)();
+
+    int (*loadBasePipelines)();
+    int (*unloadBasePipelines)();
+
+
+    int (*loadBaseShaders)();
+    int (*unloadBaseShaders)();
+
+    int (*loadBaseDescriptorSetLayouts)();
+    int (*unloadBaseDescriptorSetLayouts)();
+
+    int (*bindPipeline)(GraphicsPipelineType type);
+
+    int (*bindDescriptorSets)(DescriptorSet *descriptorSets, unsigned int count);
+
+    int (*allocateDescriptorSet)(DescriptorSetLayoutType setLayoutType, DescriptorSet *descriptorSet);
+
 
     ShaderModule (*loadShader)(const char *);
     void (*unloadShader)(ShaderModule);

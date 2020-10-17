@@ -1,6 +1,7 @@
 #ifndef EVOL_RENDERER_H
 #define EVOL_RENDERER_H
 
+#include "renderer_types.h"
 #include "RendererBackend.h"
 
 extern struct ev_Renderer {
