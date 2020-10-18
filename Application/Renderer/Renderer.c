@@ -2,22 +2,38 @@
 #include "EventSystem.h"
 #include "events/events.h"
 #include "World/modules/geometry_module.h"
+#include "vec.h"
 
 static int ev_renderer_init();
 static int ev_renderer_deinit();
 
+static unsigned int ev_renderer_registerindexbuffer(unsigned int *indices, unsigned long long size);
+static unsigned int ev_renderer_registervertexbuffer(real *vertices, unsigned long long size);
+
+
 struct ev_Renderer Renderer = {
   .init   = ev_renderer_init,
   .deinit = ev_renderer_deinit,
+
+  .registerIndexBuffer = ev_renderer_registerindexbuffer,
+  .registerVertexBuffer = ev_renderer_registervertexbuffer,
 };
+
+typedef vec_t(MemoryBuffer) MemoryBufferVec;
 
 struct ev_Renderer_Data {
   MemoryPool resourcePool;
+
+  MemoryBufferVec indexBuffers;
+  MemoryBufferVec vertexBuffers;
+
 } RendererData;
 
 static int ev_renderer_init()
 {
   RendererBackend.init();
+  vec_init(&RendererData.indexBuffers);
+  vec_init(&RendererData.vertexBuffers);
 
   RendererBackend.loadBaseShaders();
   RendererBackend.loadBaseDescriptorSetLayouts();
@@ -25,52 +41,32 @@ static int ev_renderer_init()
 
   RendererBackend.createResourceMemoryPool(128ull * 1024 * 1024, 1, 4, &RendererData.resourcePool);
 
-  ev_Vector3 vertices[] = {
-    {    0,  0.5, 0},
-    { -0.5, -0.5, 0},
-    {  0.5, -0.5, 0},
-  };
+  /* DescriptorSet descriptorSet; */
+  /* RendererBackend.allocateDescriptorSet(EV_DESCRIPTOR_SET_LAYOUT_TEXTURE, &descriptorSet); */
 
-  unsigned int indices[] = {0, 1, 2};
+  
+  /* Descriptor *descriptors = malloc(sizeof(MemoryBuffer) * RendererData.vertexBuffers.length); */
 
-  MemoryBuffer vertexBuffer;
-  RendererBackend.allocateBufferInPool(RendererData.resourcePool, sizeof(ev_Vector3) * ARRAYSIZE(vertices), EV_USAGEFLAGS_RESOURCE_BUFFER, &vertexBuffer);
+  /* for(int i = 0; i < RendererData.vertexBuffers.length; ++i) */
+  /* { */
+  /*   descriptors[i] = (Descriptor){EV_DESCRIPTOR_TYPE_UNIFORM_BUFFER, RendererData.vertexBuffers.data + i}; */
+  /* } */
 
-  MemoryBuffer indexBuffer;
-  RendererBackend.allocateBufferInPool(RendererData.resourcePool, sizeof(unsigned int) * ARRAYSIZE(indices), EV_USAGEFLAGS_RESOURCE_BUFFER, &indexBuffer);
+  /* RendererBackend.pushDescriptorsToSet(descriptorSet, descriptors, RendererData.vertexBuffers.length); */
 
-  MemoryBuffer vertexStagingBuffer;
-  RendererBackend.allocateStagingBuffer(sizeof(ev_Vector3) * ARRAYSIZE(vertices), &vertexStagingBuffer);
-  RendererBackend.updateStagingBuffer(&vertexStagingBuffer, sizeof(ev_Vector3) * ARRAYSIZE(vertices), vertices); 
-  RendererBackend.copyBuffer(sizeof(ev_Vector3) * ARRAYSIZE(vertices), &vertexStagingBuffer, &vertexBuffer);
+  /* RendererBackend.startNewFrame(); */
 
-  MemoryBuffer indexStagingBuffer;
-  RendererBackend.allocateStagingBuffer(sizeof(unsigned int) * ARRAYSIZE(indices), &indexStagingBuffer);
-  RendererBackend.updateStagingBuffer(&indexStagingBuffer, sizeof(unsigned int) * ARRAYSIZE(indices), indices); 
-  RendererBackend.copyBuffer(sizeof(unsigned int) * ARRAYSIZE(indices), &indexStagingBuffer, &indexBuffer);
+  /* RendererBackend.bindPipeline(EV_GRAPHICS_PIPELINE_PBR); */
+  /* RendererBackend.bindDescriptorSets(&descriptorSet, 1); */
 
-  DescriptorSet descriptorSet;
-  RendererBackend.allocateDescriptorSet(EV_DESCRIPTOR_SET_LAYOUT_TEXTURE, &descriptorSet);
+  /* /1* { *1/ */
+  /* /1*   vkCmdDrawIndexed(RendererBackend.getCurrentFrameCommandBuffer(), ARRAYSIZE(indices), 1, 0, 0, 0); *1/ */
+  /* /1* } *1/ */
 
-  Descriptor descriptors[] = 
-  {
-    {EV_DESCRIPTOR_TYPE_UNIFORM_BUFFER, &vertexBuffer},
-  };
+  /* RendererBackend.endFrame(); */
 
-  RendererBackend.pushDescriptorsToSet(descriptorSet, descriptors, ARRAYSIZE(descriptors));
+  /* free(descriptors); */
 
-  RendererBackend.startNewFrame();
-
-  RendererBackend.bindPipeline(EV_GRAPHICS_PIPELINE_PBR);
-  RendererBackend.bindDescriptorSets(&descriptorSet, 1);
-
-  RendererBackend.bindIndexBuffer(&indexBuffer);
-
-  {
-    vkCmdDrawIndexed(RendererBackend.getCurrentFrameCommandBuffer(), ARRAYSIZE(indices), 1, 0, 0, 0);
-  }
-
-  RendererBackend.endFrame();
 
   RendererBackend.memoryDump();
 
@@ -80,6 +76,42 @@ static int ev_renderer_init()
 static int ev_renderer_deinit()
 {
   return 0;
+}
+
+static unsigned int ev_renderer_registerindexbuffer(unsigned int *indices, unsigned long long size)
+{
+  unsigned int idx = RendererData.indexBuffers.length;
+
+  MemoryBuffer newIndexBuffer;
+  RendererBackend.allocateBufferInPool(RendererData.resourcePool, size, EV_USAGEFLAGS_RESOURCE_BUFFER, &newIndexBuffer);
+
+  MemoryBuffer indexStagingBuffer;
+  RendererBackend.allocateStagingBuffer(size, &indexStagingBuffer);
+  RendererBackend.updateStagingBuffer(&indexStagingBuffer, size, indices); 
+  RendererBackend.copyBuffer(size, &indexStagingBuffer, &newIndexBuffer);
+  // TODO free/reuse staging buffer
+
+  vec_push(&RendererData.indexBuffers, newIndexBuffer);
+
+  return idx;
+}
+
+static unsigned int ev_renderer_registervertexbuffer(real *vertices, unsigned long long size)
+{
+  unsigned int idx = RendererData.vertexBuffers.length;
+
+  MemoryBuffer newVertexBuffer;
+  RendererBackend.allocateBufferInPool(RendererData.resourcePool, size, EV_USAGEFLAGS_RESOURCE_BUFFER, &newVertexBuffer);
+
+  MemoryBuffer vertexStagingBuffer;
+  RendererBackend.allocateStagingBuffer(size, &vertexStagingBuffer);
+  RendererBackend.updateStagingBuffer(&vertexStagingBuffer, size, vertices); 
+  RendererBackend.copyBuffer(size, &vertexStagingBuffer, &newVertexBuffer);
+  // TODO free/reuse staging buffer
+
+  vec_push(&RendererData.vertexBuffers, newVertexBuffer);
+
+  return idx;
 }
 
 /* static void ev_renderer_bind() // TODO */

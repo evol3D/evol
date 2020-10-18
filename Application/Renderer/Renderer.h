@@ -7,6 +7,8 @@
 extern struct ev_Renderer {
     int (*init)();
     int (*deinit)();
+    unsigned int (*registerIndexBuffer)(unsigned int *indices, unsigned long long size);
+    unsigned int (*registerVertexBuffer)(real *vertices, unsigned long long size);
 } Renderer;
 
 #endif //EVOL_RENDERER_H 

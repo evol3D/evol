@@ -1,10 +1,12 @@
 //TODO Comments / Logging
 #include "AssetLoader.h"
+#include "Renderer/Renderer.h"
 #include "World/World.h"
 #include <Physics/Physics.h>
 #include <World/modules/transform_module.h>
 #include <World/modules/geometry_module.h>
 #include <World/modules/physics_module.h>
+#include <World/modules/rendering_module.h>
 
 #include <ev_log/ev_log.h>
 
@@ -102,7 +104,6 @@ static void ev_assetloader_load_gltf_node(cgltf_node curr_node, Entity parent, c
       ev_log_trace("Added RigidBodyComponent to entity: %s", curr_node.name);
     }
 
-
     { // Texture Component
     }
 
@@ -121,6 +122,7 @@ static int ev_assetloader_load_gltf(const char *path)
 
   // Component Module Imports
   ImportModule(GeometryModule);
+  ImportModule(RenderingModule);
 
   Entity *mesh_entities = malloc(sizeof(Entity) * data->meshes_count);
   for(unsigned int mesh_idx = 0; mesh_idx < data->meshes_count; ++mesh_idx)
@@ -208,6 +210,26 @@ static int ev_assetloader_load_gltf(const char *path)
       }
     }
   }
+
+  // Giving a RenderingComponent to the mesh entities so that all instanced entities
+  // have the same RenderingComponent
+  for(unsigned int mesh_idx = 0; mesh_idx < data->meshes_count; ++mesh_idx)
+  {
+    const MeshComponent* meshComp = Entity_GetComponent(mesh_entities[mesh_idx], MeshComponent);
+    RenderingComponent* rendComp = Entity_GetComponent_mut(mesh_entities[mesh_idx], RenderingComponent);
+    rendComp->primitivesCount = meshComp->primitives_count;
+    rendComp->primitives = malloc(rendComp->primitivesCount * sizeof(RenderingPrimitive));
+    for(unsigned int primitive_idx = 0; primitive_idx < rendComp->primitivesCount; ++primitive_idx)
+    {
+      MeshPrimitive *meshPrim = meshComp->primitives + primitive_idx;
+      RenderingPrimitive *rendPrim = rendComp->primitives + primitive_idx;
+      rendPrim->triangleCount = meshPrim->indexCount / 3;
+      rendPrim->indexBuffer = Renderer.registerIndexBuffer(meshPrim->indexBuffer, meshPrim->indexCount * sizeof(*meshPrim->indexBuffer));
+      rendPrim->vertexBuffer = Renderer.registerVertexBuffer((real*)meshPrim->positionBuffer, meshPrim->vertexCount * sizeof(*meshPrim->positionBuffer));
+    }
+  }
+
+
 
   World.lockSceneAccess();
   for(unsigned int node_idx = 0; node_idx < data->nodes_count; ++node_idx)

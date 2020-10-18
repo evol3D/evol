@@ -55,8 +55,10 @@ static int ev_game_init()
   /* AssetLoader.loadGLTF("Triangle.gltf"); */
   /* AssetLoader.loadGLTF("Cube.gltf"); */
   /* AssetLoader.loadGLTF("InterpolationTest.gltf"); */
-  /* AssetLoader.loadGLTF("CesiumMilkTruck.gltf"); */
-  AssetLoader.loadGLTF("Duck.gltf");
+  AssetLoader.loadGLTF("CesiumMilkTruck.gltf");
+  /* AssetLoader.loadGLTF("WaterBottle.gltf"); */
+  /* AssetLoader.loadGLTF("SciFiHelmet.gltf"); */
+  /* AssetLoader.loadGLTF("Duck.gltf"); */
   ev_log_trace("Loaded GLTF file");
 
   ev_log_trace("Dispatching SceneUpdatedEvent");
