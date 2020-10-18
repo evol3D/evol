@@ -1,6 +1,6 @@
 [wrap-git]
 url = https://github.com/evol3D/evol-threads.git
-revision = head
+revision = master
 depth = 1
 
 [provides]

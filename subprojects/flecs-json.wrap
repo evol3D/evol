@@ -1,7 +1,7 @@
 [wrap-git]
 directory = flecs-json
 url = https://github.com/flecs-hub/flecs-json.git
-revision = head
+revision = master
 depth = 1
 
 patch_directory = flecs-json

@@ -1,4 +1,4 @@
 [wrap-git]
 url = https://github.com/evol3D/evol-eventsystem.git
-revision = head
+revision = master
 depth = 1
