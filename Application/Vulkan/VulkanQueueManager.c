@@ -57,38 +57,45 @@ static int ev_vulkanqueuemanager_init(VkPhysicalDevice physicalDevice, VkDeviceQ
     QUEUES_USE_COUNT[i] = 0;
   }
 
-  unsigned int graphicsIdx = 0;
-  unsigned int computeIdx = 0;
+  unsigned int graphicsIdx = -1;
+  unsigned int computeIdx = -1;
 
-  bool graphicsFound = false;
-  bool computeFound = false;
+  bool separateCompute = true;
 
   for(unsigned int i = 0; i < DATA(queueFamilyCount); ++i)
   {
-    if(graphicsFound && computeFound) break;                    // If both queues' indices were found, exit the loop.
-
-    if(!graphicsFound                                           // If the graphics index is not already found
-        && (PROPERTIES[i].queueFlags & VK_QUEUE_GRAPHICS_BIT)   // and the current family support graphics
+    if(    (PROPERTIES[i].queueFlags & VK_QUEUE_GRAPHICS_BIT)   // and the current family support graphics
         && (PROPERTIES[i].queueCount > QUEUES_ALLOC_COUNT[i]))  // and we didn't allocate the current family's maximum queue count
     {                                                           // then
       graphicsIdx = i;                                          // - Set the graphics queuefamily index to the current queuefamily
-      graphicsFound = true;                                     // - Set the graphicsFound flag to true
       QUEUES_ALLOC_COUNT[i]++;
+      break;
     }
+  }
 
-    if(!computeFound                                            // If the compute index is not already found
-        && graphicsFound                                        // and the graphics index is already found        N.B: This is to ensure that if there's only 1 queue in the queue family that supports graphics, it's not used to create the compute queue.
-        && (PROPERTIES[i].queueFlags & VK_QUEUE_COMPUTE_BIT)    // and the current family support compute
+  if(graphicsIdx == -1)
+  {
+    ev_log_error("Couldn't find a queue family that supports graphics");
+    exit(1);
+  }
+
+  for(unsigned int i = 0; i < DATA(queueFamilyCount); ++i)
+  {
+    if(    (PROPERTIES[i].queueFlags & VK_QUEUE_COMPUTE_BIT)    // and the current family support compute
         && (PROPERTIES[i].queueCount > QUEUES_ALLOC_COUNT[i]))  // and we didn't allocate the current family's maximum queue count
     {                                                           // then
       computeIdx = i;                                           // - Set the compute queuefamily index to the current queuefamily
-      computeFound = true;                                      // - Set the computeFound flag to true
       QUEUES_ALLOC_COUNT[i]++;
     }
-
   }
 
-  *queueCreateInfosCount = 2;
+  if(computeIdx == -1)
+  {
+    computeIdx = graphicsIdx;
+    separateCompute = false;
+  }
+
+  *queueCreateInfosCount = separateCompute?2:1;
   *queueCreateInfos = malloc(sizeof(VkDeviceQueueCreateInfo) * (*queueCreateInfosCount));
 
   (*queueCreateInfos)[0] = (VkDeviceQueueCreateInfo)
@@ -98,13 +105,17 @@ static int ev_vulkanqueuemanager_init(VkPhysicalDevice physicalDevice, VkDeviceQ
       .queueCount = 1,
       .pQueuePriorities = &priorityOne,
     };
-  (*queueCreateInfos)[1] = (VkDeviceQueueCreateInfo)
-    {
-      .sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
-      .queueFamilyIndex = computeIdx,
-      .queueCount = 1,
-      .pQueuePriorities = &priorityOne,
-    };
+
+  if(separateCompute && *queueCreateInfosCount >= 2)
+  {
+    (*queueCreateInfos)[1] = (VkDeviceQueueCreateInfo)
+      {
+        .sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
+        .queueFamilyIndex = computeIdx,
+        .queueCount = 1,
+        .pQueuePriorities = &priorityOne,
+      };
+  }
 
   return 0;
 }
