@@ -6,9 +6,13 @@
 # define EV_ALIGN(x) __attribute__((aligned(x)))
 # define EV_PACKED   __attribute__((packed))
 #elif _MSC_BUILD
-# define EV_UNUSED
+# define EV_UNUSED   const // This is a hack with zero guarantees of actually working.
 # define EV_ALIGN(x) __declspec(align(x))
 # define EV_PACKED   __pragma(pack(1))
+#else
+# define EV_UNUSED
+# define EV_ALIGN
+# define EV_PACKED
 #endif
 
 typedef float real;
