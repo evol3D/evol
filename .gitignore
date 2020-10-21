@@ -17,3 +17,5 @@ subprojects/*
 
 **/*.ignore
 **/*.png
+
+**/*.clangd

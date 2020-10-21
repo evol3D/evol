@@ -1,14 +1,18 @@
 //TODO Comments / Logging
 #include "Game.h"
-#include "Physics.h"
+
+#include "App.h"
+#include "Physics/Physics.h"
+#include "Window.h"
 #include "World/World.h"
+#include "World/WorldModules.h"
+
 #include "flecs.h"
-#include "World/modules/transform_module.h"
-#include "World/modules/script_module.h"
-#include "World/modules/physics_module.h"
-#include "World/modules/geometry_module.h"
 
 #include "EventSystem.h"
+#include "events/events.h"
+
+#include "ev_log/ev_log.h"
 
 #include "utils.h"
 
@@ -55,7 +59,8 @@ static int ev_game_init()
   /* AssetLoader.loadGLTF("Triangle.gltf"); */
   /* AssetLoader.loadGLTF("Cube.gltf"); */
   /* AssetLoader.loadGLTF("InterpolationTest.gltf"); */
-  AssetLoader.loadGLTF("CesiumMilkTruck.gltf");
+  /* AssetLoader.loadGLTF("CesiumMilkTruck.gltf"); */
+  AssetLoader.loadGLTF("CesiumMan.gltf");
   /* AssetLoader.loadGLTF("WaterBottle.gltf"); */
   /* AssetLoader.loadGLTF("SciFiHelmet.gltf"); */
   /* AssetLoader.loadGLTF("Duck.gltf"); */
@@ -200,4 +205,3 @@ void SyncWorldToRenderer(SystemArgs *args)
     /* meshes[i]; */
   }
 }
-

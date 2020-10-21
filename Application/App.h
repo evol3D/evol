@@ -1,25 +1,9 @@
 #ifndef EVOL_APP_H
 #define EVOL_APP_H
 
-#include "Window/Window.h"
-#include "Input/Input.h"
-
-#include "Physics/Physics.h"
-
-#include "Vulkan.h"
-#include "Renderer/Renderer.h"
-
-#include "World/World.h"
-#include "Game/Game.h"
-
-#include "Asset/Asset.h"
-#include "evolpthreads.h"
-#include "ev_log/ev_log.h"
-
-#include "EventSystem.h"
-#ifdef DEBUG
-# include "EventDebug/EventDebug.h"
-#endif
+#include <stdio.h>
+#include <evolpthreads.h>
+#include <stdbool.h>
 
 extern struct ev_app_struct{
     const char *name;
