@@ -7,10 +7,9 @@
 
 typedef struct
 {
-  ev_Vector4 position EV_ALIGN(16);
-  ev_Vector4 rotation EV_ALIGN(16);
-  ev_Vector3 scale    EV_ALIGN(16);
-} EV_PACKED TransformComponent  EV_ALIGN(16);
+  ev_Matrix4 localTransform EV_ALIGN(16);
+  ev_Matrix4 worldTransform EV_ALIGN(16);
+} TransformComponent EV_ALIGN(16);
 
 static ECS_UNUSED EcsMetaType __TransformComponent__ = {
     .kind = EcsStructType,
@@ -18,9 +17,16 @@ static ECS_UNUSED EcsMetaType __TransformComponent__ = {
     .alignment = 4, //ECS_ALIGNOF(TransformComponent),
     .descriptor = 
       "{"
-      "float pos_x; float pos_y; float pos_z; float pos_w;"
-      "float rot_x; float rot_y; float rot_z; float rot_w;"
-      "float scale_x; float scale_y; float scale_z; float scale_w;"
+      "float localTransform_00;float localTransform_01;float localTransform_02;float localTransform_03;"
+      "float localTransform_10;float localTransform_11;float localTransform_12;float localTransform_13;"
+      "float localTransform_20;float localTransform_21;float localTransform_22;float localTransform_23;"
+      "float localTransform_30;float localTransform_31;float localTransform_32;float localTransform_33;"
+      ""
+      ""
+      "float worldTransform_00;float worldTransform_01;float worldTransform_02;float worldTransform_03;"
+      "float worldTransform_10;float worldTransform_11;float worldTransform_12;float worldTransform_13;"
+      "float worldTransform_20;float worldTransform_21;float worldTransform_22;float worldTransform_23;"
+      "float worldTransform_30;float worldTransform_31;float worldTransform_32;float worldTransform_33;"
       "}"
       ,
     .alias = NULL

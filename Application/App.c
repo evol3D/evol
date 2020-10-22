@@ -5,7 +5,6 @@
 #include "Application/Input/Input.h"
 #include "Application/Physics/Physics.h"
 #include "Application/Renderer/Renderer.h"
-#include "Application/Vulkan/include/Vulkan.h"
 #include "Application/Window/Window.h"
 #include "Application/World/World.h"
 

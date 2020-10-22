@@ -7,6 +7,8 @@
 #include "World/World.h"
 #include "World/WorldModules.h"
 
+#include "cglm/call/mat4.h"
+#include "cglm/mat4.h"
 #include "flecs.h"
 
 #include "EventSystem.h"
@@ -59,8 +61,8 @@ static int ev_game_init()
   /* AssetLoader.loadGLTF("Triangle.gltf"); */
   /* AssetLoader.loadGLTF("Cube.gltf"); */
   /* AssetLoader.loadGLTF("InterpolationTest.gltf"); */
-  /* AssetLoader.loadGLTF("CesiumMilkTruck.gltf"); */
-  AssetLoader.loadGLTF("CesiumMan.gltf");
+  AssetLoader.loadGLTF("CesiumMilkTruck.gltf");
+  /* AssetLoader.loadGLTF("CesiumMan.gltf"); */
   /* AssetLoader.loadGLTF("WaterBottle.gltf"); */
   /* AssetLoader.loadGLTF("SciFiHelmet.gltf"); */
   /* AssetLoader.loadGLTF("Duck.gltf"); */
@@ -143,6 +145,7 @@ void spawn()
 }
 
 
+#include <types.h>
 static void ev_game_loop()
 {
   /* pthread_t spawn_thread; */
@@ -154,12 +157,12 @@ static void ev_game_loop()
 
   Entity sphere = CreateEntity();
   Entity_SetComponent(sphere, EcsName, {"sphere_1"});
-  Entity_SetComponent(sphere,
-    TransformComponent, {
-    .position = {0, -10, 0, 0},
-    .rotation = {0, 0, 0, 1},
-    .scale    = {1, 1, 1},
-    });
+
+  ev_Matrix4 *transform = &(Entity_GetComponent_mut(sphere, TransformComponent)->worldTransform);
+  ev_Vector3 position = {0, -10, 0};
+  glm_mat4_identity(*transform);
+  glm_translate(*transform, (real*)&position);
+  
   Entity_SetComponent(sphere,
     RigidBodyComponent, {
     .mass = 0,

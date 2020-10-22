@@ -1,4 +1,3 @@
-
 #ifndef EVOL_PHYSICS_UTILS_HEADER
 #define EVOL_PHYSICS_UTILS_HEADER
 
@@ -7,6 +6,5 @@
 
 #define ANG2RAD(ang) ((ang/180) * M_PI)
 #define RAD2ANG(rad) ((rad/M_PI) * 180)
-
 
 #endif
