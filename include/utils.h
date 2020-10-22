@@ -25,5 +25,8 @@ extern const ev_Vector4* entity_get_position(unsigned int entt);
 extern ev_Vector4* entity_get_rotation_mut(unsigned int entt);
 extern const ev_Vector4* entity_get_rotation(unsigned int entt);
 
+extern const ev_Matrix4* entity_getWorldTransform(unsigned int entt);
+extern ev_Matrix4* entity_getWorldTransformMut(unsigned int entt);
+
 
 #endif

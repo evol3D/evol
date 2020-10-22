@@ -12,34 +12,17 @@ void TransformModuleImport(ecs_world_t *world)
   ECS_EXPORT_COMPONENT(TransformComponent);
 }
 
-// Returns a reference to a mutable version of the TransformComponent.position
-ev_Vector4* entity_get_position_mut(unsigned int entt)
-{
-  ImportModule(TransformModule);
-  TransformComponent *tr = Entity_GetComponent_mut(entt, TransformComponent);
-  return &(tr->position);
-}
-
-// Returns a reference to an immutable version of the TransformComponent.position
-const ev_Vector4* entity_get_position(unsigned int entt)
+const ev_Matrix4* entity_getWorldTransform(unsigned int entt)
 {
   ImportModule(TransformModule);
   const TransformComponent *tr = Entity_GetComponent(entt, TransformComponent);
-  return &(tr->position);
+  return &(tr->worldTransform);
 }
 
-// Returns a reference to a mutable version of the TransformComponent.rotation
-ev_Vector4* entity_get_rotation_mut(unsigned int entt)
+ev_Matrix4* entity_getWorldTransformMut(unsigned int entt)
 {
   ImportModule(TransformModule);
   TransformComponent *tr = Entity_GetComponent_mut(entt, TransformComponent);
-  return &(tr->rotation);
+  return &(tr->worldTransform);
 }
 
-// Returns a reference to an immutable version of the TransformComponent.rotation
-const ev_Vector4* entity_get_rotation(unsigned int entt)
-{
-  ImportModule(TransformModule);
-  const TransformComponent *tr = Entity_GetComponent(entt, TransformComponent);
-  return &(tr->rotation);
-}

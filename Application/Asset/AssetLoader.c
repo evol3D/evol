@@ -50,9 +50,14 @@ static void ev_assetloader_load_gltf_node(cgltf_node curr_node, Entity parent, c
     Entity curr;
 
     if(parent)
+    {
       curr = Entity_AddChild(parent);
+    }
     else
+    {
       curr = CreateEntity();
+    }
+
 
 #ifdef DEBUG
     if(curr_node.name)
@@ -66,13 +71,9 @@ static void ev_assetloader_load_gltf_node(cgltf_node curr_node, Entity parent, c
     // Transform
     Entity_SetComponent(curr, TransformComponent, {0});
     TransformComponent *tr = Entity_GetComponent_mut(curr, TransformComponent);
+    cgltf_node_transform_world(&curr_node, (real*)tr->worldTransform);
+    cgltf_node_transform_local(&curr_node, (real*)tr->localTransform);
 
-    {
-      mat4 tr_mat, rot_mat;
-      cgltf_node_transform_world(&curr_node, (float*)tr_mat);
-      glm_decompose(tr_mat, (float*)&tr->position, rot_mat, (float*)&tr->scale);
-      glm_mat4_quat(rot_mat, (float*)&tr->rotation);
-    }
     ev_log_trace("Added TransformComponent to entity: %s", curr_node.name);
 
     if(curr_node.mesh)
