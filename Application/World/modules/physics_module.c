@@ -18,6 +18,7 @@ void SetRigidBody(ecs_iter_t *it) {
   rb_phys.mass = rb->mass;
   rb_phys.collisionShape = rb->collisionShape;
   rb_phys.restitution = rb->restitution;
+  rb_phys.type = rb->type;
 
   // If the handle points to an existing rigidbody, then the rigidbody is updated
   // with the new values. Otherwise, it creates a new rigidbody in the simulation
@@ -47,8 +48,6 @@ void RemoveRigidBody(ecs_iter_t *it) {
   assert(!"TODO: RemoveRigidBody not implemented");
 }
 
-#include <flecs_meta.h>
-
 void PhysicsModuleImport(ecs_world_t *world)
 {
   ECS_IMPORT(world, TransformModule);
@@ -64,7 +63,7 @@ void PhysicsModuleImport(ecs_world_t *world)
   ECS_TRIGGER(world, AddRigidBody, EcsOnAdd, RigidBodyComponent);
   ECS_TRIGGER(world, RemoveRigidBody, EcsOnRemove, RigidBodyComponent);
 
-#ifndef _WIN32
+#ifdef FLECS_DASHBOARD
   ECS_SYSTEM(world, SetRigidBody, EcsOnSet, RigidBodyComponent, RigidBodyHandleComponent, TransformComponent);
 #else
   ECS_SYSTEM(world, SetRigidBody, EcsOnSet, RigidBodyComponent, RigidBodyHandleComponent, transform.module.TransformComponent);

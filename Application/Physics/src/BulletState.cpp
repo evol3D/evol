@@ -1,7 +1,10 @@
+#include "BulletCollision/CollisionDispatch/btCollisionObject.h"
+#include "physics_types.h"
 #include "stdio.h"
 #include "BulletState.h"
 #include "PhysicsDebugWindow.h"
 #include "EvMotionState.h"
+#include "utils.h"
 
 BulletState::BulletState()
 {
@@ -108,9 +111,9 @@ RigidBodyHandle BulletState::addRigidBody(RigidBody *rb)
 
   btVector3 localInertia(0, 0, 0);
 
-  if(isDynamic)
+  if(rb->type == EV_RIGIDBODY_DYNAMIC)
   {
-    ((btCollisionShape*)rb->collisionShape)->calculateLocalInertia(rb->mass, localInertia);
+    reinterpret_cast<btCollisionShape*>(rb->collisionShape)->calculateLocalInertia(rb->mass, localInertia);
   }
 
   EvMotionState *motionState = new EvMotionState();
@@ -121,6 +124,11 @@ RigidBodyHandle BulletState::addRigidBody(RigidBody *rb)
   rbInfo.m_restitution = rb->restitution;
 
   btRigidBody* body = new btRigidBody(rbInfo);
+  if(rb->type == EV_RIGIDBODY_KINEMATIC)
+  {
+    body->setCollisionFlags(btCollisionObject::CF_KINEMATIC_OBJECT);
+    body->setActivationState(DISABLE_DEACTIVATION);
+  }
 
   world_mutex.lock();
   world->addRigidBody(body);
@@ -140,36 +148,26 @@ void BulletState::removeRigidBody(RigidBodyHandle handle)
 
 void BulletState::updateRigidBody(RigidBodyHandle handle, RigidBody *rb)
 {
-  printf("updating\n");
+  btRigidBody *rbHandle = reinterpret_cast<btRigidBody*>(handle);
+  btCollisionShape *collisionShape = reinterpret_cast<btCollisionShape*>(rb->collisionShape);
+
   btVector3 inertiaVec = btVector3(0, 0, 0);
-  ((btRigidBody*)handle)->setMassProps(rb->mass, inertiaVec);
+  rbHandle->setMassProps(rb->mass, inertiaVec);
 
 
-  if(rb->collisionShape != ((btRigidBody*)handle)->getCollisionShape())
+  if(collisionShape != rbHandle->getCollisionShape())
   {
-    ((btRigidBody*)handle)->setCollisionShape((btCollisionShape*)rb->collisionShape);
+    rbHandle->setCollisionShape(collisionShape);
   }
 
   unsigned int entt_id = ((EvMotionState *)((btRigidBody*)handle)->getMotionState())->entt_id;
 
-  const ev_Vector4 *ev_PositionVector = entity_get_position(entt_id);
-  const ev_Vector4 *ev_RotationVector = entity_get_rotation(entt_id);
+  const ev_Matrix4 *ev_TransformMatrix = entity_getWorldTransform(entt_id);
 
   btTransform newTransform;
-  newTransform.setIdentity();
-  newTransform.setOrigin(ev2btVector3(ev_PositionVector));
-  /* btQuaternion rot(ev_RotationVector->x, ev_RotationVector->y, ev_RotationVector->z, ev_RotationVector->w); */
-  /* newTransform.setRotation(rot); */
-  newTransform.setRotation(
-    btQuaternion(
-      ev_RotationVector->x,
-      ev_RotationVector->y,
-      ev_RotationVector->z,
-      ev_RotationVector->w
-    )
-  );
+  newTransform.setFromOpenGLMatrix(reinterpret_cast<const btScalar*>(*ev_TransformMatrix));
 
-  ((btRigidBody*)handle)->setWorldTransform(newTransform);
+  rbHandle->setWorldTransform(newTransform);//->setWorldTransform(newTransform);
 }
 
 void BulletState::setGravity(real x, real y, real z)
@@ -190,4 +188,3 @@ void BulletState::step_dt(real dt)
   world->stepSimulation(dt, 10);
   world_mutex.unlock();
 }
-

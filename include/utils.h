@@ -19,11 +19,9 @@ void sleep_ms(double milliseconds);
 #endif
 
 // ECS Related
-extern ev_Vector4* entity_get_position_mut(unsigned int entt);
-extern const ev_Vector4* entity_get_position(unsigned int entt);
+extern const ev_Matrix4* entity_getWorldTransform(unsigned int entt);
+extern void entity_setWorldTransform(unsigned int entt, ev_Matrix4 newWorldTransform);
 
-extern ev_Vector4* entity_get_rotation_mut(unsigned int entt);
-extern const ev_Vector4* entity_get_rotation(unsigned int entt);
 
 
 #endif

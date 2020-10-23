@@ -3,6 +3,7 @@
 #include "ev_log/ev_log.h"
 #include "EventSystem.h"
 #include <evolpthreads.h>
+#include "flecs.h"
 #include "flecs_threads.h"
 
 static int ev_world_init();
@@ -109,7 +110,9 @@ static int ev_world_newscene()
   WorldData.activeScene->instance = ecs_init();
   ev_log_trace("Initialized Flecs world");
 
-#ifdef DEBUG
+  ecs_enable_locking(WorldData.activeScene->instance, 1);
+
+#ifdef FLECS_DASHBOARD
   ev_log_trace("DEBUG mode: Initializing Flecs dashboard for new scene");
   ev_flecs_dash_init();
   ev_log_trace("Initialized Flecs dashboard for new scene");
@@ -185,6 +188,8 @@ void ev_flecs_dash_init()
   ev_log_trace("FlecsMeta Entry: MeshPrimitive");
   ECS_META(World.getInstance(), MeshComponent);
   ev_log_trace("FlecsMeta Entry: MeshComponent");
+  ECS_META(World.getInstance(), NodeComponent);
+  ev_log_trace("FlecsMeta Entry: NodeComponent");
 
   short port = 8001;
   ecs_set(World.getInstance(), 0, EcsDashServer, {.port = port});
