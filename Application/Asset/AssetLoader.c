@@ -56,13 +56,9 @@ static void ev_assetloader_load_gltf_node(cgltf_node curr_node, Entity parent, c
     Entity curr;
 
     if(parent)
-    {
       curr = Entity_AddChild(parent);
-    }
     else
-    {
       curr = CreateEntity();
-    }
 
 
 
@@ -78,12 +74,9 @@ static void ev_assetloader_load_gltf_node(cgltf_node curr_node, Entity parent, c
     // Transform
     Entity_SetComponent(curr, TransformComponent, {0});
     TransformComponent *tr = Entity_GetComponent_mut(curr, TransformComponent);
-    glm_mat4_identity(tr->localTransform);
 
     cgltf_node_transform_world(&curr_node, (real*)tr->worldTransform);
     cgltf_node_transform_local(&curr_node, (real*)tr->localTransform);
-
-    ecs_modified(World.getInstance(), curr, TransformComponent);
 
     ev_log_trace("Added TransformComponent to entity: %s", curr_node.name);
 
@@ -147,7 +140,7 @@ static int ev_assetloader_load_gltf(const char *path)
   for(unsigned int mesh_idx = 0; mesh_idx < data->meshes_count; ++mesh_idx)
   {
     mesh_entities[mesh_idx] = CreateEntity();
-    /* Entity_SetComponent(mesh_entities[mesh_idx], EcsName, {"mesh"}); */
+    Entity_SetComponent(mesh_entities[mesh_idx], EcsName, {"mesh"});
 
     Entity_AddComponent(mesh_entities[mesh_idx], MeshComponent);
     MeshComponent* meshComp = Entity_GetComponent_mut(mesh_entities[mesh_idx], MeshComponent);
@@ -247,8 +240,6 @@ static int ev_assetloader_load_gltf(const char *path)
       rendPrim->vertexBuffer = Renderer.registerVertexBuffer((real*)meshPrim->positionBuffer, meshPrim->vertexCount * sizeof(*meshPrim->positionBuffer));
     }
   }
-
-
 
   World.lockSceneAccess();
   for(unsigned int node_idx = 0; node_idx < data->nodes_count; ++node_idx)

@@ -39,8 +39,6 @@ extern struct ev_World {
 #define RegisterCallableSystem(sys, ...)    ECS_SYSTEM(World.getInstance(), sys, 0 , __VA_ARGS__)
 
 #define CreateEntity() ecs_new(World.getInstance(), 0)
-#define ENTITY(entt) ECS_ENTITY(World.getInstance(), entt, 0)
-#define ENTITY_CHILDOF(entt, parent) ECS_ENTITY(World.getInstance(), entt, CHILDOF | parent)
 #define CreateNamedEntity(name) ECS_ENTITY(World.getInstance(), name, 0)
 
 #define Prefab_Create(pb) ECS_PREFAB(World.getInstance(), pb)

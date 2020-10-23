@@ -21,7 +21,7 @@ void SetTransform(ecs_iter_t *it)
   for(int i = 0; i < it->count; ++i)
   {
     glm_mat4_inv(parentTransform->worldTransform, transform[i].localTransform);
-    glm_mat4_mul(transform[i].worldTransform, transform[i].localTransform, transform[i].localTransform);
+    glm_mat4_mul(transform[i].localTransform, transform[i].worldTransform, transform[i].localTransform);
   }
 }
 

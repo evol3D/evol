@@ -165,80 +165,6 @@ static void ev_game_loop()
   ImportModule(TransformModule);
   ImportModule(PhysicsModule);
 
-  /* { */
-  /*   ENTITY(parent); */
-  /*   ev_Matrix4 *parentTransform = &(Entity_GetComponent_mut(parent, TransformComponent)->worldTransform); */
-  /*   glm_mat4_identity(*parentTransform); */
-  /*   ecs_modified(World.getInstance(), parent, TransformComponent); */
-  /*   Entity_SetComponent(parent, */
-  /*     RigidBodyComponent, { */
-  /*     .mass = 3, */
-  /*     .type = EV_RIGIDBODY_DYNAMIC, */
-  /*     .restitution = 1.3, */
-  /*     .collisionShape = Physics.createBox(1, 1, 1), */
-  /*     }); */
-
-  /*   ENTITY_CHILDOF(child, parent); */
-  /*   Entity_SetComponent(child, EcsName, {"child"}); */
-  /*   ev_Matrix4 *childWorldTransform = &(Entity_GetComponent_mut(child, TransformComponent)->worldTransform); */
-  /*   ev_Vector3 childPosition = {4, 4, 4}; */
-  /*   glm_mat4_identity(*childWorldTransform); */
-
-  /*   glm_translate(*childWorldTransform, (real*)&childPosition); */
-  /*   ecs_modified(World.getInstance(), child, TransformComponent); */
-
-  /*   Entity_SetComponent(child, */
-  /*       RigidBodyComponent, */
-  /*       { */
-  /*       .mass = 1, */
-  /*       .type = EV_RIGIDBODY_KINEMATIC, */
-  /*       .restitution = 0, */
-  /*       .collisionShape = Physics.createSphere(1), */
-  /*       }); */
-
-
-  /*   ENTITY_CHILDOF(child2, parent); */
-
-  /*   ev_Matrix4 *child2WorldTransform = &(Entity_GetComponent_mut(child2, TransformComponent)->worldTransform); */
-  /*   ev_Vector3 child2Position = {-4, -4, -4}; */
-  /*   glm_mat4_identity(*child2WorldTransform); */
-  /*   glm_translate(*child2WorldTransform, (real*)&child2Position); */
-
-  /*   ecs_modified(World.getInstance(), child2, TransformComponent); */
-
-  /*   Entity_SetComponent(child2, */
-  /*       RigidBodyComponent, */
-  /*       { */
-  /*       .mass = 1, */
-  /*       .type = EV_RIGIDBODY_KINEMATIC, */
-  /*       .restitution = 0, */
-  /*       .collisionShape = Physics.createSphere(1), */
-  /*       }); */
-  /*   /1* ecs_add_entity(World.getInstance(), child2, ECS_CHILDOF | parent); *1/ */
-
-  /*   ENTITY_CHILDOF(child3, parent); */
-  /*   Entity_SetComponent(child3, EcsName, {"child3"}); */
-
-  /*   ev_Matrix4 *child3WorldTransform = &(Entity_GetComponent_mut(child3, TransformComponent)->worldTransform); */
-  /*   ev_Matrix4 *child3LocalTransform = &(Entity_GetComponent_mut(child3, TransformComponent)->localTransform); */
-  /*   ev_Vector3 child3Position = {8, 8, 8}; */
-  /*   glm_mat4_identity(*child3WorldTransform); */
-  /*   glm_mat4_identity(*child3LocalTransform); */
-
-  /*   /1* glm_translate(*child3LocalTransform, (real*)&child2Position); *1/ */
-  /*   glm_translate(*child3WorldTransform, (real*)&child3Position); */
-  /*   ecs_modified(World.getInstance(), child3, TransformComponent); */
-
-  /*   Entity_SetComponent(child3, */
-  /*       RigidBodyComponent, */
-  /*       { */
-  /*       .mass = 0, */
-  /*       .type = EV_RIGIDBODY_KINEMATIC, */
-  /*       .restitution = 0, */
-  /*       .collisionShape = Physics.createSphere(1), */
-  /*       }); */
-  /* } */
-
   Entity sphere = CreateEntity();
   Entity_SetComponent(sphere, EcsName, {"sphere_1"});
 
@@ -306,40 +232,10 @@ void MaintainTransformConstraints(SystemArgs *args)
 
   for(int k = 0; k < args->count; ++k)
   {
-    printf("%s Local Transform:\n", Entity_GetComponent(args->entities[k], EcsName)->alloc_value);;
-    for(int i = 0; i < 4; ++i)
-    {
-        for(int j = 0; j < 4; ++j)
-        {
-            printf("%f, ", transform[k].worldTransform[i][j]);
-        }
-      printf("\n");
-    }
-    printf("%s Parent World Transform:\n", Entity_GetComponent(args->entities[k], EcsName)->alloc_value);;
-    for(int i = 0; i < 4; ++i)
-    {
-        for(int j = 0; j < 4; ++j)
-        {
-            printf("%f, ", parentTransform[k].worldTransform[i][j]);
-        }
-      printf("\n");
-    }
-    printf("Entity's name: %s\n", Entity_GetComponent(args->entities[k], EcsName)->value);
     glm_mat4_mul(
-        transform[k].localTransform,
         parentTransform->worldTransform,
+        transform[k].localTransform,
         transform[k].worldTransform
         );
-
-    printf("%s New World Transform:\n", Entity_GetComponent(args->entities[k], EcsName)->alloc_value);;
-    for(int i = 0; i < 4; ++i)
-    {
-        for(int j = 0; j < 4; ++j)
-        {
-            printf("%f, ", transform[k].worldTransform[i][j]);
-        }
-      printf("\n");
-    }
-    printf("\n");
   }
 }

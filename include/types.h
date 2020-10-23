@@ -25,8 +25,6 @@ typedef struct
 
 typedef real ev_Matrix4[4][4];
 
-
-
 typedef struct
 {
   real x, y, z, w;
