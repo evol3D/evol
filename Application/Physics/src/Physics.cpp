@@ -1,6 +1,6 @@
 #include "Physics.h"
 
-#include "btBulletDynamicsCommon.h"
+/* #include "btBulletDynamicsCommon.h" */
 
 #include "BulletState.h"
 
@@ -39,7 +39,7 @@ static int ev_physics_init()
   Physics.createStaticFromTriangleIndexVertex = ev_physics_create_mesh_from_index_vertex;
   Physics.generateConvexHull = ev_physics_generateconvexhull;
 
-  PhysicsData.state = new BulletState;
+  PhysicsData.state = new BulletState();
   PhysicsData.state->visualize();
   return 0;
 }

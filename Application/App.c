@@ -1,9 +1,24 @@
-//TODO Comments / Logging
-#include "App.h"
+// TODO Comments / Logging
+#include "Application/App.h"
+#include "Application/Asset/AssetLoader.h"
+#include "Application/Game/Game.h"
+#include "Application/Input/Input.h"
+#include "Application/Physics/Physics.h"
+#include "Application/Renderer/Renderer.h"
+#include "Application/Vulkan/include/Vulkan.h"
+#include "Application/Window/Window.h"
+#include "Application/World/World.h"
+
 #include <utils.h>
 
-#include <evolpthreads.h>
+#include <EventSystem.h>
 #include <events/events.h>
+
+#ifdef DEBUG
+#include <EventDebug/EventDebug.h>
+#endif
+
+#include <ev_log/ev_log.h>
 
 static int start(int argc, char **argv);
 static int destroy(void);
@@ -12,28 +27,25 @@ static int window_poll_loop(void);
 static int handle_args(int argc, char **argv);
 
 struct ev_app_struct App = {
-  .name = "evol",
-  .closeSystem = false,
-  .start = start,
-  .destroy = destroy,
-  .lastFrameTime = 0,
-  .framerate = 144,
-  .windowPollRate = 1000,
-  .eventSystemUpdateRate = 1000,
+    .name = "evol",
+    .closeSystem = false,
+    .start = start,
+    .destroy = destroy,
+    .lastFrameTime = 0,
+    .framerate = 144,
+    .windowPollRate = 1000,
+    .eventSystemUpdateRate = 1000,
 };
 
-static int start(int argc, char **argv)
-{
-  if(argc > 1)
-  {
+static int start(int argc, char **argv) {
+  if (argc > 1) {
     int args_result = handle_args(argc, argv);
-    if(args_result)
+    if (args_result)
       return args_result;
   }
 
   // If a log file was opened, set it in the logger
-  if(App.logs)
-  {
+  if (App.logs) {
     log_add_fp(App.logs, EV_LOG_TRACE);
     ev_log_info("File logging enabled. File name: %s", "log.evol");
   }
@@ -47,9 +59,9 @@ static int start(int argc, char **argv)
     INIT_EVOL_EVENTS();
     INITIALIZE_EVENTSYSTEM();
 
-    if(EVENTSYSTEM_RESULT != EVENTSYSTEM_RESULT_OPERATION_SUCCESSFUL)
-    {
-      ev_log_error("EventSystem Initialization not successful: %s", EVENTSYSTEM_RESULT_STRINGS[EVENTSYSTEM_RESULT]);
+    if (EVENTSYSTEM_RESULT != EVENTSYSTEM_RESULT_OPERATION_SUCCESSFUL) {
+      ev_log_error("EventSystem Initialization not successful: %s",
+                   EVENTSYSTEM_RESULT_STRINGS[EVENTSYSTEM_RESULT]);
       return EVENTSYSTEM_RESULT;
     }
 
@@ -57,9 +69,9 @@ static int start(int argc, char **argv)
   }
 
 #ifdef DEBUG
-    ev_log_debug("DEBUG mode: Initializing EventDebugger");
-    EventDebug.init();
-    ev_log_debug("Initialized EventDebugger");
+  ev_log_debug("DEBUG mode: Initializing EventDebugger");
+  EventDebug.init();
+  ev_log_debug("Initialized EventDebugger");
 #endif
 
   { // Window Initialization
@@ -119,22 +131,17 @@ static int start(int argc, char **argv)
   return window_poll_loop();
 }
 
-static void* event_system_loop()
-{
+static void *event_system_loop() {
   double lastUpdate = 0;
-  while(!App.closeSystem)
-  {
+  while (!App.closeSystem) {
     double time = Window.getTime();
     double timeStep = time - lastUpdate;
-    double remainingTime = (1.f/(double)App.eventSystemUpdateRate) - timeStep;
+    double remainingTime = (1.f / (double)App.eventSystemUpdateRate) - timeStep;
 
-    if(remainingTime <= 0)
-    {
+    if (remainingTime <= 0) {
       EventSystem.progress();
       lastUpdate = time;
-    }
-    else
-    {
+    } else {
       sleep_ms(remainingTime * 1000);
     }
   }
@@ -142,34 +149,27 @@ static void* event_system_loop()
   return 0;
 }
 
-static int window_poll_loop()
-{
+static int window_poll_loop() {
   pthread_create(&App.eventsystem_thread, NULL, event_system_loop, NULL);
-  pthread_create(&App.gameloop_thread, NULL, (void*)Game.loop, NULL);
+  pthread_create(&App.gameloop_thread, NULL, (void *)Game.loop, NULL);
 
   double lastUpdate = 0;
-  while(!Window.shouldClose())
-  {
+  while (!Window.shouldClose()) {
     double time = Window.getTime();
     double timeStep = time - lastUpdate;
-    double remainingTime = (1.f/(double)App.windowPollRate) - timeStep;
+    double remainingTime = (1.f / (double)App.windowPollRate) - timeStep;
 
-    if (remainingTime <= 0)
-    {
+    if (remainingTime <= 0) {
       Window.pollEvents();
       lastUpdate = time;
-    }
-    else
-    {
+    } else {
       sleep_ms(remainingTime * 1000);
     }
-
   }
   return App.destroy();
 }
 
-static int destroy(void)
-{
+static int destroy(void) {
   // This should start stopping other loops (threads)
   App.closeSystem = true;
 
@@ -227,25 +227,22 @@ static int destroy(void)
   }
 
   ev_log_debug("Closing Log file");
-  if(App.logs) fclose(App.logs);
+  if (App.logs)
+    fclose(App.logs);
 
   return 0;
 }
 
-static int handle_args(int argc, char **argv)
-{
-  for(int i = 1; i < argc; ++i)
-  {
-    if(strcmp(argv[i], "-l") == 0)
-    {
+static int handle_args(int argc, char **argv) {
+  for (int i = 1; i < argc; ++i) {
+    if (strcmp(argv[i], "-l") == 0) {
       ++i;
-      if(argc == i)
-      {
+      if (argc == i) {
         ev_log_error("Please specify a file after the -l option");
         return 1;
       }
       App.logs = fopen(argv[i], "w");
-      if(!App.logs)
+      if (!App.logs)
         ev_log_error("Couldn't open file: %s", argv[i]);
     }
     // Template to copy:

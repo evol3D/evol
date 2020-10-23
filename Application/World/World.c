@@ -5,7 +5,6 @@
 #include <evolpthreads.h>
 #include "flecs_threads.h"
 
-
 static int ev_world_init();
 static int ev_world_deinit();
 static int ev_world_progress();
@@ -163,9 +162,12 @@ static SceneInstance inline ev_world_getinstance()
 
 
 #ifdef DEBUG
-# include "World/modules/transform_module.h"
-# include "World/modules/physics_module.h"
-# include "World/modules/geometry_module.h"
+
+# include <flecs_meta.h>
+# include <flecs_dash.h>
+# include <flecs_systems_civetweb.h>
+
+# include "WorldModules.h"
 void ev_flecs_dash_init()
 {
   ECS_IMPORT(World.getInstance(), FlecsMeta);

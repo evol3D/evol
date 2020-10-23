@@ -3,12 +3,6 @@
 
 #include <flecs.h>
 
-#ifdef DEBUG
-# include <flecs_meta.h>
-# include <flecs_dash.h>
-# include <flecs_systems_civetweb.h>
-#endif
-
 typedef ecs_entity_t Entity;
 typedef ecs_world_t* SceneInstance;
 typedef ecs_type_t   ComponentSet;

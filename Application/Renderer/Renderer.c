@@ -60,8 +60,7 @@ static int ev_renderer_init()
 
   DescriptorSet descriptorSet;
   RendererBackend.allocateDescriptorSet(EV_DESCRIPTOR_SET_LAYOUT_TEXTURE, &descriptorSet);
-
-  
+ 
   Descriptor *descriptors = malloc(sizeof(MemoryBuffer) * RendererData.vertexBuffers.length);
 
   for(int i = 0; i < RendererData.vertexBuffers.length; ++i)
