@@ -10,6 +10,22 @@ static int ev_renderer_deinit();
 static unsigned int ev_renderer_registerindexbuffer(unsigned int *indices, unsigned long long size);
 static unsigned int ev_renderer_registervertexbuffer(real *vertices, unsigned long long size);
 
+//////////////////////////////////////////////////////////////////////////////
+typedef struct {
+unsigned int indecies_index;
+unsigned int vertices_index;
+
+unsigned int indecies_count;
+} rendererComp;
+
+
+typedef vec_t(rendererComp) primitive;
+
+
+typedef struct {
+  unsigned int count;
+} pushConstant;
+
 
 struct ev_Renderer Renderer = {
   .init   = ev_renderer_init,
@@ -18,6 +34,7 @@ struct ev_Renderer Renderer = {
   .registerIndexBuffer = ev_renderer_registerindexbuffer,
   .registerVertexBuffer = ev_renderer_registervertexbuffer,
 };
+//////////////////////////////////////////////////////////////////////////////
 
 typedef vec_t(MemoryBuffer) MemoryBufferVec;
 
@@ -41,31 +58,30 @@ static int ev_renderer_init()
 
   RendererBackend.createResourceMemoryPool(128ull * 1024 * 1024, 1, 4, &RendererData.resourcePool);
 
-  /* DescriptorSet descriptorSet; */
-  /* RendererBackend.allocateDescriptorSet(EV_DESCRIPTOR_SET_LAYOUT_TEXTURE, &descriptorSet); */
+  DescriptorSet descriptorSet;
+  RendererBackend.allocateDescriptorSet(EV_DESCRIPTOR_SET_LAYOUT_TEXTURE, &descriptorSet);
+ 
+  Descriptor *descriptors = malloc(sizeof(MemoryBuffer) * RendererData.vertexBuffers.length);
 
+  for(int i = 0; i < RendererData.vertexBuffers.length; ++i)
+  {
+    descriptors[i] = (Descriptor){EV_DESCRIPTOR_TYPE_UNIFORM_BUFFER, RendererData.vertexBuffers.data + i};
+  }
 
-  /* Descriptor *descriptors = malloc(sizeof(MemoryBuffer) * RendererData.vertexBuffers.length); */
+  RendererBackend.pushDescriptorsToSet(descriptorSet, descriptors, RendererData.vertexBuffers.length);
 
-  /* for(int i = 0; i < RendererData.vertexBuffers.length; ++i) */
-  /* { */
-  /*   descriptors[i] = (Descriptor){EV_DESCRIPTOR_TYPE_UNIFORM_BUFFER, RendererData.vertexBuffers.data + i}; */
-  /* } */
+  RendererBackend.startNewFrame();
 
-  /* RendererBackend.pushDescriptorsToSet(descriptorSet, descriptors, RendererData.vertexBuffers.length); */
+ RendererBackend.bindPipeline(EV_GRAPHICS_PIPELINE_PBR);
+  RendererBackend.bindDescriptorSets(&descriptorSet, 1);
 
-  /* RendererBackend.startNewFrame(); */
+  {
+    vkCmdDrawIndexed(RendererBackend.getCurrentFrameCommandBuffer(), ARRAYSIZE(indices), 1, 0, 0, 0);
+  }
 
-  /* RendererBackend.bindPipeline(EV_GRAPHICS_PIPELINE_PBR); */
-  /* RendererBackend.bindDescriptorSets(&descriptorSet, 1); */
+  RendererBackend.endFrame();
 
-  /* /1* { *1/ */
-  /* /1*   vkCmdDrawIndexed(RendererBackend.getCurrentFrameCommandBuffer(), ARRAYSIZE(indices), 1, 0, 0, 0); *1/ */
-  /* /1* } *1/ */
-
-  /* RendererBackend.endFrame(); */
-
-  /* free(descriptors); */
+  free(descriptors);
 
 
   RendererBackend.memoryDump();
