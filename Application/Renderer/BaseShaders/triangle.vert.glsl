@@ -1,11 +1,37 @@
 #version 450
+#extension GL_EXT_nonuniform_qualifier : require
 
-layout (binding = 0) buffer Vertices
+
+
+
+
+
+layout (push_constant) uniform pushConstants
 {
-  layout (align = 16) vec3 vertices[];
+  int index;
+} push;
+
+
+
+
+
+
+
+
+layout (binding = 0)  buffer Ver
+{
+  vec3 vecs[];
 };
+
+
+
+
+
+
+
 
 void main() 
 {
-  gl_Position = vec4(vertices[gl_VertexIndex], 1);
+  int a = push.index;
+  gl_Position = vec4(vecs[nonuniformEXT(push.index)], 1);
 }

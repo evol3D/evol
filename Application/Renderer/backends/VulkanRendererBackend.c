@@ -154,7 +154,7 @@ void ev_rendererbackend_createrenderpass();
 static int ev_rendererbackend_init()
 {
   // TODO: Should this be checked?
-  DATA(depthStencilFormat) = VK_FORMAT_D16_UNORM_S8_UINT;
+  DATA(depthStencilFormat) = VK_FORMAT_S8_UINT;
 
   Vulkan.createSurface(&DATA(surface));
 
@@ -239,7 +239,7 @@ static int ev_rendererbackend_init()
   {
     {
       .type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, // TODO: Measure performance difference of using VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER vs VK_DESCRIPTOR_TYPE_STORAGE_BUFFER
-      .descriptorCount = 1,
+      .descriptorCount = 10, //TODO CHANGE THIS COUNT
     },
   };
 
@@ -282,7 +282,7 @@ void ev_rendererbackend_createdepthbuffer()
   };
 
   VmaAllocationCreateInfo vmaAllocationCreateInfo = {
-    .usage = VMA_MEMORY_USAGE_GPU_ONLY,
+    .usage = VMA_MEMORY_USAGE_CPU_ONLY,
   };
 
   Vulkan.createImage(&depthImageCreateInfo, &vmaAllocationCreateInfo, &(DATA(depthBufferImage)));
@@ -784,7 +784,7 @@ static int ev_rendererbackend_loadbasepipelines()
   VkPushConstantRange pc = {
     .stageFlags = VK_SHADER_STAGE_VERTEX_BIT,
     .offset = 0,
-    .size = 96 //TODO sizeof(push constant struct)
+    .size = 4 //TODO sizeof(push constant struct)
   };
 
   VkDescriptorSetLayout setLayouts[] = {
@@ -853,7 +853,7 @@ static int ev_rendererbackend_loadbasedescriptorsetlayouts()
     { 
       {
         .binding = 0,
-        .descriptorCount = 1,
+        .descriptorCount = 10 , //TODO look into changing this
         .descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
         .pImmutableSamplers = NULL,
         .stageFlags = VK_SHADER_STAGE_VERTEX_BIT
