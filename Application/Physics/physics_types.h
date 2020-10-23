@@ -13,11 +13,20 @@ extern "C" {
 typedef void* CollisionShape;
 typedef void* RigidBodyHandle;
 
+typedef enum
+{
+  EV_RIGIDBODY_DYNAMIC,
+  EV_RIGIDBODY_KINEMATIC,
+  EV_RIGIDBODY_STATIC,
+} RigidBodyType;
+
 typedef struct 
 {
   unsigned int entt_id;
 
   CollisionShape collisionShape;
+
+  RigidBodyType type;
   real mass;
   real restitution;
 } RigidBody;

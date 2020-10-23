@@ -6,6 +6,8 @@ cc = meson.get_compiler('c')
 RENDERING_BACKEND = 'VULKAN'
 add_project_arguments('-DVULKAN_BACKEND', language : 'c')
 
+# add_project_arguments('-DFLECS_DASHBOARD', language: 'c')
+
 global_incdir = include_directories( './include', './Application', '.')
 add_global_arguments('-Dc_std=c99', language: 'c')
 
@@ -53,6 +55,7 @@ srcfiles = files('src/main.c',
             'Application/World/modules/physics_module.c',
             'Application/World/modules/geometry_module.c',
             'Application/World/modules/rendering_module.c',
+            'Application/World/modules/node_module.c',
             'Application/Asset/AssetLoader.c',
             'Application/EventDebug/EventDebug.c',
             )

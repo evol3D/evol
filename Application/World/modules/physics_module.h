@@ -16,6 +16,9 @@ typedef struct
 
   CollisionShape collisionShape;
 
+  //TODO remove this
+  RigidBodyType type;
+
 } RigidBodyComponent;
 
 ECS_UNUSED
@@ -29,6 +32,8 @@ static EcsMetaType __RigidBodyComponent__ = {
       "float angularVelocity_x; float angularVelocity_y; float angularVelocity_z; float angularVelocity_w;"
       "float mass; float restitution;"
       "uint64_t collisionShape;"
+      "uint32_t type;"
+      "char padding[8];"
       "}"
       ,
     .alias = NULL
