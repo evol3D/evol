@@ -1,3 +1,5 @@
+#include "BulletCollision/CollisionDispatch/btCollisionObject.h"
+#include "physics_types.h"
 #include "stdio.h"
 #include "BulletState.h"
 #include "PhysicsDebugWindow.h"
@@ -109,9 +111,9 @@ RigidBodyHandle BulletState::addRigidBody(RigidBody *rb)
 
   btVector3 localInertia(0, 0, 0);
 
-  if(isDynamic)
+  if(rb->type == EV_RIGIDBODY_DYNAMIC)
   {
-    ((btCollisionShape*)rb->collisionShape)->calculateLocalInertia(rb->mass, localInertia);
+    reinterpret_cast<btCollisionShape*>(rb->collisionShape)->calculateLocalInertia(rb->mass, localInertia);
   }
 
   EvMotionState *motionState = new EvMotionState();
@@ -122,6 +124,11 @@ RigidBodyHandle BulletState::addRigidBody(RigidBody *rb)
   rbInfo.m_restitution = rb->restitution;
 
   btRigidBody* body = new btRigidBody(rbInfo);
+  if(rb->type == EV_RIGIDBODY_KINEMATIC)
+  {
+    body->setCollisionFlags(btCollisionObject::CF_KINEMATIC_OBJECT);
+    body->setActivationState(DISABLE_DEACTIVATION);
+  }
 
   world_mutex.lock();
   world->addRigidBody(body);
@@ -155,24 +162,10 @@ void BulletState::updateRigidBody(RigidBodyHandle handle, RigidBody *rb)
 
   unsigned int entt_id = ((EvMotionState *)((btRigidBody*)handle)->getMotionState())->entt_id;
 
-  /* const ev_Vector4 *ev_PositionVector = entity_get_position(entt_id); */
-  /* const ev_Vector4 *ev_RotationVector = entity_get_rotation(entt_id); */
   const ev_Matrix4 *ev_TransformMatrix = entity_getWorldTransform(entt_id);
 
   btTransform newTransform;
   newTransform.setFromOpenGLMatrix(reinterpret_cast<const btScalar*>(*ev_TransformMatrix));
-  /* newTransform.setIdentity(); */
-  /* newTransform.setOrigin(ev2btVector3(ev_PositionVector)); */
-  /* /1* btQuaternion rot(ev_RotationVector->x, ev_RotationVector->y, ev_RotationVector->z, ev_RotationVector->w); *1/ */
-  /* /1* newTransform.setRotation(rot); *1/ */
-  /* newTransform.setRotation( */
-  /*   btQuaternion( */
-  /*     ev_RotationVector->x, */
-  /*     ev_RotationVector->y, */
-  /*     ev_RotationVector->z, */
-  /*     ev_RotationVector->w */
-  /*   ) */
-  /* ); */
 
   rbHandle->setWorldTransform(newTransform);//->setWorldTransform(newTransform);
 }

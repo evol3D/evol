@@ -2,17 +2,22 @@
 #include "AssetLoader.h"
 #include "Renderer/Renderer.h"
 #include "World/World.h"
+#include "cglm/affine.h"
+#include "cglm/call/quat.h"
+#include "cglm/mat4.h"
+#include "cglm/quat.h"
+#include "flecs.h"
+#include "physics_types.h"
 #include <Physics/Physics.h>
-#include <World/modules/transform_module.h>
-#include <World/modules/geometry_module.h>
-#include <World/modules/physics_module.h>
-#include <World/modules/rendering_module.h>
+
+#include <World/WorldModules.h>
 
 #include <ev_log/ev_log.h>
 
 #include <assert.h>
 
 #include <cgltf.h>
+#include <vec.h>
 
 #include <cglm/cglm.h>
 
@@ -41,11 +46,12 @@ static int ev_assetloader_deinit()
 }
 
 static void ev_assetloader_load_gltf_node(cgltf_node curr_node, Entity parent, cgltf_data *data, Entity *mesh_entities)
-{ 
+{
     // World module imports
     ImportModule(TransformModule);
     ImportModule(GeometryModule);
     ImportModule(PhysicsModule);
+    ImportModule(NodeModule);
 
     Entity curr;
 
@@ -57,6 +63,7 @@ static void ev_assetloader_load_gltf_node(cgltf_node curr_node, Entity parent, c
     {
       curr = CreateEntity();
     }
+
 
 
 #ifdef DEBUG
@@ -71,8 +78,12 @@ static void ev_assetloader_load_gltf_node(cgltf_node curr_node, Entity parent, c
     // Transform
     Entity_SetComponent(curr, TransformComponent, {0});
     TransformComponent *tr = Entity_GetComponent_mut(curr, TransformComponent);
+    glm_mat4_identity(tr->localTransform);
+
     cgltf_node_transform_world(&curr_node, (real*)tr->worldTransform);
     cgltf_node_transform_local(&curr_node, (real*)tr->localTransform);
+
+    ecs_modified(World.getInstance(), curr, TransformComponent);
 
     ev_log_trace("Added TransformComponent to entity: %s", curr_node.name);
 
@@ -92,15 +103,22 @@ static void ev_assetloader_load_gltf_node(cgltf_node curr_node, Entity parent, c
     // TODO: Not all objects that have meshes need collision shapes
     if(curr_node.mesh)
     {
+      RigidBodyType rbType = EV_RIGIDBODY_DYNAMIC;
+      for(int i = 0; i < curr_node.extensions_count; ++i)
+      {
+        if(!strcmp(curr_node.extensions[i].name, "EV_physics_rigidbody_kinematic"))
+            rbType = EV_RIGIDBODY_KINEMATIC;
+      }
       const MeshComponent *meshComponent = Entity_GetComponent(curr, MeshComponent);
       Entity_SetComponent(curr, RigidBodyComponent, {
         .mass = 1,
+        .type = rbType,
         .collisionShape =
           Physics.generateConvexHull(
             meshComponent->primitives->vertexCount,
             meshComponent->primitives->positionBuffer
           ),
-	    .restitution = 1,
+        .restitution = 0,
       });
       ev_log_trace("Added RigidBodyComponent to entity: %s", curr_node.name);
     }
@@ -129,7 +147,7 @@ static int ev_assetloader_load_gltf(const char *path)
   for(unsigned int mesh_idx = 0; mesh_idx < data->meshes_count; ++mesh_idx)
   {
     mesh_entities[mesh_idx] = CreateEntity();
-    Entity_SetComponent(mesh_entities[mesh_idx], EcsName, {"mesh"});
+    /* Entity_SetComponent(mesh_entities[mesh_idx], EcsName, {"mesh"}); */
 
     Entity_AddComponent(mesh_entities[mesh_idx], MeshComponent);
     MeshComponent* meshComp = Entity_GetComponent_mut(mesh_entities[mesh_idx], MeshComponent);
