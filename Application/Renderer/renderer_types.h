@@ -33,8 +33,8 @@ typedef struct {
   unsigned int vertexBufferId;
 
   unsigned int indexCount;
-} PrimitveRenderData;
+} PrimitiveRenderData;
 
-typedef vec_t(PrimitveRenderData) MeshRenderData;
+typedef vec_t(PrimitiveRenderData) MeshRenderData;
 
 #endif

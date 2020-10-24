@@ -7,8 +7,14 @@
 extern struct ev_Renderer {
   int (*init)();
   int (*deinit)();
+
   unsigned int (*registerIndexBuffer)(unsigned int *indices, unsigned long long size);
   unsigned int (*registerVertexBuffer)(real *vertices, unsigned long long size);
+
+  int (*startFrame)();
+  int (*endFrame)();
+
+  void (*draw)(PrimitiveRenderData primitiveRenderData, ev_Matrix4 transformMatrix);
 } Renderer;
 
 #endif //EVOL_RENDERER_H 

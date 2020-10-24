@@ -1,26 +1,27 @@
 #version 450
-#extension GL_EXT_nonuniform_qualifier : require
+
+/* #extension GL_EXT_nonuniform_qualifier : require */
 
 
 
 
 
 
-layout (push_constant) uniform pushConstants
+/* layout (push_constant) uniform PushConstant */
+/* { */
+/*   int vertexBufferIndex; */
+/* } RenderData; */
+
+
+
+
+
+
+
+
+layout (binding = 0) buffer VertexBuffers
 {
-  int index;
-} push;
-
-
-
-
-
-
-
-
-layout (binding = 0)  buffer Ver
-{
-  vec3 vecs[];
+  layout (align = 16) vec3 vertices[];
 };
 
 
@@ -32,6 +33,5 @@ layout (binding = 0)  buffer Ver
 
 void main() 
 {
-  int a = push.index;
-  gl_Position = vec4(vecs[nonuniformEXT(push.index)], 1);
+  gl_Position = vec4(vertices[gl_VertexIndex], 1);
 }

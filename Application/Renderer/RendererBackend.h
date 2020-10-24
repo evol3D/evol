@@ -17,7 +17,8 @@ typedef EvImage               MemoryImage;
 typedef VmaPool               MemoryPool;
 typedef unsigned int          MemoryType;
 
-#define EV_USAGEFLAGS_RESOURCE_BUFFER VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT
+#define EV_USAGEFLAGS_RESOURCE_BUFFER          VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT
+#define EV_BUFFER_USAGE_INDEX_BUFFER_BIT       VK_BUFFER_USAGE_INDEX_BUFFER_BIT   | VK_BUFFER_USAGE_TRANSFER_DST_BIT
 
 typedef enum DescriptorType {
    EV_DESCRIPTOR_TYPE_SAMPLER                = VK_DESCRIPTOR_TYPE_SAMPLER,
@@ -81,9 +82,10 @@ extern struct ev_RendererBackend {
 
     void (*memoryDump)();
 
-    //TODO fix the need for these
-    VkCommandBuffer (*getCurrentFrameCommandBuffer)();
-    VkRenderPass (*getRenderPass)();
+    void (*pushConstant)(void *data, unsigned int size);
+
+    void (*drawIndexed)(unsigned int indexCount);
+
 } RendererBackend;
 
 

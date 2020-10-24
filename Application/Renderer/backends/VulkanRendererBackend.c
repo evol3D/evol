@@ -1,9 +1,10 @@
+#include "Renderer/renderer_types.h"
 #include <Renderer/RendererBackend.h>
 #include <Window.h>
 #include <Vulkan.h>
 #include <string.h>
 #include <stdlib.h>
-
+#include <vulkan/vulkan_core.h>
 
 static int ev_rendererbackend_init();
 static int ev_rendererbackend_deinit();
@@ -18,7 +19,6 @@ static int ev_rendererbackend_loadbasedescriptorsetlayouts();
 
 ShaderModule ev_rendererbackend_loadshader(const char* shaderPath);
 void ev_rendererbackend_unloadshader(ShaderModule shader);
-
 
 static int ev_rendererbackend_bindpipeline(GraphicsPipelineType type);
 
@@ -39,9 +39,9 @@ static void ev_rendererbackend_copybuffer(unsigned long long size, MemoryBuffer 
 
 static void ev_rendererbackend_memorydump();
 
-// Disgrace functions
-static VkCommandBuffer ev_rendererbackend_getcurrentframecommandbuffer();
-static VkRenderPass ev_rendererbackend_getrenderpass();
+static void ev_rendererbackend_pushconstant(void *data, unsigned int size);
+
+static void ev_rendererbackend_drawindexed(unsigned int indexCount);
 
 struct ev_RendererBackend RendererBackend = 
 {
@@ -76,12 +76,12 @@ struct ev_RendererBackend RendererBackend =
 
   .copyBuffer = ev_rendererbackend_copybuffer,
 
+  .pushConstant = ev_rendererbackend_pushconstant,
+
+  .drawIndexed = ev_rendererbackend_drawindexed,
+
 
   .memoryDump = ev_rendererbackend_memorydump,
-
-  // TODO Remove
-  .getCurrentFrameCommandBuffer = ev_rendererbackend_getcurrentframecommandbuffer,
-  .getRenderPass = ev_rendererbackend_getrenderpass,
 };
 
 
@@ -501,15 +501,6 @@ void ev_rendererbackend_endframe()
   //assert(!"Not implemented");
 }
 
-static VkCommandBuffer ev_rendererbackend_getcurrentframecommandbuffer()
-{
-  return CMDBUFFERS[FRAME];
-}
-static VkRenderPass ev_rendererbackend_getrenderpass()
-{
-  return DATA(renderPass);
-}
-
 /* void ev_vulkan_destroy_swapchain() */
 /* { */
 /*   // Destroy semaphores */
@@ -782,14 +773,14 @@ static int ev_rendererbackend_loadbasepipelines()
 
   //push constants
   VkPushConstantRange pc = {
-    .stageFlags = VK_SHADER_STAGE_VERTEX_BIT,
+    .stageFlags = VK_SHADER_STAGE_ALL_GRAPHICS,
     .offset = 0,
     .size = 4 //TODO sizeof(push constant struct)
   };
 
   VkDescriptorSetLayout setLayouts[] = {
-    BASE_DESCRIPTOR_SET_LAYOUTS[EV_DESCRIPTOR_SET_LAYOUT_RIG],
     BASE_DESCRIPTOR_SET_LAYOUTS[EV_DESCRIPTOR_SET_LAYOUT_TEXTURE],
+    BASE_DESCRIPTOR_SET_LAYOUTS[EV_DESCRIPTOR_SET_LAYOUT_RIG],
   };
 
   VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo = {
@@ -820,7 +811,7 @@ static int ev_rendererbackend_loadbasepipelines()
       .pColorBlendState = &pipelineColorBlendState,
       .pDynamicState = &pipelineDynamicState,
       .layout = BASE_PIPELINES_LAYOUTS[EV_GRAPHICS_PIPELINE_PBR],
-      .renderPass = RendererBackend.getRenderPass(),
+      .renderPass = DATA(renderPass),
       .subpass = 0, // TODO Read more about the graphics pipelines and what this number represents (first subpass to run?)
     } 
   };
@@ -860,9 +851,17 @@ static int ev_rendererbackend_loadbasedescriptorsetlayouts()
       }
     };
 
+    VkDescriptorBindingFlagsEXT bindingFlags = VK_DESCRIPTOR_BINDING_VARIABLE_DESCRIPTOR_COUNT_BIT_EXT | VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT;
+    VkDescriptorSetLayoutBindingFlagsCreateInfoEXT descriptorSetLayoutBindingFlagsCreateInfo = {
+      .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_BINDING_FLAGS_CREATE_INFO_EXT,
+      .bindingCount = ARRAYSIZE(bindings),
+      .pBindingFlags = &bindingFlags,
+    };
+
     VkDescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo = 
     {
       .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
+      .pNext = &descriptorSetLayoutBindingFlagsCreateInfo,
       .bindingCount = ARRAYSIZE(bindings),
       .pBindings = bindings
     };
@@ -941,6 +940,7 @@ static int ev_rendererbackend_pushdescriptorstoset(DescriptorSet descriptorSet, 
           .descriptorCount = 1,
           .descriptorType = (VkDescriptorType)descriptors[i].type,
           .dstSet = descriptorSet,
+          /* .dstArrayElement = i, */
           .pBufferInfo = &bufferInfos[i],
         };
         break;
@@ -969,4 +969,14 @@ static int ev_rendererbackend_bindindexbuffer(MemoryBuffer *indexBuffer)
 {
   vkCmdBindIndexBuffer(CMDBUFFERS[FRAME], indexBuffer->buffer, 0, VK_INDEX_TYPE_UINT32);
   return 0;
+}
+
+static void ev_rendererbackend_pushconstant(void *data, unsigned int size)
+{
+  vkCmdPushConstants(CMDBUFFERS[FRAME], BOUND_PIPELINE_LAYOUT, VK_SHADER_STAGE_ALL_GRAPHICS, 0, size, data); 
+}
+
+static void ev_rendererbackend_drawindexed(unsigned int indexCount)
+{
+  vkCmdDrawIndexed(CMDBUFFERS[FRAME], indexCount, 1, 0, 0, 0);
 }

@@ -233,7 +233,7 @@ static int ev_assetloader_load_gltf(const char *path)
     for(unsigned int primitive_idx = 0; primitive_idx < data->meshes[mesh_idx].primitives_count; ++primitive_idx)
     {
       MeshPrimitive *meshPrim = meshComp->primitives + primitive_idx;
-      PrimitveRenderData primRendData;
+      PrimitiveRenderData primRendData;
       primRendData.indexCount = meshPrim->indexCount;
       primRendData.indexBufferId = Renderer.registerIndexBuffer(meshPrim->indexBuffer, meshPrim->indexCount * sizeof(*meshPrim->indexBuffer));
       primRendData.vertexBufferId = Renderer.registerVertexBuffer((real*)meshPrim->positionBuffer, meshPrim->vertexCount * sizeof(*meshPrim->positionBuffer));

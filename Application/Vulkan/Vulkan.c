@@ -157,6 +157,7 @@ void ev_vulkan_create_instance()
 {
   const char *extensions[] = {
     "VK_KHR_surface",
+    VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME,
     #ifdef _WIN32
     "VK_KHR_win32_surface",
     #else
@@ -218,15 +219,25 @@ void ev_vulkan_create_logical_device()
 {
   const char *deviceExtensions[] = {
     VK_KHR_SWAPCHAIN_EXTENSION_NAME,
+    VK_KHR_MAINTENANCE3_EXTENSION_NAME,
+    VK_EXT_DESCRIPTOR_INDEXING_EXTENSION_NAME
   };
 
   VkDeviceQueueCreateInfo *deviceQueueCreateInfos = NULL;
   unsigned int queueCreateInfoCount = 0;
   VulkanQueueManager.init(VulkanData.physicalDevice, &deviceQueueCreateInfos, &queueCreateInfoCount);
 
+  VkPhysicalDeviceDescriptorIndexingFeaturesEXT physicalDeviceDescriptorIndexingFeatures = {
+    .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES_EXT,
+    .shaderSampledImageArrayNonUniformIndexing = VK_TRUE,
+    .runtimeDescriptorArray = VK_TRUE,
+    .descriptorBindingVariableDescriptorCount = VK_TRUE,
+  };
+
   VkDeviceCreateInfo deviceCreateInfo = 
   {
     .sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
+    .pNext = &physicalDeviceDescriptorIndexingFeatures,
     .enabledExtensionCount = ARRAYSIZE(deviceExtensions),
     .ppEnabledExtensionNames = deviceExtensions,
     .queueCreateInfoCount = queueCreateInfoCount,

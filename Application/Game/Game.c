@@ -3,6 +3,7 @@
 
 #include "App.h"
 #include "Physics/Physics.h"
+#include "Renderer/Renderer.h"
 #include "Window.h"
 #include "World/World.h"
 #include "World/WorldModules.h"
@@ -20,7 +21,6 @@
 #include "utils.h"
 
 // Game Systems
-void SyncWorldToRenderer(SystemArgs *args);
 void MaintainTransformConstraints(SystemArgs *args);
 
 // API functions
@@ -47,10 +47,6 @@ static int ev_game_init()
 {
   ev_log_trace("Started initializing the game");
 
-  ev_log_trace("Activating event handlers");
-  ACTIVATE_EVENT_HANDLER(SceneUpdatedEventHandler, SceneUpdatedEvent);
-  ev_log_trace("Activated event handlers");
-
   ev_log_trace("Starting a new scene");
   World.newScene();
   ev_log_trace("New scene started");
@@ -58,7 +54,6 @@ static int ev_game_init()
   ev_log_trace("Registering systems");
   ImportModule(GeometryModule);
   ImportModule(TransformModule);
-  /* RegisterCallableSystem(SyncWorldToRenderer, SHARED: MeshComponent); */
 #ifdef FLECS_DASHBOARD
   RegisterSystem_OnUpdate(MaintainTransformConstraints, CASCADE: TransformComponent, TransformComponent);
 #else
@@ -198,7 +193,30 @@ static void ev_game_loop()
       World.unlockSceneAccess();
       World.progress();
 
-      // Renderer.startFrame();
+      {
+#ifdef FLECS_DASHBOARD
+        ecs_query_t *q = ecs_query_new(World.getInstance(), "TransformComponent, SHARED: RenderingComponent");
+#else
+        ecs_query_t *q = ecs_query_new(World.getInstance(), "transform.module.TransformComponent, SHARED: rendering.module.RenderingComponent");
+#endif
+        ecs_iter_t it = ecs_query_iter(q);
+
+        Renderer.startFrame();
+
+        while(ecs_query_next(&it))
+        {
+          TransformComponent *transformComp = ecs_column(&it, TransformComponent, 1);
+          RenderingComponent *renderingComp = ecs_column(&it, RenderingComponent, 2);
+
+          for(int i = 0; i < it.count; ++i)
+          {
+            for(int primitiveIdx = 0; primitiveIdx < renderingComp[i].meshRenderData.length; ++primitiveIdx)
+            {
+              Renderer.draw(renderingComp[i].meshRenderData.data[primitiveIdx], transformComp[i].worldTransform);
+            }
+          }
+        }
+
       // ....
       // ....
       // Rendering code
@@ -209,7 +227,9 @@ static void ev_game_loop()
       // ....
       // TODO Create Query for all components that have signature "TransformComponent, SHARED: RenderingComponent"
       // ....
-      // Renderer.endFrame();
+
+        Renderer.endFrame();
+      }
 
       old = new;
     }

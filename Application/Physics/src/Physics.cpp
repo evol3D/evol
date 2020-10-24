@@ -41,7 +41,7 @@ static int ev_physics_init()
   Physics.generateConvexHull = ev_physics_generateconvexhull;
 
   PhysicsData.state = new BulletState();
-  PhysicsData.state->visualize();
+  /* PhysicsData.state->visualize(); */
   return 0;
 }
 
