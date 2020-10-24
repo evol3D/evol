@@ -193,10 +193,24 @@ static void ev_game_loop()
 
     if(remainingTime<=0)
     {
-      World.progress();
       World.lockSceneAccess();
       ev_game_loop_physics(timeStep);
       World.unlockSceneAccess();
+      World.progress();
+
+      // Renderer.startFrame();
+      // ....
+      // ....
+      // Rendering code
+      // ....
+      // Iterate on all components that have a RenderingComponent.
+      // For each one of those, send the world transform matrix and the 
+      // render data.
+      // ....
+      // TODO Create Query for all components that have signature "TransformComponent, SHARED: RenderingComponent"
+      // ....
+      // Renderer.endFrame();
+
       old = new;
     }
     else

@@ -10,23 +10,6 @@ static int ev_renderer_deinit();
 static unsigned int ev_renderer_registerindexbuffer(unsigned int *indices, unsigned long long size);
 static unsigned int ev_renderer_registervertexbuffer(real *vertices, unsigned long long size);
 
-//////////////////////////////////////////////////////////////////////////////
-typedef struct {
-unsigned int indecies_index;
-unsigned int vertices_index;
-
-unsigned int indecies_count;
-} rendererComp;
-
-
-typedef vec_t(rendererComp) primitive;
-
-
-typedef struct {
-  unsigned int count;
-} pushConstant;
-
-
 struct ev_Renderer Renderer = {
   .init   = ev_renderer_init,
   .deinit = ev_renderer_deinit,
@@ -34,7 +17,6 @@ struct ev_Renderer Renderer = {
   .registerIndexBuffer = ev_renderer_registerindexbuffer,
   .registerVertexBuffer = ev_renderer_registervertexbuffer,
 };
-//////////////////////////////////////////////////////////////////////////////
 
 typedef vec_t(MemoryBuffer) MemoryBufferVec;
 
@@ -70,18 +52,18 @@ static int ev_renderer_init()
 
   RendererBackend.pushDescriptorsToSet(descriptorSet, descriptors, RendererData.vertexBuffers.length);
 
-  RendererBackend.startNewFrame();
+  /* RendererBackend.startNewFrame(); */
 
- RendererBackend.bindPipeline(EV_GRAPHICS_PIPELINE_PBR);
-  RendererBackend.bindDescriptorSets(&descriptorSet, 1);
+  /* RendererBackend.bindPipeline(EV_GRAPHICS_PIPELINE_PBR); */
+  /* RendererBackend.bindDescriptorSets(&descriptorSet, 1); */
 
-  {
-    vkCmdDrawIndexed(RendererBackend.getCurrentFrameCommandBuffer(), ARRAYSIZE(indices), 1, 0, 0, 0);
-  }
+  /* { */
+  /*   vkCmdDrawIndexed(RendererBackend.getCurrentFrameCommandBuffer(), ARRAYSIZE(indices), 1, 0, 0, 0); */
+  /* } */
 
-  RendererBackend.endFrame();
+  /* RendererBackend.endFrame(); */
 
-  free(descriptors);
+  /* free(descriptors); */
 
 
   RendererBackend.memoryDump();
@@ -91,6 +73,8 @@ static int ev_renderer_init()
 
 static int ev_renderer_deinit()
 {
+  vec_deinit(&RendererData.indexBuffers);
+  vec_deinit(&RendererData.vertexBuffers);
   return 0;
 }
 

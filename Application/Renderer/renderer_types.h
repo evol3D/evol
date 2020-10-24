@@ -1,6 +1,8 @@
 #ifndef EVOL_RENDERERTYPES_HEADER
 #define EVOL_RENDERERTYPES_HEADER
 
+#include <vec.h>
+
 typedef enum
 {
   EV_DESCRIPTOR_SET_LAYOUT_TEXTURE,
@@ -25,5 +27,14 @@ typedef enum
   // Add before this line
   GRAPHICS_PIPELINES_COUNT
 } GraphicsPipelineType;
+
+typedef struct {
+  unsigned int indexBufferId;
+  unsigned int vertexBufferId;
+
+  unsigned int indexCount;
+} PrimitveRenderData;
+
+typedef vec_t(PrimitveRenderData) MeshRenderData;
 
 #endif

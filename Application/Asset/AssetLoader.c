@@ -1,6 +1,7 @@
 //TODO Comments / Logging
 #include "AssetLoader.h"
 #include "Renderer/Renderer.h"
+#include "Renderer/renderer_types.h"
 #include "World/World.h"
 #include "cglm/affine.h"
 #include "cglm/call/quat.h"
@@ -229,15 +230,14 @@ static int ev_assetloader_load_gltf(const char *path)
   {
     const MeshComponent* meshComp = Entity_GetComponent(mesh_entities[mesh_idx], MeshComponent);
     RenderingComponent* rendComp = Entity_GetComponent_mut(mesh_entities[mesh_idx], RenderingComponent);
-    rendComp->primitivesCount = meshComp->primitives_count;
-    rendComp->primitives = malloc(rendComp->primitivesCount * sizeof(RenderingPrimitive));
-    for(unsigned int primitive_idx = 0; primitive_idx < rendComp->primitivesCount; ++primitive_idx)
+    for(unsigned int primitive_idx = 0; primitive_idx < data->meshes[mesh_idx].primitives_count; ++primitive_idx)
     {
       MeshPrimitive *meshPrim = meshComp->primitives + primitive_idx;
-      RenderingPrimitive *rendPrim = rendComp->primitives + primitive_idx;
-      rendPrim->triangleCount = meshPrim->indexCount / 3;
-      rendPrim->indexBuffer = Renderer.registerIndexBuffer(meshPrim->indexBuffer, meshPrim->indexCount * sizeof(*meshPrim->indexBuffer));
-      rendPrim->vertexBuffer = Renderer.registerVertexBuffer((real*)meshPrim->positionBuffer, meshPrim->vertexCount * sizeof(*meshPrim->positionBuffer));
+      PrimitveRenderData primRendData;
+      primRendData.indexCount = meshPrim->indexCount;
+      primRendData.indexBufferId = Renderer.registerIndexBuffer(meshPrim->indexBuffer, meshPrim->indexCount * sizeof(*meshPrim->indexBuffer));
+      primRendData.vertexBufferId = Renderer.registerVertexBuffer((real*)meshPrim->positionBuffer, meshPrim->vertexCount * sizeof(*meshPrim->positionBuffer));
+      vec_push(&rendComp->meshRenderData, primRendData);
     }
   }
 
