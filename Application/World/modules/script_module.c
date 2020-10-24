@@ -1,12 +1,41 @@
 //TODO Comments / Logging
 #include "script_module.h"
 
-void RunOnUpdate(ecs_iter_t *it)
+void RunOnUpdateC(ecs_iter_t *it)
 {
-  ECS_COLUMN(it, ScriptComponent, script, 1);
+  ECS_COLUMN(it, CScriptComponent, script, 1);
 
-  // Somehow run the OnUpdate function in the script
-  printf("Scriptname: %s, OnUpdate\n", script->script_path);
+  for(int i = 0; i < it->count; ++i)
+  {
+    script[i].on_update(it->entities[i]);
+  }
+}
+
+void OnAddCScriptComponent(ecs_iter_t *it)
+{
+  ECS_COLUMN(it, CScriptComponent, script, 1);
+  for(int i = 0; i < it->count; ++i)
+  {
+    script[i].on_update = NULL;
+  }
+}
+
+void OnSetCScriptComponent(ecs_iter_t *it)
+{
+  ECS_IMPORT(it->world, ScriptModule);
+  CScriptComponent *script = ecs_column(it, CScriptComponent, 1);
+
+  for(int i = 0; i < it->count; ++i)
+  {
+    if(script[i].on_update)
+    {
+      ecs_add(it->world, it->entities[i], OnUpdateC);
+    }
+    else
+    {
+      ecs_remove(it->world, it->entities[i], OnUpdateC);
+    }
+  }
 }
 
 void ScriptModuleImport(ecs_world_t *world)
@@ -14,9 +43,17 @@ void ScriptModuleImport(ecs_world_t *world)
   ECS_MODULE(world, ScriptModule);
 
   ECS_COMPONENT(world, ScriptComponent);
+  ECS_COMPONENT(world, CScriptComponent);
 
-  ECS_SYSTEM(world, RunOnUpdate, EcsOnUpdate, ScriptComponent);
+  ECS_TAG(world, OnUpdateC);
+
+  ECS_SYSTEM(world, RunOnUpdateC, EcsOnUpdate, CScriptComponent, OnUpdateC);
 
   ECS_EXPORT_COMPONENT(ScriptComponent);
-  ECS_EXPORT_ENTITY(RunOnUpdate);
+  ECS_EXPORT_COMPONENT(CScriptComponent);
+  ECS_EXPORT_ENTITY(OnUpdateC);
+
+  ECS_TRIGGER(world, OnAddCScriptComponent, EcsOnAdd, CScriptComponent);
+
+  ECS_SYSTEM(world, OnSetCScriptComponent, EcsOnSet, CScriptComponent);
 }

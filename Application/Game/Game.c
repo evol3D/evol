@@ -38,18 +38,9 @@ struct ev_Game_Data {
   int placeholder;
 } GameData;
 
-DECLARE_EVENT_HANDLER( SceneUpdatedEventHandler, (SceneUpdatedEvent *event) {
-    // TODO: Call callable system to sync renderer
-    /* ecs_run(World.getInstance(), SyncWorldToRenderer, 0, NULL); */
-});
-
 static int ev_game_init()
 {
   ev_log_trace("Started initializing the game");
-
-  ev_log_trace("Activating event handlers");
-  ACTIVATE_EVENT_HANDLER(SceneUpdatedEventHandler, SceneUpdatedEvent);
-  ev_log_trace("Activated event handlers");
 
   ev_log_trace("Starting a new scene");
   World.newScene();
@@ -58,7 +49,6 @@ static int ev_game_init()
   ev_log_trace("Registering systems");
   ImportModule(GeometryModule);
   ImportModule(TransformModule);
-  /* RegisterCallableSystem(SyncWorldToRenderer, SHARED: MeshComponent); */
 #ifdef FLECS_DASHBOARD
   RegisterSystem_OnUpdate(MaintainTransformConstraints, CASCADE: TransformComponent, TransformComponent);
 #else
@@ -70,7 +60,7 @@ static int ev_game_init()
   /* AssetLoader.loadGLTF("Triangle.gltf"); */
   /* AssetLoader.loadGLTF("Cube.gltf"); */
   /* AssetLoader.loadGLTF("InterpolationTest.gltf"); */
-  AssetLoader.loadGLTF("CesiumMilkTruck.gltf");
+  /* AssetLoader.loadGLTF("CesiumMilkTruck.gltf"); */
   /* AssetLoader.loadGLTF("RiggedFigure.gltf"); */
   /* AssetLoader.loadGLTF("CesiumMan.gltf"); */
   /* AssetLoader.loadGLTF("WaterBottle.gltf"); */
@@ -154,32 +144,16 @@ void spawn()
   /* } */
 }
 
+void sandbox();
+
 
 #include <types.h>
 static void ev_game_loop()
 {
   /* pthread_t spawn_thread; */
   /* pthread_create(&spawn_thread, NULL, (void*)spawn, NULL); */
-
-  World.lockSceneAccess();
-  ImportModule(TransformModule);
-  ImportModule(PhysicsModule);
-
-  Entity sphere = CreateEntity();
-  Entity_SetComponent(sphere, EcsName, {"sphere_1"});
-
-  ev_Matrix4 *transform = &(Entity_GetComponent_mut(sphere, TransformComponent)->worldTransform);
-  ev_Vector3 position = {0, -10, 0};
-  glm_mat4_identity(*transform);
-  glm_translate(*transform, (real*)&position);
-
-  Entity_SetComponent(sphere,
-    RigidBodyComponent, {
-    .mass = 0,
-    .restitution = 0.5,
-    .collisionShape = Physics.createBox(2, 2, 2),
-    });
-  World.unlockSceneAccess();
+  
+  sandbox();
 
   double old = Window.getTime();
   unsigned int physics_steprate = 60;
@@ -209,18 +183,6 @@ static void ev_game_loop()
   ev_log_debug("Exiting game loop");
 }
 
-void SyncWorldToRenderer(SystemArgs *args)
-{
-  MeshComponent *meshes = ecs_column(args, MeshComponent, 1);
-  (void)meshes;
-  printf("SyncWorldToRenderer\n");
-
-  for (int i = 0; i < args->count; ++i)
-  {
-    /* meshes[i]; */
-  }
-}
-
 #include <cglm/cglm.h>
 void MaintainTransformConstraints(SystemArgs *args)
 {
@@ -238,4 +200,37 @@ void MaintainTransformConstraints(SystemArgs *args)
         transform[k].worldTransform
         );
   }
+}
+
+void sphereOnUpdate(unsigned int entt)
+{
+  printf("OnUpdate in Entity #%d, Name: %s\n", entt, Entity_GetName(entt));
+}
+
+void sandbox()
+{
+
+  World.lockSceneAccess();
+  ImportModule(TransformModule);
+  ImportModule(PhysicsModule);
+  ImportModule(ScriptModule);
+
+  Entity sphere = CreateEntity();
+  Entity_SetComponent(sphere, EcsName, {"sphere_1"});
+
+  Entity_SetComponent(sphere, CScriptComponent, {sphereOnUpdate});
+
+  ev_Matrix4 *transform = &(Entity_GetComponent_mut(sphere, TransformComponent)->worldTransform);
+  ev_Vector3 position = {0, -10, 0};
+  glm_mat4_identity(*transform);
+  glm_translate(*transform, (real*)&position);
+
+  Entity_SetComponent(sphere,
+    RigidBodyComponent, {
+    .mass = 0,
+    .restitution = 0.5,
+    .collisionShape = Physics.createBox(2, 2, 2),
+    });
+  World.unlockSceneAccess();
+
 }
