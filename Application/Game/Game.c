@@ -66,6 +66,7 @@ static int ev_game_init()
   /* AssetLoader.loadGLTF("Cube.gltf"); */
   /* AssetLoader.loadGLTF("InterpolationTest.gltf"); */
   AssetLoader.loadGLTF("CesiumMilkTruck.gltf");
+  /* AssetLoader.loadGLTF("Duck.gltf"); */
   /* AssetLoader.loadGLTF("RiggedFigure.gltf"); */
   /* AssetLoader.loadGLTF("CesiumMan.gltf"); */
   /* AssetLoader.loadGLTF("WaterBottle.gltf"); */
@@ -73,9 +74,9 @@ static int ev_game_init()
   /* AssetLoader.loadGLTF("Duck.gltf"); */
   ev_log_trace("Loaded GLTF file");
 
-  ev_log_trace("Dispatching SceneUpdatedEvent");
-  DISPATCH_EVENT( SceneUpdatedEvent, {});
-  ev_log_trace("Dispatched SceneUpdatedEvent");
+  /* ev_log_trace("Dispatching SceneUpdatedEvent"); */
+  /* DISPATCH_EVENT( SceneUpdatedEvent, {}); */
+  /* ev_log_trace("Dispatched SceneUpdatedEvent"); */
 
   ev_log_trace("Finished initializing the game");
   return 0;
@@ -181,17 +182,16 @@ static void ev_game_loop()
   double new;
   while(!App.closeSystem)
   {
-    ev_log_trace("Starting gameloop iteration");
+    ev_log_debug("Starting gameloop iteration");
     new = Window.getTime();
     double timeStep = new - old;
     double remainingTime = (1.f/(double)physics_steprate) - timeStep;
 
     if(remainingTime<=0)
     {
+      World.progress();
       World.lockSceneAccess();
       ev_game_loop_physics(timeStep);
-      World.unlockSceneAccess();
-      World.progress();
 
       {
 #ifdef FLECS_DASHBOARD
@@ -201,7 +201,10 @@ static void ev_game_loop()
 #endif
         ecs_iter_t it = ecs_query_iter(q);
 
+        ev_log_debug("Initializing new frame : Renderer.startFrame()");
         Renderer.startFrame();
+        ev_log_debug("Finished initializing new frame : Renderer.startFrame()");
+
 
         while(ecs_query_next(&it))
         {
@@ -217,19 +220,11 @@ static void ev_game_loop()
           }
         }
 
-      // ....
-      // ....
-      // Rendering code
-      // ....
-      // Iterate on all components that have a RenderingComponent.
-      // For each one of those, send the world transform matrix and the 
-      // render data.
-      // ....
-      // TODO Create Query for all components that have signature "TransformComponent, SHARED: RenderingComponent"
-      // ....
-
+        ev_log_debug("Ending frame : Renderer.endFrame()");
         Renderer.endFrame();
+        ev_log_debug("Ended frame : Renderer.endFrame()");
       }
+      World.unlockSceneAccess();
 
       old = new;
     }
@@ -238,7 +233,7 @@ static void ev_game_loop()
       ev_log_trace("Gameloop going to sleep for %f milliseconds", remainingTime * 1000);
       sleep_ms(remainingTime * 1000);
     }
-    ev_log_trace("Finished gameloop iteration");
+    ev_log_debug("Finished gameloop iteration");
   }
   ev_log_debug("Exiting game loop");
 }

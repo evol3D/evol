@@ -5,6 +5,7 @@
 #include "vulkan_utils.h"
 #include "VulkanQueueManager.h"
 #include <ev_log/ev_log.h>
+#include <vulkan/vulkan_core.h>
 
 #include "stdio.h"
 #include "stdlib.h"
@@ -46,6 +47,7 @@ void ev_vulkan_image_memory_barrier(VkImage image, VkImageLayout oldLayout, VkIm
 
 //getters
 static inline VkDevice ev_vulkan_get_logical_device();
+static inline VkPhysicalDevice ev_vulkan_get_physical_device();
 static inline VkCommandPool ev_vulkan_get_commandpool(QueueType type);
 static inline VmaAllocator ev_vulkan_getallocator();
 
@@ -73,6 +75,7 @@ struct ev_Vulkan Vulkan = {
 
   // Getters
   .getDevice               = ev_vulkan_get_logical_device,
+  .getPhysicalDevice       = ev_vulkan_get_physical_device,
   .getCommandPool          = ev_vulkan_get_commandpool,
   .getAllocator            = ev_vulkan_getallocator,
 
@@ -173,7 +176,7 @@ void ev_vulkan_create_instance()
     .sType = VK_STRUCTURE_TYPE_APPLICATION_INFO,
     .pApplicationName = "evol_vulkan",
     .applicationVersion = 0,
-    .apiVersion = VK_API_VERSION_1_1,
+    .apiVersion = VK_API_VERSION_1_2,
   };
 
   VkInstanceCreateInfo instanceCreateInfo = {
@@ -220,7 +223,7 @@ void ev_vulkan_create_logical_device()
   const char *deviceExtensions[] = {
     VK_KHR_SWAPCHAIN_EXTENSION_NAME,
     VK_KHR_MAINTENANCE3_EXTENSION_NAME,
-    VK_EXT_DESCRIPTOR_INDEXING_EXTENSION_NAME
+    VK_EXT_DESCRIPTOR_INDEXING_EXTENSION_NAME,
   };
 
   VkDeviceQueueCreateInfo *deviceQueueCreateInfos = NULL;
@@ -232,6 +235,7 @@ void ev_vulkan_create_logical_device()
     .shaderSampledImageArrayNonUniformIndexing = VK_TRUE,
     .runtimeDescriptorArray = VK_TRUE,
     .descriptorBindingVariableDescriptorCount = VK_TRUE,
+    .shaderStorageBufferArrayNonUniformIndexing = VK_TRUE,
   };
 
   VkDeviceCreateInfo deviceCreateInfo = 
@@ -266,15 +270,6 @@ void ev_vulkan_createswapchain(unsigned int* imageCount, VkSurfaceKHR* surface, 
   if(windowWidth == UINT32_MAX || windowHeight == UINT32_MAX)
     Window.getSize(&windowWidth, &windowHeight);
 
-/*   VkBool32 surfaceSupported = VK_FALSE; */
-/*   vkGetPhysicalDeviceSurfaceSupportKHR( */
-/*     VulkanData.physicalDevice, VulkanData.queueFamilyIndices[GRAPHICS], */ 
-/*     *surface, &surfaceSupported); */   
-
-/*   if(surfaceSupported == VK_FALSE) */
-/*     assert(!"Surface not supported by physical device!"); */
-
-  
   // The forbidden fruit (don't touch it)
   VkCompositeAlphaFlagBitsKHR compositeAlpha =
     (surfaceCapabilities.supportedCompositeAlpha & VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR)
@@ -480,3 +475,7 @@ void ev_vulkan_memorydump()
   vmaFreeStatsString(VulkanData.allocator, vmaDump);
 }
 
+static inline VkPhysicalDevice ev_vulkan_get_physical_device()
+{
+  return VulkanData.physicalDevice;
+}

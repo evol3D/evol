@@ -5,6 +5,7 @@
 #include "World/modules/geometry_module.h"
 #include "vec.h"
 #include <vulkan/vulkan_core.h>
+#include <ev_log/ev_log.h>
 
 static int ev_renderer_init();
 static int ev_renderer_deinit();
@@ -43,15 +44,25 @@ struct ev_Renderer_Data {
 
 static int ev_renderer_init()
 {
+  ev_log_debug("Initializing RendererBackend");
   RendererBackend.init();
+  ev_log_debug("Initialized RendererBackend");
   vec_init(&RendererData.indexBuffers);
   vec_init(&RendererData.vertexBuffers);
 
+  ev_log_debug("Loading BaseShaders");
   RendererBackend.loadBaseShaders();
+  ev_log_debug("Loaded BaseShaders");
+  ev_log_debug("Loading BaseDescriptorSetLayouts");
   RendererBackend.loadBaseDescriptorSetLayouts();
+  ev_log_debug("Loaded BaseDescriptorSetLayouts");
+  ev_log_debug("Loading BasePipelines");
   RendererBackend.loadBasePipelines();
+  ev_log_debug("Loaded BasePipelines");
 
+  ev_log_debug("Allocating ResourceMemoryPool");
   RendererBackend.createResourceMemoryPool(128ull * 1024 * 1024, 1, 4, &RendererData.resourcePool);
+  ev_log_debug("Allocated ResourceMemoryPool");
 
 
   /* RendererBackend.startNewFrame(); */
@@ -68,7 +79,7 @@ static int ev_renderer_init()
   /* free(descriptors); */
 
 
-  RendererBackend.memoryDump();
+  /* RendererBackend.memoryDump(); */
 
   return 0;
 }
@@ -146,26 +157,35 @@ static void EV_UNUSED ev_renderer_update_resources(MeshComponent* meshes, unsign
 {
 }
 
-// TODO TODO REMOVE
-DescriptorSet descriptorSet = VK_NULL_HANDLE;
+// TODO TODO Remove
+DescriptorSet descriptorSet;
 static int ev_renderer_startframe()
 {
   // TODO Error reporting
-  /* DescriptorSet descriptorSet; */
   if(descriptorSet == VK_NULL_HANDLE)
-    RendererBackend.allocateDescriptorSet(EV_DESCRIPTOR_SET_LAYOUT_TEXTURE, &descriptorSet);
- 
-  Descriptor *descriptors = malloc(sizeof(MemoryBuffer) * RendererData.vertexBuffers.length);
-
-  for(int i = 0; i < RendererData.vertexBuffers.length; ++i)
   {
-    // TODO What would be the difference if we switched to EV_DESCRIPTOR_TYPE_UNIFORM_BUFFER?
-    descriptors[i] = (Descriptor){EV_DESCRIPTOR_TYPE_STORAGE_BUFFER, RendererData.vertexBuffers.data + i};
+    ev_log_debug("Creating DescriptorSet");
+    RendererBackend.allocateDescriptorSet(EV_DESCRIPTOR_SET_LAYOUT_TEXTURE, &descriptorSet);
+    ev_log_debug("Allocated DescriptorSet");
+    Descriptor *descriptors = malloc(sizeof(MemoryBuffer) * RendererData.vertexBuffers.length);
+    for(int i = 0; i < RendererData.vertexBuffers.length; ++i)
+    {
+      // TODO What would be the difference if we switched to EV_DESCRIPTOR_TYPE_UNIFORM_BUFFER?
+      descriptors[i] = (Descriptor){EV_DESCRIPTOR_TYPE_STORAGE_BUFFER, RendererData.vertexBuffers.data + i};
+    }
+
+    ev_log_debug("Pushing Descriptors to DescriptorSet");
+    RendererBackend.pushDescriptorsToSet(descriptorSet, descriptors, RendererData.vertexBuffers.length);
+    ev_log_debug("Finished pushing Descriptors to DescriptorSet");
   }
 
-  RendererBackend.pushDescriptorsToSet(descriptorSet, descriptors, RendererData.vertexBuffers.length);
-
+  ev_log_debug("Starting API specific new frame initialization : RendererBackend.startNewFrame()");
   RendererBackend.startNewFrame();
+  ev_log_debug("Finished API specific new frame initialization : RendererBackend.startNewFrame()");
+
+  RendererBackend.bindPipeline(EV_GRAPHICS_PIPELINE_PBR);
+  RendererBackend.bindDescriptorSets(&descriptorSet, 1);
+
   return 0;
 }
 
@@ -179,13 +199,11 @@ static int ev_renderer_endframe()
 
 static void ev_renderer_draw(PrimitiveRenderData primitiveRenderData, ev_Matrix4 transformMatrix)
 {
-  RendererBackend.bindPipeline(EV_GRAPHICS_PIPELINE_PBR);
-  RendererBackend.bindDescriptorSets(&descriptorSet, 1);
-
   //TODO Create a "pushconstant?" struct that should hold the data that will be passed to the pipeline
   RendererBackend.pushConstant(&primitiveRenderData.vertexBufferId, sizeof(unsigned int));
 
-  RendererBackend.bindIndexBuffer(&RendererData.indexBuffers.data[primitiveRenderData.indexBufferId]);
+  RendererBackend.bindIndexBuffer(&(RendererData.indexBuffers.data[primitiveRenderData.indexBufferId]));
+  /* RendererBackend.bindIndexBuffer(&(RendererData.indexBuffers.data[0])); */
 
   RendererBackend.drawIndexed(primitiveRenderData.indexCount);
 }

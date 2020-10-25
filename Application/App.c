@@ -151,6 +151,7 @@ static void *event_system_loop() {
 static int window_poll_loop() {
   pthread_create(&App.eventsystem_thread, NULL, event_system_loop, NULL);
   pthread_create(&App.gameloop_thread, NULL, (void *)Game.loop, NULL);
+  /* Game.loop(); */
 
   double lastUpdate = 0;
   while (!Window.shouldClose()) {

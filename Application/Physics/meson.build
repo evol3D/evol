@@ -36,7 +36,7 @@ evphys_dep_list = [
   linear_math_dep,
 
   # Remove if not debugging
-  physics_debug_dep,
+  # physics_debug_dep,
   ]
 
 evphys_lib = library('evphys', srcfiles, include_directories: incdir,

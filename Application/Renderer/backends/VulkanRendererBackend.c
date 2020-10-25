@@ -154,9 +154,19 @@ void ev_rendererbackend_createrenderpass();
 static int ev_rendererbackend_init()
 {
   // TODO: Should this be checked?
-  DATA(depthStencilFormat) = VK_FORMAT_S8_UINT;
+  DATA(depthStencilFormat) = VK_FORMAT_D32_SFLOAT_S8_UINT;
 
   Vulkan.createSurface(&DATA(surface));
+
+  VkBool32 surfaceSupported = VK_FALSE;
+  vkGetPhysicalDeviceSurfaceSupportKHR(
+    Vulkan.getPhysicalDevice(), VulkanQueueManager.getFamilyIndex(GRAPHICS), 
+    DATA(surface), &surfaceSupported);   
+
+  if(surfaceSupported == VK_FALSE)
+    assert(!"Surface not supported by physical device!");
+
+  
 
   // TODO: Actually detect the format
   {
@@ -223,6 +233,7 @@ static int ev_rendererbackend_init()
   // Creating all semaphores needed
   VkSemaphoreCreateInfo semaphoreCreateInfo = {VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO};
   SEMAPHORES = malloc(sizeof(VkSemaphore) * SEMAPHORE_COUNT);
+
   for(unsigned int i = 0; i < SEMAPHORE_COUNT; ++i)
   {
     VK_ASSERT(vkCreateSemaphore(Vulkan.getDevice(), &semaphoreCreateInfo, NULL, SEMAPHORES + i));
@@ -238,13 +249,13 @@ static int ev_rendererbackend_init()
   VkDescriptorPoolSize poolSizes[] = 
   {
     {
-      .type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, // TODO: Measure performance difference of using VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER vs VK_DESCRIPTOR_TYPE_STORAGE_BUFFER
+      .type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, // TODO: Measure performance difference of using VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER vs VK_DESCRIPTOR_TYPE_STORAGE_BUFFER
       .descriptorCount = 10, //TODO CHANGE THIS COUNT
     },
   };
 
   VkDescriptorPoolCreateInfo descriptorPoolCreateInfo = {VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO};
-  descriptorPoolCreateInfo.maxSets = 1;
+  descriptorPoolCreateInfo.maxSets = 10;
   descriptorPoolCreateInfo.poolSizeCount = ARRAYSIZE(poolSizes);
   descriptorPoolCreateInfo.pPoolSizes = poolSizes;
 
@@ -388,7 +399,34 @@ void ev_rendererbackend_startnewframe()
     VK_ASSERT(vkBeginCommandBuffer(CMDBUFFERS[FRAME], &commandBufferBeginInfo));
   }
 
-  /* ev_vulkan_image_memory_barrier(VulkanData.swapchainImages[VulkanData.currentFrameIndex], VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, 0, VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, VK_DEPENDENCY_BY_REGION_BIT); */
+  VkImageMemoryBarrier imageMemoryBarrier = 
+  {
+    .sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
+    .pNext = NULL,
+    .srcAccessMask = 0,
+    .dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
+    .oldLayout = VK_IMAGE_LAYOUT_UNDEFINED,
+    .newLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+    .srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,  // TODO
+    .dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,  // TODO
+    .image = DATA(swapchainImages)[FRAME],
+    .subresourceRange = 
+    {
+      .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
+      .levelCount = VK_REMAINING_MIP_LEVELS,
+      .layerCount = VK_REMAINING_ARRAY_LAYERS,
+    }
+  };
+
+  vkCmdPipelineBarrier(CMDBUFFERS[FRAME], 
+      VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, 
+      VK_DEPENDENCY_BY_REGION_BIT, 0, NULL, 0, NULL, 1, &imageMemoryBarrier);
+
+  /* ev_vulkan_image_memory_barrier(VulkanData.swapchainImages[VulkanData.currentFrameIndex], */ 
+  /*     VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, */ 
+  /*     0, VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT, */ 
+  /*     VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, */ 
+  /*     VK_DEPENDENCY_BY_REGION_BIT); */
 
   unsigned int width, height;
   Window.getSize(&width, &height);
@@ -398,7 +436,7 @@ void ev_rendererbackend_startnewframe()
     VkClearValue clearValues[] = 
     {
       {
-        .color = { {0.33f, 0.22f, 0.37f, 1.f} },
+        .color = { {0.13f, 0.22f, 0.37f, 1.f} },
       },
       {
         .depthStencil = {1.0f, 0.0f},
@@ -575,7 +613,7 @@ static void ev_rendererbackend_createresourcememorypool(unsigned long long block
 
   { // Detecting memorytype index
     VkBufferCreateInfo sampleBufferCreateInfo = {VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO};
-    /* sampleBufferCreateInfo.size = 1024; */
+    sampleBufferCreateInfo.size = 1024;
     sampleBufferCreateInfo.usage = EV_USAGEFLAGS_RESOURCE_BUFFER;
 
     VmaAllocationCreateInfo allocationCreateInfo = {
@@ -780,7 +818,7 @@ static int ev_rendererbackend_loadbasepipelines()
 
   VkDescriptorSetLayout setLayouts[] = {
     BASE_DESCRIPTOR_SET_LAYOUTS[EV_DESCRIPTOR_SET_LAYOUT_TEXTURE],
-    BASE_DESCRIPTOR_SET_LAYOUTS[EV_DESCRIPTOR_SET_LAYOUT_RIG],
+    /* BASE_DESCRIPTOR_SET_LAYOUTS[EV_DESCRIPTOR_SET_LAYOUT_RIG], */
   };
 
   VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo = {
@@ -846,12 +884,11 @@ static int ev_rendererbackend_loadbasedescriptorsetlayouts()
         .binding = 0,
         .descriptorCount = 10 , //TODO look into changing this
         .descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
-        .pImmutableSamplers = NULL,
-        .stageFlags = VK_SHADER_STAGE_VERTEX_BIT
+        .stageFlags = VK_SHADER_STAGE_ALL_GRAPHICS,
       }
     };
 
-    VkDescriptorBindingFlagsEXT bindingFlags = VK_DESCRIPTOR_BINDING_VARIABLE_DESCRIPTOR_COUNT_BIT_EXT | VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT;
+    VkDescriptorBindingFlagsEXT bindingFlags = VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT; // | VK_DESCRIPTOR_BINDING_VARIABLE_DESCRIPTOR_COUNT_BIT;
     VkDescriptorSetLayoutBindingFlagsCreateInfoEXT descriptorSetLayoutBindingFlagsCreateInfo = {
       .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_BINDING_FLAGS_CREATE_INFO_EXT,
       .bindingCount = ARRAYSIZE(bindings),
@@ -870,26 +907,26 @@ static int ev_rendererbackend_loadbasedescriptorsetlayouts()
   }
 
    //SET 1 FOR rigging
-  {
-    VkDescriptorSetLayoutBinding bindings[] =
-    { 
-      {
-        .binding = 0,
-        .descriptorCount = 1,
-        .descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
-        .pImmutableSamplers = NULL,
-        .stageFlags = VK_SHADER_STAGE_VERTEX_BIT
-      }
-    };
+  /* { */
+  /*   VkDescriptorSetLayoutBinding bindings[] = */
+  /*   { */ 
+  /*     { */
+  /*       .binding = 0, */
+  /*       .descriptorCount = 1, */
+  /*       .descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, */
+  /*       .pImmutableSamplers = NULL, */
+  /*       .stageFlags = VK_SHADER_STAGE_VERTEX_BIT */
+  /*     } */
+  /*   }; */
 
-    VkDescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo = {
-      .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
-      .bindingCount = ARRAYSIZE(bindings),
-      .pBindings = bindings
-    };
+  /*   VkDescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo = { */
+  /*     .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO, */
+  /*     .bindingCount = ARRAYSIZE(bindings), */
+  /*     .pBindings = bindings */
+  /*   }; */
 
-    VK_ASSERT(vkCreateDescriptorSetLayout(Vulkan.getDevice(), &descriptorSetLayoutCreateInfo, NULL, &BASE_DESCRIPTOR_SET_LAYOUTS[EV_DESCRIPTOR_SET_LAYOUT_RIG]));
-  }
+  /*   VK_ASSERT(vkCreateDescriptorSetLayout(Vulkan.getDevice(), &descriptorSetLayoutCreateInfo, NULL, &BASE_DESCRIPTOR_SET_LAYOUTS[EV_DESCRIPTOR_SET_LAYOUT_RIG])); */
+  /* } */
   return 0;
 }
 
@@ -911,9 +948,10 @@ static int ev_rendererbackend_allocatedescriptorset(DescriptorSetLayoutType setL
   VkDescriptorSetAllocateInfo setAllocateInfo = { VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO };
   setAllocateInfo.descriptorPool = DATA(descriptorPool);
   setAllocateInfo.descriptorSetCount = 1;
-  setAllocateInfo.pSetLayouts = &BASE_DESCRIPTOR_SET_LAYOUTS[EV_DESCRIPTOR_SET_LAYOUT_TEXTURE];
+  setAllocateInfo.pSetLayouts = &BASE_DESCRIPTOR_SET_LAYOUTS[setLayoutType];
 
-  vkAllocateDescriptorSets(Vulkan.getDevice(), &setAllocateInfo, descriptorSet);
+  /* ev_log_debug("Error Code: %d", vkAllocateDescriptorSets(Vulkan.getDevice(), &setAllocateInfo, descriptorSet)); */
+  VK_ASSERT(vkAllocateDescriptorSets(Vulkan.getDevice(), &setAllocateInfo, descriptorSet));
   return 0;
 }
 
@@ -940,7 +978,8 @@ static int ev_rendererbackend_pushdescriptorstoset(DescriptorSet descriptorSet, 
           .descriptorCount = 1,
           .descriptorType = (VkDescriptorType)descriptors[i].type,
           .dstSet = descriptorSet,
-          /* .dstArrayElement = i, */
+          .dstBinding = 0,
+          .dstArrayElement = i,
           .pBufferInfo = &bufferInfos[i],
         };
         break;
@@ -958,9 +997,11 @@ static int ev_rendererbackend_pushdescriptorstoset(DescriptorSet descriptorSet, 
         ;
     }
   }
-
+  ev_log_debug("About to call `vkUpdateDescriptorSets`");
   vkUpdateDescriptorSets(Vulkan.getDevice(), descriptorsCount, setWrites, 0, NULL);
+  ev_log_debug("Called `vkUpdateDescriptorSets`");
 
+  free(bufferInfos);
   free(setWrites);
   return 0;
 }

@@ -2,7 +2,7 @@
 #include "physics_types.h"
 #include "stdio.h"
 #include "BulletState.h"
-#include "PhysicsDebugWindow.h"
+/* #include "PhysicsDebugWindow.h" */
 #include "EvMotionState.h"
 #include "utils.h"
 
@@ -17,7 +17,7 @@ BulletState::BulletState()
 
 BulletState::~BulletState()
 {
-  PhysicsDebugWindow::deinit();
+  /* PhysicsDebugWindow::deinit(); */
 
   clearCollisionObjects();
   clearCollisionShapes();
@@ -61,7 +61,7 @@ void BulletState::visualize()
   if(visualDebugging)
     return;
 
-  PhysicsDebugWindow::init(world);
+  /* PhysicsDebugWindow::init(world); */
   visualDebugging = true;
 }
 
