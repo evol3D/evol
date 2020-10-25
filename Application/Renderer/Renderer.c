@@ -112,14 +112,15 @@ static unsigned int ev_renderer_registervertexbuffer(real *vertices, unsigned lo
 }
 
 // TODO TODO Remove
-DescriptorSet descriptorSet;
+DescriptorSet descriptorSet0;
+DescriptorSet descriptorSet1;
 static int ev_renderer_startframe()
 {
   // TODO Error reporting
-  if(descriptorSet == VK_NULL_HANDLE)
+  if(descriptorSet1 == VK_NULL_HANDLE)
   {
     ev_log_trace("Creating DescriptorSet");
-    RendererBackend.allocateDescriptorSet(EV_DESCRIPTOR_SET_LAYOUT_TEXTURE, &descriptorSet);
+    RendererBackend.allocateDescriptorSet(EV_DESCRIPTOR_SET_LAYOUT_TEXTURE, &descriptorSet1);
     ev_log_trace("Allocated DescriptorSet");
     Descriptor *descriptors = malloc(sizeof(MemoryBuffer) * RendererData.vertexBuffers.length);
     for(int i = 0; i < RendererData.vertexBuffers.length; ++i)
@@ -129,7 +130,7 @@ static int ev_renderer_startframe()
     }
 
     ev_log_trace("Pushing Descriptors to DescriptorSet");
-    RendererBackend.pushDescriptorsToSet(descriptorSet, descriptors, RendererData.vertexBuffers.length);
+    RendererBackend.pushDescriptorsToSet(descriptorSet1, descriptors, RendererData.vertexBuffers.length);
     ev_log_trace("Finished pushing Descriptors to DescriptorSet");
   }
 
@@ -138,7 +139,7 @@ static int ev_renderer_startframe()
   ev_log_trace("Finished API specific new frame initialization : RendererBackend.startNewFrame()");
 
   RendererBackend.bindPipeline(EV_GRAPHICS_PIPELINE_PBR);
-  RendererBackend.bindDescriptorSets(&descriptorSet, 1);
+  RendererBackend.bindDescriptorSets(&descriptorSet1, 1);
 
   return 0;
 }

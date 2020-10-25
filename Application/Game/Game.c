@@ -164,7 +164,6 @@ void MaintainTransformConstraints(SystemArgs *args)
 
 void sandbox()
 {
-
   ev_log_trace("Loading GLTF file");
   /* AssetLoader.loadGLTF("Triangle.gltf"); */
   /* AssetLoader.loadGLTF("Cube.gltf"); */
@@ -178,9 +177,27 @@ void sandbox()
   /* AssetLoader.loadGLTF("Duck.gltf"); */
   ev_log_trace("Loaded GLTF file");
 
+
   World.lockSceneAccess();
   ImportModule(TransformModule);
   ImportModule(PhysicsModule);
+  ImportModule(CameraModule);
+
+  {
+    Entity camera = CreateEntity();
+    Entity_SetComponent(camera, CameraComponent, {
+        .viewType = EV_CAMERA_PERSPECTIVE_VIEW,
+        .hfov = 90,
+        .aspectRatio = 1,
+        .nearPlane = 0,
+        .farPlane = 1000,
+        });
+    TransformComponent * transformComp = Entity_GetComponent_mut(camera, TransformComponent);
+    ev_Vector3 cameraPosition = {0, 0, -10};
+    glm_mat4_identity(transformComp->worldTransform);
+    glm_translate(transformComp->worldTransform, (real*)&cameraPosition);
+    ecs_modified(World.getInstance(), camera, TransformComponent);
+  }
 
   Entity sphere = CreateEntity();
   Entity_SetComponent(sphere, EcsName, {"sphere_1"});
