@@ -6,6 +6,7 @@
 #include "vec.h"
 #include <vulkan/vulkan_core.h>
 #include <ev_log/ev_log.h>
+#include <stdio.h>
 
 static int ev_renderer_init();
 static int ev_renderer_deinit();
@@ -153,10 +154,17 @@ static int ev_renderer_endframe()
 
 static void ev_renderer_draw(PrimitiveRenderData primitiveRenderData, ev_Matrix4 transformMatrix)
 {
+  uint32_t size = sizeof(int) + sizeof(ev_Matrix4);
+  void* data = malloc(size);
+  memcpy(data, &primitiveRenderData.vertexBufferId, 4);
+  memcpy(data + 4 , transformMatrix , 64);
+
   //TODO Create a "pushconstant?" struct that should hold the data that will be passed to the pipeline
-  RendererBackend.pushConstant(&primitiveRenderData.vertexBufferId, sizeof(unsigned int));
+  RendererBackend.pushConstant(data, 68);
 
   RendererBackend.bindIndexBuffer(&(RendererData.indexBuffers.data[primitiveRenderData.indexBufferId]));
 
   RendererBackend.drawIndexed(primitiveRenderData.indexCount);
+
+  free(data);
 }

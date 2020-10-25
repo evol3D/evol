@@ -5,6 +5,8 @@
 layout (push_constant) uniform PushConstant
 {
   int vertexBufferIndex;
+
+  mat4 model;
 } RenderData;
 
 layout(set = 0, binding = 0) buffer VertexBuffer {
@@ -13,5 +15,5 @@ layout(set = 0, binding = 0) buffer VertexBuffer {
 
 void main() 
 {
-  gl_Position = vec4(VertexBuffers[nonuniformEXT(RenderData.vertexBufferIndex)].vertices[gl_VertexIndex], 1);
+  gl_Position = RenderData.model * vec4(VertexBuffers[nonuniformEXT(RenderData.vertexBufferIndex)].vertices[gl_VertexIndex], 1);
 }

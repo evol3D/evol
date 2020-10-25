@@ -813,7 +813,7 @@ static int ev_rendererbackend_loadbasepipelines()
   VkPushConstantRange pc = {
     .stageFlags = VK_SHADER_STAGE_ALL_GRAPHICS,
     .offset = 0,
-    .size = 4 //TODO sizeof(push constant struct)
+    .size = 68 //TODO sizeof(push constant struct)
   };
 
   VkDescriptorSetLayout setLayouts[] = {
