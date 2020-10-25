@@ -234,8 +234,8 @@ void ev_vulkan_create_logical_device()
     .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES_EXT,
     .shaderSampledImageArrayNonUniformIndexing = VK_TRUE,
     .runtimeDescriptorArray = VK_TRUE,
-    .descriptorBindingVariableDescriptorCount = VK_TRUE,
     .shaderStorageBufferArrayNonUniformIndexing = VK_TRUE,
+    .descriptorBindingPartiallyBound = VK_TRUE,
   };
 
   VkDeviceCreateInfo deviceCreateInfo = 

@@ -13,5 +13,5 @@ layout(set = 0, binding = 0) buffer VertexBuffer {
 
 void main() 
 {
-  gl_Position = vec4(VertexBuffers[RenderData.vertexBufferIndex].vertices[gl_VertexIndex], 1);
+  gl_Position = vec4(VertexBuffers[nonuniformEXT(RenderData.vertexBufferIndex)].vertices[gl_VertexIndex], 1);
 }

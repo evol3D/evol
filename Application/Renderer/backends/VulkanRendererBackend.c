@@ -997,9 +997,7 @@ static int ev_rendererbackend_pushdescriptorstoset(DescriptorSet descriptorSet, 
         ;
     }
   }
-  ev_log_debug("About to call `vkUpdateDescriptorSets`");
   vkUpdateDescriptorSets(Vulkan.getDevice(), descriptorsCount, setWrites, 0, NULL);
-  ev_log_debug("Called `vkUpdateDescriptorSets`");
 
   free(bufferInfos);
   free(setWrites);
