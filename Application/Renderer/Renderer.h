@@ -11,7 +11,7 @@ extern struct ev_Renderer {
   unsigned int (*registerIndexBuffer)(unsigned int *indices, unsigned long long size);
   unsigned int (*registerVertexBuffer)(real *vertices, unsigned long long size);
 
-  int (*startFrame)();
+  int (*startFrame)(ev_RenderCamera *camera);
   int (*endFrame)();
 
   void (*draw)(PrimitiveRenderData primitiveRenderData, ev_Matrix4 transformMatrix);

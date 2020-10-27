@@ -101,13 +101,25 @@ static void ev_game_loop()
         // TODO This query can persist. Move it somewhere.
 #ifdef FLECS_DASHBOARD
         ecs_query_t *q = ecs_query_new(World.getInstance(), "TransformComponent, SHARED: RenderingComponent");
+        ecs_query_t *cameraQuery = ecs_query_new(World.getInstance(), "camera.module.CameraComponent, TransformComponent");
 #else
         ecs_query_t *q = ecs_query_new(World.getInstance(), "transform.module.TransformComponent, SHARED: rendering.module.RenderingComponent");
+        ecs_query_t *cameraQuery = ecs_query_new(World.getInstance(), "camera.module.CameraComponent, transform.module.TransformComponent");
 #endif
         ecs_iter_t it = ecs_query_iter(q);
+        ecs_iter_t cameraIter = ecs_query_iter(cameraQuery);
+
+        ecs_query_next(&cameraIter);
+        CameraComponent *cameraData = ecs_column(&cameraIter, CameraComponent, 1);
+        TransformComponent *cameraTransform = ecs_column(&cameraIter, TransformComponent, 2);
+
+        ev_RenderCamera renderCamera;
+
+        glm_mat4_dup(cameraData->projectionMatrix, renderCamera.projectionMatrix);
+        glm_mat4_inv(cameraTransform->worldTransform, renderCamera.viewMatrix);
 
         ev_log_trace("Initializing new frame : Renderer.startFrame()");
-        Renderer.startFrame();
+        Renderer.startFrame(&renderCamera);
         ev_log_trace("Finished initializing new frame : Renderer.startFrame()");
 
 
@@ -118,10 +130,13 @@ static void ev_game_loop()
 
           for(int i = 0; i < it.count; ++i)
           {
+            ev_log_debug("Entity %s has %d primitives in its rendering component", Entity_GetName(it.entities[i]), renderingComp[i].meshRenderData.length);
             for(int primitiveIdx = 0; primitiveIdx < renderingComp[i].meshRenderData.length; ++primitiveIdx)
             {
+              ev_log_debug("Render.draw()'ing the RenderComponent for entity: %s", Entity_GetName(it.entities[i]));
               Renderer.draw(renderingComp[i].meshRenderData.data[primitiveIdx], transformComp[i].worldTransform);
             }
+            ev_log_debug("Finished Entity");
           }
         }
 
@@ -190,28 +205,27 @@ void sandbox()
         .hfov = 90,
         .aspectRatio = 1,
         .nearPlane = 0,
-        .farPlane = 1000,
+        .farPlane = 100,
         });
     TransformComponent * transformComp = Entity_GetComponent_mut(camera, TransformComponent);
-    ev_Vector3 cameraPosition = {0, 0, -10};
+    ev_Vector3 cameraPosition = {0, 0, 5};
     glm_mat4_identity(transformComp->worldTransform);
     glm_translate(transformComp->worldTransform, (real*)&cameraPosition);
-    ecs_modified(World.getInstance(), camera, TransformComponent);
   }
 
-  Entity sphere = CreateEntity();
-  Entity_SetComponent(sphere, EcsName, {"sphere_1"});
+  /* Entity sphere = CreateEntity(); */
+  /* Entity_SetComponent(sphere, EcsName, {"sphere_1"}); */
 
-  ev_Matrix4 *transform = &(Entity_GetComponent_mut(sphere, TransformComponent)->worldTransform);
-  ev_Vector3 position = {0, -10, 0};
-  glm_mat4_identity(*transform);
-  glm_translate(*transform, (real*)&position);
+  /* ev_Matrix4 *transform = &(Entity_GetComponent_mut(sphere, TransformComponent)->worldTransform); */
+  /* ev_Vector3 position = {0, -10, 0}; */
+  /* glm_mat4_identity(*transform); */
+  /* glm_translate(*transform, (real*)&position); */
 
-  Entity_SetComponent(sphere,
-    RigidBodyComponent, {
-    .mass = 0,
-    .restitution = 0.5,
-    .collisionShape = Physics.createBox(2, 2, 2),
-    });
+  /* Entity_SetComponent(sphere, */
+  /*   RigidBodyComponent, { */
+  /*   .mass = 0, */
+  /*   .restitution = 0.5, */
+  /*   .collisionShape = Physics.createBox(2, 2, 2), */
+  /*   }); */
   World.unlockSceneAccess();
 }

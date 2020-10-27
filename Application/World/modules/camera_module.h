@@ -23,8 +23,6 @@ typedef struct
   float farPlane;
 
   ev_Matrix4 projectionMatrix;
-  ev_Matrix4 viewMatrix;
-
 } CameraComponent;
 
 typedef struct

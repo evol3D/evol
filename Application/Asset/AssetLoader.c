@@ -141,7 +141,6 @@ static int ev_assetloader_load_gltf(const char *path)
   for(unsigned int mesh_idx = 0; mesh_idx < data->meshes_count; ++mesh_idx)
   {
     mesh_entities[mesh_idx] = CreateEntity();
-    Entity_SetComponent(mesh_entities[mesh_idx], EcsName, {"mesh"});
 
     Entity_AddComponent(mesh_entities[mesh_idx], MeshComponent);
     MeshComponent* meshComp = Entity_GetComponent_mut(mesh_entities[mesh_idx], MeshComponent);

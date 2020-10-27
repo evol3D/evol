@@ -35,6 +35,8 @@ static void ev_rendererbackend_allocatebufferinpool(MemoryPool pool, unsigned lo
 static void ev_rendererbackend_allocatestagingbuffer(unsigned long long bufferSize, MemoryBuffer *buffer);
 static void ev_rendererbackend_updatestagingbuffer(MemoryBuffer *buffer, unsigned long long bufferSize, const void *data);
 
+static void ev_rendererbackend_allocateuniformbuffer(unsigned long long bufferSize, MemoryBuffer *buffer);
+
 static void ev_rendererbackend_copybuffer(unsigned long long size, MemoryBuffer *src, MemoryBuffer *dst);
 
 static void ev_rendererbackend_memorydump();
@@ -73,6 +75,8 @@ struct ev_RendererBackend RendererBackend =
   
   .allocateStagingBuffer = ev_rendererbackend_allocatestagingbuffer,
   .updateStagingBuffer = ev_rendererbackend_updatestagingbuffer,
+
+  .allocateUniformBuffer = ev_rendererbackend_allocateuniformbuffer,
 
   .copyBuffer = ev_rendererbackend_copybuffer,
 
@@ -669,6 +673,20 @@ static void ev_rendererbackend_updatestagingbuffer(MemoryBuffer *buffer, unsigne
   vmaUnmapMemory(Vulkan.getAllocator(), buffer->allocation);
 }
 
+static void ev_rendererbackend_allocateuniformbuffer(unsigned long long bufferSize, MemoryBuffer *buffer)
+{
+  VmaAllocationCreateInfo allocationCreateInfo = {
+    .usage = VMA_MEMORY_USAGE_CPU_TO_GPU, // TODO: Experiment with VMA_MEMORY_USAGE_CPU_TO_GPU
+  };
+
+  VkBufferCreateInfo bufferCreateInfo = { VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO };
+  bufferCreateInfo.size = bufferSize;
+  bufferCreateInfo.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
+  bufferCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+
+  Vulkan.createBuffer(&bufferCreateInfo, &allocationCreateInfo, buffer);
+}
+
 static void ev_rendererbackend_copybuffer(unsigned long long size, MemoryBuffer *src, MemoryBuffer *dst)
 {
   VkCommandBuffer tempCommandBuffer;
@@ -813,11 +831,12 @@ static int ev_rendererbackend_loadbasepipelines()
   VkPushConstantRange pc = {
     .stageFlags = VK_SHADER_STAGE_ALL_GRAPHICS,
     .offset = 0,
-    .size = 68 //TODO sizeof(push constant struct)
+    .size = 128 
   };
 
   VkDescriptorSetLayout setLayouts[] = {
     BASE_DESCRIPTOR_SET_LAYOUTS[EV_DESCRIPTOR_SET_LAYOUT_TEXTURE],
+    BASE_DESCRIPTOR_SET_LAYOUTS[EV_DESCRIPTOR_SET_LAYOUT_CAMERA_PARAM],
     /* BASE_DESCRIPTOR_SET_LAYOUTS[EV_DESCRIPTOR_SET_LAYOUT_RIG], */
   };
 
@@ -904,6 +923,27 @@ static int ev_rendererbackend_loadbasedescriptorsetlayouts()
     };
 
     VK_ASSERT(vkCreateDescriptorSetLayout(Vulkan.getDevice(), &descriptorSetLayoutCreateInfo, NULL, &BASE_DESCRIPTOR_SET_LAYOUTS[EV_DESCRIPTOR_SET_LAYOUT_TEXTURE]));
+  }
+
+  {
+    VkDescriptorSetLayoutBinding bindings[] =
+    { 
+      {
+        .binding = 0,
+        .descriptorCount = 1, //TODO look into changing this
+        .descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+        .stageFlags = VK_SHADER_STAGE_ALL_GRAPHICS,
+      }
+    };
+
+    VkDescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo = 
+    {
+      .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
+      .bindingCount = ARRAYSIZE(bindings),
+      .pBindings = bindings
+    };
+
+    VK_ASSERT(vkCreateDescriptorSetLayout(Vulkan.getDevice(), &descriptorSetLayoutCreateInfo, NULL, &BASE_DESCRIPTOR_SET_LAYOUTS[EV_DESCRIPTOR_SET_LAYOUT_CAMERA_PARAM]));
   }
 
    //SET 1 FOR rigging

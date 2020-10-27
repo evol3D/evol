@@ -11,7 +11,7 @@
 static int ev_renderer_init();
 static int ev_renderer_deinit();
 
-static int ev_renderer_startframe();
+static int ev_renderer_startframe(ev_RenderCamera *camera);
 static int ev_renderer_endframe();
 
 
@@ -112,34 +112,52 @@ static unsigned int ev_renderer_registervertexbuffer(real *vertices, unsigned lo
 }
 
 // TODO TODO Remove
-DescriptorSet descriptorSet0;
-DescriptorSet descriptorSet1;
-static int ev_renderer_startframe()
+DescriptorSet cameraDescriptorSet = VK_NULL_HANDLE;
+DescriptorSet resourceDescriptorSet = VK_NULL_HANDLE;
+MemoryBuffer cameraParamBuffer;
+static int ev_renderer_startframe(ev_RenderCamera *camera)
 {
+  if(cameraDescriptorSet == VK_NULL_HANDLE)
+  {
+    RendererBackend.allocateDescriptorSet(EV_DESCRIPTOR_SET_LAYOUT_CAMERA_PARAM, &cameraDescriptorSet);
+    RendererBackend.allocateUniformBuffer(sizeof(ev_RenderCamera), &cameraParamBuffer);
+  }
+
+  Descriptor cameraDescriptors[] = {
+    {EV_DESCRIPTOR_TYPE_UNIFORM_BUFFER, &cameraParamBuffer},
+  };
+  RendererBackend.pushDescriptorsToSet(cameraDescriptorSet, cameraDescriptors, ARRAYSIZE(cameraDescriptors));
+  RendererBackend.updateStagingBuffer(&cameraParamBuffer, sizeof(ev_RenderCamera), camera);
+
   // TODO Error reporting
-  if(descriptorSet1 == VK_NULL_HANDLE)
+  if(resourceDescriptorSet == VK_NULL_HANDLE)
   {
     ev_log_trace("Creating DescriptorSet");
-    RendererBackend.allocateDescriptorSet(EV_DESCRIPTOR_SET_LAYOUT_TEXTURE, &descriptorSet1);
+    RendererBackend.allocateDescriptorSet(EV_DESCRIPTOR_SET_LAYOUT_TEXTURE, &resourceDescriptorSet);
     ev_log_trace("Allocated DescriptorSet");
-    Descriptor *descriptors = malloc(sizeof(MemoryBuffer) * RendererData.vertexBuffers.length);
-    for(int i = 0; i < RendererData.vertexBuffers.length; ++i)
-    {
-      // TODO What would be the difference if we switched to EV_DESCRIPTOR_TYPE_UNIFORM_BUFFER?
-      descriptors[i] = (Descriptor){EV_DESCRIPTOR_TYPE_STORAGE_BUFFER, RendererData.vertexBuffers.data + i};
-    }
-
-    ev_log_trace("Pushing Descriptors to DescriptorSet");
-    RendererBackend.pushDescriptorsToSet(descriptorSet1, descriptors, RendererData.vertexBuffers.length);
-    ev_log_trace("Finished pushing Descriptors to DescriptorSet");
   }
+  Descriptor *resourceDescriptors = malloc(sizeof(Descriptor) * RendererData.vertexBuffers.length);
+  for(int i = 0; i < RendererData.vertexBuffers.length; ++i)
+  {
+    // TODO What would be the difference if we switched to EV_DESCRIPTOR_TYPE_UNIFORM_BUFFER?
+    resourceDescriptors[i] = (Descriptor){EV_DESCRIPTOR_TYPE_STORAGE_BUFFER, &RendererData.vertexBuffers.data[i]};
+  }
+  ev_log_trace("Pushing Descriptors to DescriptorSet");
+  RendererBackend.pushDescriptorsToSet(resourceDescriptorSet, resourceDescriptors, RendererData.vertexBuffers.length);
+  ev_log_trace("Finished pushing Descriptors to DescriptorSet");
+  free(resourceDescriptors);
 
   ev_log_trace("Starting API specific new frame initialization : RendererBackend.startNewFrame()");
   RendererBackend.startNewFrame();
   ev_log_trace("Finished API specific new frame initialization : RendererBackend.startNewFrame()");
 
+  DescriptorSet descriptorSets[] = {
+    resourceDescriptorSet,
+    cameraDescriptorSet,
+  };
+
   RendererBackend.bindPipeline(EV_GRAPHICS_PIPELINE_PBR);
-  RendererBackend.bindDescriptorSets(&descriptorSet1, 1);
+  RendererBackend.bindDescriptorSets(descriptorSets, ARRAYSIZE(descriptorSets));
 
   return 0;
 }
@@ -153,19 +171,19 @@ static int ev_renderer_endframe()
   return 0;
 }
 
+#include <cglm/cglm.h>
 static void ev_renderer_draw(PrimitiveRenderData primitiveRenderData, ev_Matrix4 transformMatrix)
 {
-  uint32_t size = sizeof(int) + sizeof(ev_Matrix4);
-  void* data = malloc(size);
-  memcpy(data, &primitiveRenderData.vertexBufferId, 4);
-  memcpy(data + 4 , transformMatrix , 64);
+  struct {
+    unsigned int vertexBufferIndex;
+    ev_Matrix4 modelMatrix;
+  } params;
+  params.vertexBufferIndex = primitiveRenderData.vertexBufferId;
+  glm_mat4_dup(transformMatrix, params.modelMatrix);
 
-  //TODO Create a "pushconstant?" struct that should hold the data that will be passed to the pipeline
-  RendererBackend.pushConstant(data, 68);
+  RendererBackend.pushConstant(&params, sizeof(params));
 
   RendererBackend.bindIndexBuffer(&(RendererData.indexBuffers.data[primitiveRenderData.indexBufferId]));
 
   RendererBackend.drawIndexed(primitiveRenderData.indexCount);
-
-  free(data);
 }
