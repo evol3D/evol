@@ -11,22 +11,20 @@ typedef struct
 
 typedef struct
 {
-  void (*on_update)(unsigned int entt);
-} CScriptComponent;
+  void (*fn)(unsigned int entt);
+} CScriptOnUpdate;
 
 typedef struct
 {
   ECS_DECLARE_COMPONENT(ScriptComponent);
-  ECS_DECLARE_COMPONENT(CScriptComponent);
-  ECS_DECLARE_ENTITY(OnUpdateC);
+  ECS_DECLARE_COMPONENT(CScriptOnUpdate);
 } ScriptModule;
 
 void ScriptModuleImport(ecs_world_t *world);
 
 #define ScriptModuleImportHandles(module)        \
   ECS_IMPORT_COMPONENT(module, ScriptComponent); \
-  ECS_IMPORT_COMPONENT(module, CScriptComponent);\
-  ECS_IMPORT_ENTITY(module, OnUpdateC);          \
+  ECS_IMPORT_COMPONENT(module, CScriptOnUpdate);\
 
 
 #endif

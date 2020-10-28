@@ -218,7 +218,7 @@ void sandbox()
   Entity sphere = CreateEntity();
   Entity_SetComponent(sphere, EcsName, {"sphere_1"});
 
-  Entity_SetComponent(sphere, CScriptComponent, {sphereOnUpdate});
+  Entity_SetComponent(sphere, CScriptOnUpdate, {sphereOnUpdate});
 
   ev_Matrix4 *transform = &(Entity_GetComponent_mut(sphere, TransformComponent)->worldTransform);
   ev_Vector3 position = {0, -10, 0};
