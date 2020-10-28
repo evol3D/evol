@@ -1,6 +1,7 @@
 //TODO Comments / Logging
 #include "camera_module.h"
 #include "cglm/cglm.h"
+#include "cglm/util.h"
 
 void OnAddCameraComponent(ecs_iter_t *it)
 {
@@ -24,7 +25,7 @@ void OnChangeCameraParameters(ecs_iter_t *it)
   {
     if(cameraComp[i].viewType == EV_CAMERA_PERSPECTIVE_VIEW)
     {
-      glm_perspective(cameraComp[i].hfov, cameraComp[i].aspectRatio, cameraComp[i].nearPlane, cameraComp[i].farPlane, cameraComp[i].projectionMatrix);
+      glm_perspective(glm_rad(cameraComp[i].hfov), cameraComp[i].aspectRatio, cameraComp[i].nearPlane, cameraComp[i].farPlane, cameraComp[i].projectionMatrix);
     }
     else
     {
