@@ -139,7 +139,6 @@ static void ev_game_loop()
         ev_log_trace("Ended frame : Renderer.endFrame()");
       }
       World.unlockSceneAccess();
-
       old = new;
     }
     else

@@ -244,7 +244,6 @@ static int ev_assetloader_load_gltf(const char *path)
     }
   }
 
-
   World.lockSceneAccess();
   for(unsigned int node_idx = 0; node_idx < data->nodes_count; ++node_idx)
   {

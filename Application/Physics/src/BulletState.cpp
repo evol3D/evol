@@ -109,7 +109,7 @@ RigidBodyHandle BulletState::addRigidBody(RigidBody *rb)
 {
   bool isDynamic = rb->mass;
 
-  btVector3 localInertia(0, 0, 0);
+  btVector3 localInertia;
 
   if(rb->type == EV_RIGIDBODY_DYNAMIC)
   {
@@ -151,7 +151,8 @@ void BulletState::updateRigidBody(RigidBodyHandle handle, RigidBody *rb)
   btRigidBody *rbHandle = reinterpret_cast<btRigidBody*>(handle);
   btCollisionShape *collisionShape = reinterpret_cast<btCollisionShape*>(rb->collisionShape);
 
-  btVector3 inertiaVec = btVector3(0, 0, 0);
+  btVector3 inertiaVec;;
+  collisionShape->calculateLocalInertia(rb->mass, inertiaVec);
   rbHandle->setMassProps(rb->mass, inertiaVec);
 
 
