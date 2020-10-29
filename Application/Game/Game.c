@@ -50,11 +50,11 @@ static int ev_game_init()
   ImportModule(GeometryModule);
   ImportModule(TransformModule);
 
-#ifdef FLECS_DASHBOARD
-  RegisterSystem_OnUpdate(MaintainTransformConstraints, CASCADE: TransformComponent, TransformComponent);
-#else
+/* #ifdef FLECS_DASHBOARD */
+/*   RegisterSystem_OnUpdate(MaintainTransformConstraints, CASCADE: TransformComponent, TransformComponent); */
+/* #else */
   RegisterSystem_OnUpdate(MaintainTransformConstraints, CASCADE: transform.module.TransformComponent, transform.module.TransformComponent);
-#endif
+/* #endif */
   ev_log_trace("Registered systems");
 
   ev_log_trace("Finished initializing the game");
@@ -98,14 +98,10 @@ static void ev_game_loop()
       ev_game_loop_physics(timeStep);
 
       {
-        // TODO This query can persist. Move it somewhere.
-#ifdef FLECS_DASHBOARD
-        ecs_query_t *q = ecs_query_new(World.getInstance(), "TransformComponent, SHARED: RenderingComponent");
-        ecs_query_t *cameraQuery = ecs_query_new(World.getInstance(), "camera.module.CameraComponent, TransformComponent");
-#else
+        // TODO These queries can persist. Move it somewhere.
         ecs_query_t *q = ecs_query_new(World.getInstance(), "transform.module.TransformComponent, SHARED: rendering.module.RenderingComponent");
         ecs_query_t *cameraQuery = ecs_query_new(World.getInstance(), "camera.module.CameraComponent, transform.module.TransformComponent");
-#endif
+
         ecs_iter_t it = ecs_query_iter(q);
         ecs_iter_t cameraIter = ecs_query_iter(cameraQuery);
 
@@ -116,7 +112,8 @@ static void ev_game_loop()
         ev_RenderCamera renderCamera;
 
         glm_mat4_dup(cameraData->projectionMatrix, renderCamera.projectionMatrix);
-        glm_mat4_inv(cameraTransform->worldTransform, renderCamera.viewMatrix);
+        glm_mat4_dup(cameraTransform->worldTransform, renderCamera.viewMatrix);
+        glm_inv_tr(renderCamera.viewMatrix);
 
         ev_log_trace("Initializing new frame : Renderer.startFrame()");
         Renderer.startFrame(&renderCamera);
@@ -130,9 +127,9 @@ static void ev_game_loop()
 
           for(int i = 0; i < it.count; ++i)
           {
-            for(int primitiveIdx = 0; primitiveIdx < renderingComp[i].meshRenderData.length; ++primitiveIdx)
+            for(int primitiveIdx = 0; primitiveIdx < renderingComp->meshRenderData.length; ++primitiveIdx)
             {
-              Renderer.draw(renderingComp[i].meshRenderData.data[primitiveIdx], transformComp[i].worldTransform);
+              Renderer.draw(renderingComp->meshRenderData.data[primitiveIdx], transformComp[i].worldTransform);
             }
           }
         }
@@ -147,8 +144,8 @@ static void ev_game_loop()
     }
     else
     {
-      ev_log_trace("Gameloop going to sleep for %f milliseconds", remainingTime * 1000);
-      sleep_ms(remainingTime * 1000);
+      /* ev_log_trace("Gameloop going to sleep for %f milliseconds", remainingTime * 1000); */
+      /* sleep_ms(remainingTime * 1000); */
     }
     ev_log_trace("Finished gameloop iteration");
   }
@@ -205,7 +202,7 @@ void sandbox()
         .farPlane = 100,
         });
     TransformComponent * transformComp = Entity_GetComponent_mut(camera, TransformComponent);
-    ev_Vector3 cameraPosition = {0, 0, 5};
+    ev_Vector3 cameraPosition = {0, -5, 5};
     glm_mat4_identity(transformComp->worldTransform);
     glm_translate(transformComp->worldTransform, (real*)&cameraPosition);
   }
