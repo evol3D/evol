@@ -53,7 +53,7 @@ static int start(int argc, char **argv) {
   ev_log_info("Application Started");
 
   { // EventSystem Initialization
-    ev_log_debug("Initializing EventSystem");
+    ev_log_trace("Initializing EventSystem");
 
     INIT_EVOL_EVENTS();
     INITIALIZE_EVENTSYSTEM();
@@ -81,31 +81,31 @@ static int start(int argc, char **argv) {
   }
 
   {
-    ev_log_debug("Initializing Vulkan");
+    ev_log_trace("Initializing Vulkan");
     Vulkan.init();
     ev_log_debug("Initialized Vulkan");
   }
 
   {
-    ev_log_debug("Initializing Renderer");
+    ev_log_trace("Initializing Renderer");
     Renderer.init();
     ev_log_debug("Initialized Renderer");
   }
 
   {
-    ev_log_debug("Initializing Input");
+    ev_log_trace("Initializing Input");
     Input.init();
     ev_log_debug("Initialized Input");
   }
 
   {
-    ev_log_debug("Initializing Physics");
+    ev_log_trace("Initializing Physics");
     Physics.init();
     ev_log_debug("Initialized Physics");
   }
 
   {
-    ev_log_debug("Initializing World");
+    ev_log_trace("Initializing World");
     World.init();
     ev_log_debug("Initialized World");
   }
@@ -174,43 +174,43 @@ static int destroy(void) {
 
   // Waiting for the other threads to finish
   pthread_join(App.eventsystem_thread, 0);
-  ev_log_debug("EventSystem thread finished");
+  ev_log_trace("EventSystem thread finished");
   pthread_join(App.gameloop_thread, 0);
-  ev_log_debug("GameLoop thread finished");
+  ev_log_trace("GameLoop thread finished");
 
   {
-    ev_log_debug("Destroying Game");
+    ev_log_trace("Destroying Game");
     Game.deinit();
     ev_log_debug("Game Destroyed");
   }
 
   { // Terminating modules
 
-    ev_log_debug("Destroying Physics");
+    ev_log_trace("Destroying Physics");
     Physics.deinit();
     ev_log_debug("Physics Destroyed");
 
-    ev_log_debug("Destroying AssetLoader");
+    ev_log_trace("Destroying AssetLoader");
     AssetLoader.deinit();
     ev_log_debug("AssetLoader Destroyed");
 
-    ev_log_debug("Destroying Renderer");
+    ev_log_trace("Destroying Renderer");
     Renderer.deinit();
     ev_log_debug("Renderer Destroyed");
 
-    ev_log_debug("Destroying Vulkan");
+    ev_log_trace("Destroying Vulkan");
     Vulkan.deinit();
     ev_log_debug("Vulkan Destroyed");
 
-    ev_log_debug("Destroying Input");
+    ev_log_trace("Destroying Input");
     Input.deinit();
     ev_log_debug("Input Destroyed");
 
-    ev_log_debug("Destroying Window");
+    ev_log_trace("Destroying Window");
     Window.deinit();
     ev_log_debug("Window Destroyed");
 
-    ev_log_debug("Destroying World");
+    ev_log_trace("Destroying World");
     World.deinit();
     ev_log_debug("World Destroyed");
 
@@ -220,14 +220,15 @@ static int destroy(void) {
     ev_log_debug("EventDebugger Destroyed");
 #endif
 
-    ev_log_debug("Destroying EventSystem");
+    ev_log_trace("Destroying EventSystem");
     EventSystem.deinit();
     ev_log_debug("EventSystem Destroyed");
   }
 
-  ev_log_debug("Closing Log file");
+  ev_log_trace("Closing Log file");
   if (App.logs)
     fclose(App.logs);
+  ev_log_debug("Closed Log file");
 
   return 0;
 }

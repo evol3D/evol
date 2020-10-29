@@ -1,9 +1,13 @@
 #ifndef EVOL_RENDERERTYPES_HEADER
 #define EVOL_RENDERERTYPES_HEADER
 
+#include <vec.h>
+#include <types.h>
+
 typedef enum
 {
   EV_DESCRIPTOR_SET_LAYOUT_TEXTURE,
+  EV_DESCRIPTOR_SET_LAYOUT_CAMERA_PARAM,
   EV_DESCRIPTOR_SET_LAYOUT_RIG,
 
   // Add before this line
@@ -25,5 +29,19 @@ typedef enum
   // Add before this line
   GRAPHICS_PIPELINES_COUNT
 } GraphicsPipelineType;
+
+typedef struct {
+  unsigned int indexBufferId;
+  unsigned int vertexBufferId;
+
+  unsigned int indexCount;
+} PrimitiveRenderData;
+
+typedef struct {
+  ev_Matrix4 projectionMatrix;
+  ev_Matrix4 viewMatrix;
+} ev_RenderCamera;
+
+typedef vec_t(PrimitiveRenderData) MeshRenderData;
 
 #endif

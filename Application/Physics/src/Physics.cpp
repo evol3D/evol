@@ -1,7 +1,5 @@
 #include "Physics.h"
 
-/* #include "btBulletDynamicsCommon.h" */
-
 #include "BulletState.h"
 
 static int ev_physics_init();

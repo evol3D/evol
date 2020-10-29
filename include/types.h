@@ -23,7 +23,7 @@ typedef struct
   real padding;
 } EV_PACKED ev_Vector3 EV_ALIGN(16);
 
-typedef real ev_Matrix4[4][4];
+typedef real ev_Matrix4[4][4] EV_ALIGN(16);
 
 typedef struct
 {
