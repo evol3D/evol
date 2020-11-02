@@ -27,12 +27,19 @@ typedef struct
 
 typedef struct
 {
+  unsigned long entityId;
+} MainCamera;
+
+typedef struct
+{
   ECS_DECLARE_COMPONENT(CameraComponent);
+  ECS_DECLARE_COMPONENT(MainCamera);
 } CameraModule;
 
 void CameraModuleImport(ecs_world_t *world);
 
 #define CameraModuleImportHandles(module)\
   ECS_IMPORT_COMPONENT(module, CameraComponent);\
+  ECS_IMPORT_COMPONENT(module, MainCamera);\
 
 #endif

@@ -14,7 +14,7 @@ extern struct ev_Renderer {
   int (*startFrame)(ev_RenderCamera *camera);
   int (*endFrame)();
 
-  void (*draw)(PrimitiveRenderData primitiveRenderData, ev_Matrix4 transformMatrix);
+  void (*draw)(MeshRenderData meshRenderData, ev_Matrix4 transformMatrix);
 } Renderer;
 
 #endif //EVOL_RENDERER_H 

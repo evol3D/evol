@@ -30,12 +30,17 @@ static int ev_rendererbackend_pushdescriptorstoset(DescriptorSet descriptorSet, 
 
 
 static void ev_rendererbackend_createresourcememorypool(unsigned long long blockSize, unsigned int minBlockCount, unsigned int maxBlockCount, MemoryPool *pool);
+static void ev_rendererbackend_freememorypool(MemoryPool pool);
 static void ev_rendererbackend_allocatebufferinpool(MemoryPool pool, unsigned long long bufferSize, unsigned long long usageFlags, MemoryBuffer *buffer);
+
+static void ev_rendererbackend_freememorybuffer(MemoryBuffer *buffer);
 
 static void ev_rendererbackend_allocatestagingbuffer(unsigned long long bufferSize, MemoryBuffer *buffer);
 static void ev_rendererbackend_updatestagingbuffer(MemoryBuffer *buffer, unsigned long long bufferSize, const void *data);
 
-static void ev_rendererbackend_allocateuniformbuffer(unsigned long long bufferSize, MemoryBuffer *buffer);
+static void ev_rendererbackend_allocateubo(unsigned long long bufferSize, bool persistentMap, UBO *ubo);
+static void ev_rendererbackend_freeubo(UBO *ubo);
+static void ev_rendererbackend_updateubo(unsigned long long size, const void *data, UBO *ubo);
 
 static void ev_rendererbackend_copybuffer(unsigned long long size, MemoryBuffer *src, MemoryBuffer *dst);
 
@@ -71,12 +76,18 @@ struct ev_RendererBackend RendererBackend =
   .unloadShader = ev_rendererbackend_unloadshader,
 
   .createResourceMemoryPool = ev_rendererbackend_createresourcememorypool,
+  .freeMemoryPool = ev_rendererbackend_freememorypool,
+
   .allocateBufferInPool = ev_rendererbackend_allocatebufferinpool,
+
+  .freeMemoryBuffer = ev_rendererbackend_freememorybuffer,
   
   .allocateStagingBuffer = ev_rendererbackend_allocatestagingbuffer,
   .updateStagingBuffer = ev_rendererbackend_updatestagingbuffer,
 
-  .allocateUniformBuffer = ev_rendererbackend_allocateuniformbuffer,
+  .allocateUBO = ev_rendererbackend_allocateubo,
+  .freeUBO = ev_rendererbackend_freeubo,
+  .updateUBO = ev_rendererbackend_updateubo,
 
   .copyBuffer = ev_rendererbackend_copybuffer,
 
@@ -111,15 +122,18 @@ struct ev_RendererBackendData
   VkRenderPass renderPass;
 
   VkSemaphore *semaphores;
+  VkFence *frameSubmissionFences;
 
   const char * baseShadersPaths[EV_BASE_SHADER_COUNT];
   ShaderModule baseShaders[EV_BASE_SHADER_COUNT];
 
-  VkDescriptorPool descriptorPool;
+  VkDescriptorPool *descriptorPools;
   DescriptorSetLayout baseDescriptorSetLayouts[DESCRIPTOR_SET_LAYOUT_COUNT];
+
 
   GraphicsPipeline baseGraphicsPipelines[GRAPHICS_PIPELINES_COUNT];
   VkPipelineLayout baseGraphicsPipelinesLayouts[GRAPHICS_PIPELINES_COUNT];
+  unsigned int baseGraphicsPipelinesLayoutsRef[GRAPHICS_PIPELINES_COUNT];
 
   GraphicsPipelineType boundPipeline;
 
@@ -148,29 +162,27 @@ void ev_rendererbackend_createrenderpass();
 #define BASE_SHADERS RendererBackendData.baseShaders
 
 #define BASE_PIPELINES RendererBackendData.baseGraphicsPipelines
-#define BASE_PIPELINES_LAYOUTS RendererBackendData.baseGraphicsPipelinesLayouts
+#define BASE_PIPELINES_LAYOUTS(type) RendererBackendData.baseGraphicsPipelinesLayouts[RendererBackendData.baseGraphicsPipelinesLayoutsRef[type]]
+#define BASE_PIPELINES_LAYOUTS_UPDATE_REF(type, ref) RendererBackendData.baseGraphicsPipelinesLayoutsRef[type] = ref
 
 #define BASE_DESCRIPTOR_SET_LAYOUTS RendererBackendData.baseDescriptorSetLayouts
 
 #define BOUND_PIPELINE RendererBackendData.baseGraphicsPipelines[RendererBackendData.boundPipeline]
-#define BOUND_PIPELINE_LAYOUT RendererBackendData.baseGraphicsPipelinesLayouts[RendererBackendData.boundPipeline]
+#define BOUND_PIPELINE_LAYOUT RendererBackendData.baseGraphicsPipelinesLayouts[RendererBackendData.baseGraphicsPipelinesLayoutsRef[RendererBackendData.boundPipeline]]
 
 static int ev_rendererbackend_init()
 {
   // TODO: Should this be checked?
   DATA(depthStencilFormat) = VK_FORMAT_D32_SFLOAT_S8_UINT;
+  DATA(boundPipeline) = -1;
+
+  for(int i = 0; i < GRAPHICS_PIPELINES_COUNT; ++i)
+  {
+    RendererBackendData.baseGraphicsPipelinesLayouts[i] = 0;
+    RendererBackendData.baseGraphicsPipelinesLayoutsRef[i] = i;
+  }
 
   Vulkan.createSurface(&DATA(surface));
-
-  VkBool32 surfaceSupported = VK_FALSE;
-  vkGetPhysicalDeviceSurfaceSupportKHR(
-    Vulkan.getPhysicalDevice(), VulkanQueueManager.getFamilyIndex(GRAPHICS), 
-    DATA(surface), &surfaceSupported);   
-
-  if(surfaceSupported == VK_FALSE)
-    assert(!"Surface not supported by physical device!");
-
-  
 
   // TODO: Actually detect the format
   {
@@ -243,12 +255,7 @@ static int ev_rendererbackend_init()
     VK_ASSERT(vkCreateSemaphore(Vulkan.getDevice(), &semaphoreCreateInfo, NULL, SEMAPHORES + i));
   }
 
-  // Creating a commandpool for transfer operations
-  VkCommandPoolCreateInfo transferCommandPoolCreateInfo = {VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO};
-  transferCommandPoolCreateInfo.flags = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT;
-  transferCommandPoolCreateInfo.queueFamilyIndex = VulkanQueueManager.getFamilyIndex(TRANSFER);
-
-  vkCreateCommandPool(Vulkan.getDevice(), &transferCommandPoolCreateInfo, NULL, &DATA(transferCommandPool));
+  DATA(transferCommandPool) = Vulkan.getCommandPool(TRANSFER);
 
   VkDescriptorPoolSize poolSizes[] = 
   {
@@ -263,14 +270,65 @@ static int ev_rendererbackend_init()
   descriptorPoolCreateInfo.poolSizeCount = ARRAYSIZE(poolSizes);
   descriptorPoolCreateInfo.pPoolSizes = poolSizes;
 
-  VK_ASSERT(vkCreateDescriptorPool(Vulkan.getDevice(), &descriptorPoolCreateInfo, NULL, &DATA(descriptorPool)));
+  DATA(descriptorPools) = malloc(sizeof(VkDescriptorPool) * DATA(swapchainImageCount));
+  for(int i = 0; i < DATA(swapchainImageCount); ++i)
+  {
+    VK_ASSERT(vkCreateDescriptorPool(Vulkan.getDevice(), &descriptorPoolCreateInfo, NULL, &DATA(descriptorPools)[i]));
+  }
+
+  VkFenceCreateInfo fenceCreateInfo = 
+  {
+    .sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO,
+    .flags = VK_FENCE_CREATE_SIGNALED_BIT,
+  };
+  DATA(frameSubmissionFences) = malloc(sizeof(VkFence) * DATA(swapchainImageCount));
+  for(int i = 0; i < DATA(swapchainImageCount); ++i)
+  {
+    VK_ASSERT(vkCreateFence(Vulkan.getDevice(), &fenceCreateInfo, NULL, &DATA(frameSubmissionFences)[i]));
+  }
 
   return 0;
 }
 
 static int ev_rendererbackend_deinit()
 {
+  vkWaitForFences(Vulkan.getDevice(), DATA(swapchainImageCount), DATA(frameSubmissionFences), VK_TRUE, ~0ull);
+
+  vkFreeCommandBuffers(Vulkan.getDevice(), Vulkan.getCommandPool(GRAPHICS), DATA(swapchainImageCount), CMDBUFFERS);
+
+  for(int i = 0; i < GRAPHICS_PIPELINES_COUNT; ++i)
+    vkDestroyPipeline(Vulkan.getDevice(), BASE_PIPELINES[i], NULL);
+  for(int i = 0; i < GRAPHICS_PIPELINES_COUNT; ++i)
+    if(BASE_PIPELINES_LAYOUTS(i))
+    {
+      vkDestroyPipelineLayout(Vulkan.getDevice(), BASE_PIPELINES_LAYOUTS(i), NULL);
+      BASE_PIPELINES_LAYOUTS(i) = 0;
+    }
+
+  for(int i = 0; i < EV_BASE_SHADER_COUNT; ++i)
+    vkDestroyShaderModule(Vulkan.getDevice(), BASE_SHADERS[i], NULL);
+
+  for(int i = 0; i < DESCRIPTOR_SET_LAYOUT_COUNT; ++i)
+    vkDestroyDescriptorSetLayout(Vulkan.getDevice(), BASE_DESCRIPTOR_SET_LAYOUTS[i], NULL);
+
+  vkDestroyImageView(Vulkan.getDevice(), DATA(depthBufferImageView), NULL);
+  Vulkan.destroyImage(&DATA(depthBufferImage));
+
+  vkDestroyRenderPass(Vulkan.getDevice(), DATA(renderPass), NULL);
+
+  for(int i = 0; i < SEMAPHORE_COUNT; ++i)
+    vkDestroySemaphore(Vulkan.getDevice(), SEMAPHORES[i], NULL);
+
+  for(int i = 0; i < DATA(swapchainImageCount); ++i)
+  {
+    vkDestroyDescriptorPool(Vulkan.getDevice(), DATA(descriptorPools)[i], NULL);
+    vkDestroyFramebuffer(Vulkan.getDevice(), FRAMEBUFFERS[i], NULL);
+    vkDestroyImageView(Vulkan.getDevice(), DATA(swapchainImageViews)[i], NULL);
+    vkDestroyFence(Vulkan.getDevice(), DATA(frameSubmissionFences)[i], NULL);
+  }
+  Vulkan.destroySwapchain(DATA(swapchain));
   Vulkan.destroySurface(RendererBackendData.surface);
+
   return 0;
 }
 
@@ -392,7 +450,12 @@ void ev_rendererbackend_createrenderpass()
 void ev_rendererbackend_startnewframe()
 {
   // Create semaphore
-  VK_ASSERT(vkAcquireNextImageKHR(Vulkan.getDevice(), DATA(swapchain), ~0ull, SEMAPHORES[IMAGE_SEMAPHORE]/* image semaphore */, NULL, &FRAME));
+  VK_ASSERT(vkAcquireNextImageKHR(Vulkan.getDevice(), DATA(swapchain), ~0ull, SEMAPHORES[IMAGE_SEMAPHORE], NULL, &FRAME));
+
+  vkWaitForFences(Vulkan.getDevice(), 1, &DATA(frameSubmissionFences[FRAME]), VK_TRUE, ~0ull);
+  vkResetFences(Vulkan.getDevice(), 1, &DATA(frameSubmissionFences[FRAME]));
+
+  VK_ASSERT(vkResetDescriptorPool(Vulkan.getDevice(), DATA(descriptorPools[FRAME]), 0));
 
   //start recording into the right command buffer
   {
@@ -521,7 +584,7 @@ void ev_rendererbackend_endframe()
   submitInfo.signalSemaphoreCount = 1;
   submitInfo.pSignalSemaphores = &SEMAPHORES[SUBMISSION_SEMAPHORE];
 
-  VK_ASSERT(vkQueueSubmit(VulkanQueueManager.getQueue(GRAPHICS), 1, &submitInfo, VK_NULL_HANDLE));
+  VK_ASSERT(vkQueueSubmit(VulkanQueueManager.getQueue(GRAPHICS), 1, &submitInfo, DATA(frameSubmissionFences[FRAME])));
 
   VkPresentInfoKHR presentInfo = {VK_STRUCTURE_TYPE_PRESENT_INFO_KHR};
   presentInfo.swapchainCount = 1;
@@ -540,41 +603,9 @@ void ev_rendererbackend_endframe()
   //  vkResetCommandBuffer(VulkanData.swapchainCommandBuffers[VulkanData.currentFrameIndex], VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
   //
 
+  RendererBackendData.boundPipeline = -1;
   //assert(!"Not implemented");
 }
-
-/* void ev_vulkan_destroy_swapchain() */
-/* { */
-/*   // Destroy semaphores */
-/*   vkDestroySemaphore(VulkanData.logicalDevice, VulkanData.imageSemaphore, NULL); */
-/*   vkDestroySemaphore(VulkanData.logicalDevice, VulkanData.signalSemaphore, NULL); */
-
-/*   // Free frame commandbuffers */
-/*   vkFreeCommandBuffers(VulkanData.logicalDevice, VulkanData.commandPools[GRAPHICS], VulkanData.swapchainImageCount, VulkanData.swapchainCommandBuffers); */
-
-/*   // Destroy depth buffer */
-/*   vkDestroyImageView(VulkanData.logicalDevice, VulkanData.depthBufferImageView, NULL); */
-/*   Vulkan.destroyImage(&VulkanData.depthBufferImage); */
-
-/*   for(unsigned int i = 0; i < VulkanData.swapchainImageCount; ++i) */
-/*   { */
-/*     // Destroy Framebuffers */
-/*     vkDestroyFramebuffer(VulkanData.logicalDevice, VulkanData.framebuffers[i], NULL); */
-    
-/*     // Destroy swapchain imageviews */
-/*     vkDestroyImageView(VulkanData.logicalDevice, VulkanData.swapchainImageViews[i], NULL); */
-/*   } */
-
-/*   vkDestroySwapchainKHR(VulkanData.logicalDevice, VulkanData.swapchain, NULL); */
-
-/*   // Destroying the renderpass */
-/*   vkDestroyRenderPass(VulkanData.logicalDevice, VulkanData.renderPass, NULL); */
-
-/*   free(VulkanData.swapchainCommandBuffers); */
-/*   free(VulkanData.framebuffers); */
-/*   free(VulkanData.swapchainImageViews); */
-/*   free(VulkanData.swapchainImages); */
-/* } */
 
 #include <stdio.h>
 #include <ev_log/ev_log.h>
@@ -665,6 +696,19 @@ static void ev_rendererbackend_allocatestagingbuffer(unsigned long long bufferSi
   Vulkan.createBuffer(&bufferCreateInfo, &allocationCreateInfo, buffer);
 }
 
+static void ev_rendererbackend_updateubo(unsigned long long bufferSize, const void *data, UBO *ubo)
+{
+  if(ubo->mappedData)
+    memcpy(ubo->mappedData, data, bufferSize);
+  else
+  {
+    vmaMapMemory(Vulkan.getAllocator(), ubo->buffer.allocation, &ubo->mappedData);
+    memcpy(ubo->mappedData, data, bufferSize);
+    vmaUnmapMemory(Vulkan.getAllocator(), ubo->buffer.allocation);
+  }
+
+}
+
 static void ev_rendererbackend_updatestagingbuffer(MemoryBuffer *buffer, unsigned long long bufferSize, const void *data)
 {
   void *mapped;
@@ -673,10 +717,10 @@ static void ev_rendererbackend_updatestagingbuffer(MemoryBuffer *buffer, unsigne
   vmaUnmapMemory(Vulkan.getAllocator(), buffer->allocation);
 }
 
-static void ev_rendererbackend_allocateuniformbuffer(unsigned long long bufferSize, MemoryBuffer *buffer)
+static void ev_rendererbackend_allocateubo(unsigned long long bufferSize, bool persistentMap, UBO *ubo)
 {
   VmaAllocationCreateInfo allocationCreateInfo = {
-    .usage = VMA_MEMORY_USAGE_CPU_TO_GPU, // TODO: Experiment with VMA_MEMORY_USAGE_CPU_TO_GPU
+    .usage = VMA_MEMORY_USAGE_CPU_TO_GPU,
   };
 
   VkBufferCreateInfo bufferCreateInfo = { VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO };
@@ -684,17 +728,25 @@ static void ev_rendererbackend_allocateuniformbuffer(unsigned long long bufferSi
   bufferCreateInfo.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
   bufferCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-  Vulkan.createBuffer(&bufferCreateInfo, &allocationCreateInfo, buffer);
+  Vulkan.createBuffer(&bufferCreateInfo, &allocationCreateInfo, &ubo->buffer);
+
+  if(persistentMap)
+    vmaMapMemory(Vulkan.getAllocator(), ubo->buffer.allocation, &ubo->mappedData);
+  else
+    ubo->mappedData = 0;
+}
+
+static void ev_rendererbackend_freeubo(UBO *ubo)
+{
+  if(ubo->mappedData)
+    vmaUnmapMemory(Vulkan.getAllocator(), ubo->buffer.allocation);
+  ev_rendererbackend_freememorybuffer(&ubo->buffer);
 }
 
 static void ev_rendererbackend_copybuffer(unsigned long long size, MemoryBuffer *src, MemoryBuffer *dst)
 {
   VkCommandBuffer tempCommandBuffer;
-  VkCommandBufferAllocateInfo tempCommandBufferAllocateInfo = {VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO};
-  tempCommandBufferAllocateInfo.commandPool = DATA(transferCommandPool);
-  tempCommandBufferAllocateInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-  tempCommandBufferAllocateInfo.commandBufferCount = 1;
-  vkAllocateCommandBuffers(Vulkan.getDevice(), &tempCommandBufferAllocateInfo, &tempCommandBuffer);
+  Vulkan.allocatePrimaryCommandBuffer(TRANSFER, &tempCommandBuffer);
 
   VkCommandBufferBeginInfo tempCommandBufferBeginInfo = {VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO};
   tempCommandBufferBeginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
@@ -738,13 +790,13 @@ static int ev_rendererbackend_loadbasepipelines()
     {
       .sType  = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
       .stage  = VK_SHADER_STAGE_VERTEX_BIT,
-      .module = BASE_SHADERS[EV_BASE_SHADER_PBR_VERT],
+      .module = BASE_SHADERS[EV_BASE_SHADER_DUMMY_VERT],
       .pName  = "main"
     },
     {
       .sType  = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
       .stage  = VK_SHADER_STAGE_FRAGMENT_BIT,
-      .module = BASE_SHADERS[EV_BASE_SHADER_PBR_FRAG],
+      .module = BASE_SHADERS[EV_BASE_SHADER_DUMMY_FRAG],
       .pName  = "main"
     },
   };
@@ -835,9 +887,8 @@ static int ev_rendererbackend_loadbasepipelines()
   };
 
   VkDescriptorSetLayout setLayouts[] = {
-    BASE_DESCRIPTOR_SET_LAYOUTS[EV_DESCRIPTOR_SET_LAYOUT_TEXTURE],
     BASE_DESCRIPTOR_SET_LAYOUTS[EV_DESCRIPTOR_SET_LAYOUT_CAMERA_PARAM],
-    /* BASE_DESCRIPTOR_SET_LAYOUTS[EV_DESCRIPTOR_SET_LAYOUT_RIG], */
+    BASE_DESCRIPTOR_SET_LAYOUTS[EV_DESCRIPTOR_SET_LAYOUT_BUFFER_ARR],
   };
 
   VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo = {
@@ -849,36 +900,70 @@ static int ev_rendererbackend_loadbasepipelines()
     .pPushConstantRanges = &pc
   };
 
-  VK_ASSERT(vkCreatePipelineLayout(Vulkan.getDevice(), &pipelineLayoutCreateInfo, NULL, &BASE_PIPELINES_LAYOUTS[EV_GRAPHICS_PIPELINE_PBR]));
+  VK_ASSERT(vkCreatePipelineLayout(Vulkan.getDevice(), &pipelineLayoutCreateInfo, NULL, &BASE_PIPELINES_LAYOUTS(EV_GRAPHICS_PIPELINE_BASE)));
 
   // The graphicsPipelinesCreateInfos array should follow the order set by
   // the GraphicsPipelineUsage enum.
-  VkGraphicsPipelineCreateInfo graphicsPipelinesCreateInfos[] = 
+  VkGraphicsPipelineCreateInfo graphicsPipelinesCreateInfo = 
   { 
-    {
-      .sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO,
-      .stageCount = ARRAYSIZE(pipelineShaderStages),
-      .pStages = pipelineShaderStages,
-      .pVertexInputState = &pipelineVertexInputState,
-      .pInputAssemblyState = &pipelineInputAssemblyState,
-      .pViewportState = &pipelineViewportState,
-      .pRasterizationState = &pipelineRasterizationState,
-      .pMultisampleState = &pipelineMultisampleState,
-      .pDepthStencilState = &pipelineDepthStencilState,
-      .pColorBlendState = &pipelineColorBlendState,
-      .pDynamicState = &pipelineDynamicState,
-      .layout = BASE_PIPELINES_LAYOUTS[EV_GRAPHICS_PIPELINE_PBR],
-      .renderPass = DATA(renderPass),
-      .subpass = 0, // TODO Read more about the graphics pipelines and what this number represents (first subpass to run?)
-    } 
+    .sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO,
+    .flags = VK_PIPELINE_CREATE_ALLOW_DERIVATIVES_BIT,
+    .stageCount = ARRAYSIZE(pipelineShaderStages),
+    .pStages = pipelineShaderStages,
+    .pVertexInputState = &pipelineVertexInputState,
+    .pInputAssemblyState = &pipelineInputAssemblyState,
+    .pViewportState = &pipelineViewportState,
+    .pRasterizationState = &pipelineRasterizationState,
+    .pMultisampleState = &pipelineMultisampleState,
+    .pDepthStencilState = &pipelineDepthStencilState,
+    .pColorBlendState = &pipelineColorBlendState,
+    .pDynamicState = &pipelineDynamicState,
+    .layout = BASE_PIPELINES_LAYOUTS(EV_GRAPHICS_PIPELINE_BASE),
+    .renderPass = DATA(renderPass),
+    .subpass = 0, // TODO Read more about the graphics pipelines and what this number represents (first subpass to run?)
   };
 
   VK_ASSERT(
     vkCreateGraphicsPipelines(
       Vulkan.getDevice(), NULL, 
-      ARRAYSIZE(graphicsPipelinesCreateInfos), 
-      graphicsPipelinesCreateInfos, NULL, 
+      1, 
+      &graphicsPipelinesCreateInfo, NULL, 
+      &BASE_PIPELINES[EV_GRAPHICS_PIPELINE_BASE]));
+
+
+  BASE_PIPELINES_LAYOUTS_UPDATE_REF(EV_GRAPHICS_PIPELINE_PBR, EV_GRAPHICS_PIPELINE_BASE);
+
+  VkPipelineShaderStageCreateInfo pipelinePBRShaderStages[] = 
+  {
+    {
+      .sType  = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
+      .stage  = VK_SHADER_STAGE_VERTEX_BIT,
+      .module = BASE_SHADERS[EV_BASE_SHADER_PBR_VERT],
+      .pName  = "main"
+    },
+    {
+      .sType  = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
+      .stage  = VK_SHADER_STAGE_FRAGMENT_BIT,
+      .module = BASE_SHADERS[EV_BASE_SHADER_PBR_FRAG],
+      .pName  = "main"
+    },
+  };
+
+  graphicsPipelinesCreateInfo.pStages = pipelinePBRShaderStages;
+  graphicsPipelinesCreateInfo.stageCount = ARRAYSIZE(pipelinePBRShaderStages);
+
+  graphicsPipelinesCreateInfo.flags = VK_PIPELINE_CREATE_DERIVATIVE_BIT;
+  graphicsPipelinesCreateInfo.basePipelineHandle = BASE_PIPELINES[EV_GRAPHICS_PIPELINE_BASE];
+  graphicsPipelinesCreateInfo.basePipelineIndex = -1;
+
+
+  VK_ASSERT(
+    vkCreateGraphicsPipelines(
+      Vulkan.getDevice(), NULL, 
+      1, 
+      &graphicsPipelinesCreateInfo, NULL, 
       &BASE_PIPELINES[EV_GRAPHICS_PIPELINE_PBR]));
+
   return 0;
 }
 
@@ -922,7 +1007,7 @@ static int ev_rendererbackend_loadbasedescriptorsetlayouts()
       .pBindings = bindings
     };
 
-    VK_ASSERT(vkCreateDescriptorSetLayout(Vulkan.getDevice(), &descriptorSetLayoutCreateInfo, NULL, &BASE_DESCRIPTOR_SET_LAYOUTS[EV_DESCRIPTOR_SET_LAYOUT_TEXTURE]));
+    VK_ASSERT(vkCreateDescriptorSetLayout(Vulkan.getDevice(), &descriptorSetLayoutCreateInfo, NULL, &BASE_DESCRIPTOR_SET_LAYOUTS[EV_DESCRIPTOR_SET_LAYOUT_BUFFER_ARR]));
   }
 
   {
@@ -972,6 +1057,8 @@ static int ev_rendererbackend_loadbasedescriptorsetlayouts()
 
 static int ev_rendererbackend_bindpipeline(GraphicsPipelineType type)
 {
+  if(RendererBackendData.boundPipeline == type) return 0;
+
   vkCmdBindPipeline(CMDBUFFERS[FRAME], VK_PIPELINE_BIND_POINT_GRAPHICS, BASE_PIPELINES[type]);
   RendererBackendData.boundPipeline = type;
   return 0;
@@ -986,7 +1073,7 @@ static int ev_rendererbackend_binddescriptorsets(DescriptorSet *descriptorSets, 
 static int ev_rendererbackend_allocatedescriptorset(DescriptorSetLayoutType setLayoutType, DescriptorSet *descriptorSet)
 {
   VkDescriptorSetAllocateInfo setAllocateInfo = { VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO };
-  setAllocateInfo.descriptorPool = DATA(descriptorPool);
+  setAllocateInfo.descriptorPool = DATA(descriptorPools[FRAME]);
   setAllocateInfo.descriptorSetCount = 1;
   setAllocateInfo.pSetLayouts = &BASE_DESCRIPTOR_SET_LAYOUTS[setLayoutType];
 
@@ -1058,4 +1145,14 @@ static void ev_rendererbackend_pushconstant(void *data, unsigned int size)
 static void ev_rendererbackend_drawindexed(unsigned int indexCount)
 {
   vkCmdDrawIndexed(CMDBUFFERS[FRAME], indexCount, 1, 0, 0, 0);
+}
+
+static void ev_rendererbackend_freememorybuffer(MemoryBuffer *buffer)
+{
+  vmaDestroyBuffer(Vulkan.getAllocator(), buffer->buffer, buffer->allocation);
+}
+
+static void ev_rendererbackend_freememorypool(MemoryPool pool)
+{
+  vmaDestroyPool(Vulkan.getAllocator(), pool);
 }

@@ -24,6 +24,7 @@ void ev_vulkan_destroysurface(VkSurfaceKHR surface);
 
 void ev_vulkan_createswapchain(unsigned int* imageCount, VkSurfaceKHR* surface, VkSurfaceFormatKHR *surfaceFormat, VkSwapchainKHR* swapchain);
 void ev_vulkan_retrieveswapchainimages(VkSwapchainKHR swapchain, unsigned int * imageCount, VkImage ** images);
+void ev_vulkan_destroyswapchain(VkSwapchainKHR swapchain);
 void ev_vulkan_allocate_swapchain_commandbuffers();
 void ev_vulkan_create_semaphores();
 
@@ -39,11 +40,9 @@ void ev_vulkan_destroy_buffer(EvBuffer *buffer);
 void ev_vulkan_allocatememorypool(VmaPoolCreateInfo *poolCreateInfo, VmaPool* pool);
 void ev_vulkan_allocatebufferinpool(VkBufferCreateInfo *bufferCreateInfo, VmaPool pool, EvBuffer *buffer);
 
-void ev_vulkan_memorydump();
+void ev_vulkan_allocateprimarycommandbuffer(QueueType queueType, VkCommandBuffer *cmdBuffer);
 
-void ev_vulkan_image_memory_barrier(VkImage image, VkImageLayout oldLayout, VkImageLayout newLayout, 
-  VkAccessFlags srcAccessMask, VkAccessFlags dstAccessMask, VkPipelineStageFlags srcStageMask, 
-  VkPipelineStageFlags dstStageMask, VkDependencyFlags dependencyFlags);
+void ev_vulkan_memorydump();
 
 //getters
 static inline VkDevice ev_vulkan_get_logical_device();
@@ -52,36 +51,40 @@ static inline VkCommandPool ev_vulkan_get_commandpool(QueueType type);
 static inline VmaAllocator ev_vulkan_getallocator();
 
 struct ev_Vulkan Vulkan = {
-  .init                    = ev_vulkan_init,
-  .deinit                  = ev_vulkan_deinit,
+  .init                         = ev_vulkan_init,
+  .deinit                       = ev_vulkan_deinit,
 
-  .createSurface           = ev_vulkan_createsurface,
-  .destroySurface          = ev_vulkan_destroysurface,
+  .createSurface                = ev_vulkan_createsurface,
+  .destroySurface               = ev_vulkan_destroysurface,
 
-  .createSwapchain         = ev_vulkan_createswapchain,
-  .retrieveSwapchainImages = ev_vulkan_retrieveswapchainimages,
+  .createSwapchain              = ev_vulkan_createswapchain,
+  .retrieveSwapchainImages      = ev_vulkan_retrieveswapchainimages,
 
   // Memory
-  .createImage             = ev_vulkan_create_image,
-  .destroyImage            = ev_vulkan_destroy_image,
-  .createBuffer            = ev_vulkan_create_buffer,
-  .destroyBuffer           = ev_vulkan_destroy_buffer,
+  .createImage                  = ev_vulkan_create_image,
+  .destroyImage                 = ev_vulkan_destroy_image,
+  .createBuffer                 = ev_vulkan_create_buffer,
+  .destroyBuffer                = ev_vulkan_destroy_buffer,
 
-  .allocateMemoryPool      = ev_vulkan_allocatememorypool,
-  .allocateBufferInPool    = ev_vulkan_allocatebufferinpool,
+  .allocateMemoryPool           = ev_vulkan_allocatememorypool,
+  .allocateBufferInPool         = ev_vulkan_allocatebufferinpool,
 
-  .createImageViews        = ev_vulkan_createimageviews,
-  .createFramebuffer       =  ev_vulkan_createframebuffer,
+  .createImageViews             = ev_vulkan_createimageviews,
+  .createFramebuffer            =  ev_vulkan_createframebuffer,
 
   // Getters
-  .getDevice               = ev_vulkan_get_logical_device,
-  .getPhysicalDevice       = ev_vulkan_get_physical_device,
-  .getCommandPool          = ev_vulkan_get_commandpool,
-  .getAllocator            = ev_vulkan_getallocator,
+  .getDevice                    = ev_vulkan_get_logical_device,
+  .getPhysicalDevice            = ev_vulkan_get_physical_device,
+  .getCommandPool               = ev_vulkan_get_commandpool,
+  .getAllocator                 = ev_vulkan_getallocator,
+
+  .destroySwapchain             = ev_vulkan_destroyswapchain,
+
+  .allocatePrimaryCommandBuffer = ev_vulkan_allocateprimarycommandbuffer,
 
 
   // Debug
-  .memoryDump              = ev_vulkan_memorydump,
+  .memoryDump                   = ev_vulkan_memorydump,
 };
 
 struct ev_Vulkan_Data {
@@ -92,10 +95,6 @@ struct ev_Vulkan_Data {
 
   VkPhysicalDevice physicalDevice;
   VkDevice logicalDevice;
-
-  unsigned int queueFamilyIndices[QUEUE_TYPE_COUNT];
-
-  unsigned int currentFrameIndex;
 
   VkCommandPool commandPools[QUEUE_TYPE_COUNT];
 } VulkanData;
@@ -256,6 +255,15 @@ void ev_vulkan_create_logical_device()
 void ev_vulkan_createsurface(VkSurfaceKHR *surface)
 {
   VK_ASSERT(Window.createVulkanSurface(VulkanData.instance, surface));
+
+  // Check that the surface is supported by the Graphics QueueFamily present
+  
+  VkBool32 surfaceSupported = VK_FALSE;
+  vkGetPhysicalDeviceSurfaceSupportKHR(VulkanData.physicalDevice, VulkanQueueManager.getFamilyIndex(GRAPHICS), *surface, &surfaceSupported);
+
+  if(surfaceSupported == VK_FALSE)
+    assert(!"Surface not supported by physical device!");
+
 }
 
 void ev_vulkan_createswapchain(unsigned int* imageCount, VkSurfaceKHR* surface, VkSurfaceFormatKHR *surfaceFormat, VkSwapchainKHR* swapchain)
@@ -356,36 +364,12 @@ static inline VkCommandPool ev_vulkan_get_commandpool(QueueType type)
       .sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,
       // TODO: Is this really what we want to have?
       .flags = (VK_COMMAND_POOL_CREATE_TRANSIENT_BIT | VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT),
-      .queueFamilyIndex = VulkanData.queueFamilyIndices[type],
+      .queueFamilyIndex = VulkanQueueManager.getFamilyIndex(type),
     };
     VK_ASSERT(vkCreateCommandPool(VulkanData.logicalDevice, &commandPoolCreateInfo, NULL, &(VulkanData.commandPools[type])));
   }
   return VulkanData.commandPools[type];
 }
-
-/* void ev_vulkan_image_memory_barrier(VkImage image, VkImageLayout oldLayout, VkImageLayout newLayout, VkAccessFlags srcAccessMask, VkAccessFlags dstAccessMask, VkPipelineStageFlags srcStageMask, VkPipelineStageFlags dstStageMask, VkDependencyFlags dependencyFlags) */
-/* { */
-/*   VkImageMemoryBarrier imageMemoryBarrier = */ 
-/*   { */
-/*     .sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER, */
-/*     .pNext = NULL, */
-/*     .srcAccessMask = srcAccessMask, */
-/*     .dstAccessMask = dstAccessMask, */
-/*     .oldLayout = oldLayout, */
-/*     .newLayout = newLayout, */
-/*     .srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,  // TODO */
-/*     .dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,  // TODO */
-/*     .image = image, */
-/*     .subresourceRange = */ 
-/*     { */
-/*       .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT, */
-/*       .levelCount = VK_REMAINING_MIP_LEVELS, */
-/*       .layerCount = VK_REMAINING_ARRAY_LAYERS, */
-/*     } */
-/*   }; */
-
-/*   vkCmdPipelineBarrier(Vulkan.getCurrentFrameCommandBuffer(), srcStageMask, dstStageMask, dependencyFlags, 0, NULL, 0, NULL, 1, &imageMemoryBarrier); */
-/* } */
 
 void ev_vulkan_retrieveswapchainimages(VkSwapchainKHR swapchain, unsigned int * imageCount, VkImage ** images)
 {
@@ -399,7 +383,7 @@ void ev_vulkan_retrieveswapchainimages(VkSwapchainKHR swapchain, unsigned int * 
 }
 
 void ev_vulkan_createimageviews(unsigned int imageCount, VkFormat imageFormat, VkImage *images, VkImageView **views)
-{  
+{
   *views = malloc(sizeof(VkImageView) * imageCount);
   for (unsigned int i = 0; i < imageCount; ++i)
   {
@@ -423,7 +407,7 @@ void ev_vulkan_createimageviews(unsigned int imageCount, VkFormat imageFormat, V
 }
 
 void ev_vulkan_createframebuffer(VkImageView* attachments, unsigned int attachmentCount, VkRenderPass renderPass, VkFramebuffer *framebuffer)
-{  
+{
   unsigned int windowWidth, windowHeight;
   Window.getSize(&windowWidth, &windowHeight);
 
@@ -478,4 +462,18 @@ void ev_vulkan_memorydump()
 static inline VkPhysicalDevice ev_vulkan_get_physical_device()
 {
   return VulkanData.physicalDevice;
+}
+
+void ev_vulkan_destroyswapchain(VkSwapchainKHR swapchain)
+{
+  vkDestroySwapchainKHR(VulkanData.logicalDevice, swapchain, NULL);
+}
+
+void ev_vulkan_allocateprimarycommandbuffer(QueueType queueType, VkCommandBuffer *cmdBuffer)
+{
+  VkCommandBufferAllocateInfo cmdBufferAllocateInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO };
+  cmdBufferAllocateInfo.commandPool = VulkanData.commandPools[queueType];
+  cmdBufferAllocateInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+  cmdBufferAllocateInfo.commandBufferCount = 1;
+  vkAllocateCommandBuffers(VulkanData.logicalDevice, &cmdBufferAllocateInfo, cmdBuffer);
 }

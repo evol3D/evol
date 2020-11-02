@@ -7,7 +7,7 @@ void OnAddRenderingComponent(ecs_iter_t *it)
 
   for(int i = 0; i < it->count; ++i)
   {
-    vec_init(&rendComp[i].meshRenderData);
+    vec_init(&rendComp[i].meshRenderData.primitives);
   }
 }
 
@@ -17,7 +17,7 @@ void OnRemoveRenderingComponent(ecs_iter_t *it)
 
   for(int i = 0; i < it->count; ++i)
   {
-    vec_deinit(&rendComp[i].meshRenderData);
+    vec_deinit(&rendComp[i].meshRenderData.primitives);
   }
 }
 

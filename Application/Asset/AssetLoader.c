@@ -1,7 +1,6 @@
 //TODO Comments / Logging
 #include "AssetLoader.h"
 #include "Renderer/Renderer.h"
-#include "Renderer/renderer_types.h"
 #include "World/World.h"
 #include "physics_types.h"
 #include <Physics/Physics.h>
@@ -100,16 +99,20 @@ static void ev_assetloader_load_gltf_node(cgltf_node curr_node, Entity parent, c
             rbType = EV_RIGIDBODY_KINEMATIC;
       }
       const MeshComponent *meshComponent = Entity_GetComponent(curr, MeshComponent);
-      Entity_SetComponent(curr, RigidBodyComponent, {
-        .mass = 1,
-        .type = rbType,
-        .collisionShape =
-          Physics.generateConvexHull(
-            meshComponent->primitives->vertexCount,
-            meshComponent->primitives->positionBuffer
-          ),
-        .restitution = 0,
-      });
+      if(rbType != EV_RIGIDBODY_KINEMATIC)
+      {
+        Entity_SetComponent(curr, RigidBodyComponent, {
+            .mass = 1,
+            .type = rbType,
+            .collisionShape =
+            Physics.createBox(2, 1, 1),
+            /* Physics.generateConvexHull( */
+            /*     meshComponent->primitives->vertexCount, */
+            /*     meshComponent->primitives->positionBuffer */
+            /* ), */
+            .restitution = 1,
+        });
+      }
       ev_log_trace("Added RigidBodyComponent to entity: %s", curr_node.name);
     }
 
@@ -240,8 +243,9 @@ static int ev_assetloader_load_gltf(const char *path)
       primRendData.indexCount = meshPrim.indexCount;
       primRendData.indexBufferId = Renderer.registerIndexBuffer(meshPrim.indexBuffer, meshPrim.indexCount * sizeof(*meshPrim.indexBuffer));
       primRendData.vertexBufferId = Renderer.registerVertexBuffer((real*)meshPrim.positionBuffer, meshPrim.vertexCount * sizeof(*meshPrim.positionBuffer));
-      vec_push(&rendComp->meshRenderData, primRendData);
+      vec_push(&rendComp->meshRenderData.primitives, primRendData);
     }
+    rendComp->meshRenderData.pipelineType = EV_GRAPHICS_PIPELINE_PBR;
   }
 
   World.lockSceneAccess();

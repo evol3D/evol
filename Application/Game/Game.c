@@ -1,9 +1,11 @@
 //TODO Comments / Logging
+#include <time.h>
 #include "Game.h"
 
 #include "App.h"
 #include "Physics/Physics.h"
 #include "Renderer/Renderer.h"
+#include "Renderer/renderer_types.h"
 #include "Window.h"
 #include "World/World.h"
 #include "World/WorldModules.h"
@@ -22,6 +24,7 @@
 
 // Game Systems
 void MaintainTransformConstraints(SystemArgs *args);
+void RendererDispatchDrawCalls(SystemArgs *args);
 
 // API functions
 static int ev_game_init();
@@ -49,12 +52,10 @@ static int ev_game_init()
   ev_log_trace("Registering systems");
   ImportModule(GeometryModule);
   ImportModule(TransformModule);
+  ImportModule(RenderingModule);
 
-/* #ifdef FLECS_DASHBOARD */
-/*   RegisterSystem_OnUpdate(MaintainTransformConstraints, CASCADE: TransformComponent, TransformComponent); */
-/* #else */
   RegisterSystem_OnUpdate(MaintainTransformConstraints, CASCADE: transform.module.TransformComponent, transform.module.TransformComponent);
-/* #endif */
+  RegisterSystem_PostUpdate(RendererDispatchDrawCalls, SHARED: rendering.module.RenderingComponent, transform.module.TransformComponent);
   ev_log_trace("Registered systems");
 
   ev_log_trace("Finished initializing the game");
@@ -66,14 +67,6 @@ static int ev_game_deinit()
   return 0;
 }
 
-void ev_game_loop_physics(real dt)
-{
-  Physics.step_dt(dt);
-  /* ev_log_info("Physics Step. dt = %f", dt); */
-  /* ev_log_info("Iterations: %u", ++iterations); */
-
-}
-
 void sandbox();
 
 #include <types.h>
@@ -81,70 +74,59 @@ static void ev_game_loop()
 {
   sandbox();
 
+  ImportModule(CameraModule);
+  ImportModule(TransformModule);
+
   double old = Window.getTime();
   unsigned int physics_steprate = 60;
   double new;
+  double waitTime = 1.f/(float)physics_steprate;
+  double remainingTime = waitTime;
+
   while(!App.closeSystem)
   {
     ev_log_trace("Starting gameloop iteration");
     new = Window.getTime();
     double timeStep = new - old;
-    double remainingTime = (1.f/(double)physics_steprate) - timeStep;
+    old = new;
+    remainingTime -= timeStep;
+
+    ev_log_debug("timestep: %f", timeStep);
+    ev_log_debug("FPS: %f", 1.f/timeStep);
+
 
     if(remainingTime<=0)
     {
-      World.progress();
+      // Fixed Update stuff
+
       World.lockSceneAccess();
-      ev_game_loop_physics(timeStep);
-
-      {
-        // TODO These queries can persist. Move it somewhere.
-        ecs_query_t *q = ecs_query_new(World.getInstance(), "transform.module.TransformComponent, SHARED: rendering.module.RenderingComponent");
-        ecs_query_t *cameraQuery = ecs_query_new(World.getInstance(), "camera.module.CameraComponent, transform.module.TransformComponent");
-
-        ecs_iter_t it = ecs_query_iter(q);
-        ecs_iter_t cameraIter = ecs_query_iter(cameraQuery);
-
-        ecs_query_next(&cameraIter);
-        CameraComponent *cameraData = ecs_column(&cameraIter, CameraComponent, 1);
-        TransformComponent *cameraTransform = ecs_column(&cameraIter, TransformComponent, 2);
-
-        ev_RenderCamera renderCamera;
-
-        glm_mat4_dup(cameraData->projectionMatrix, renderCamera.projectionMatrix);
-        glm_mat4_dup(cameraTransform->worldTransform, renderCamera.viewMatrix);
-        glm_inv_tr(renderCamera.viewMatrix);
-
-        ev_log_trace("Initializing new frame : Renderer.startFrame()");
-        Renderer.startFrame(&renderCamera);
-        ev_log_trace("Finished initializing new frame : Renderer.startFrame()");
-
-
-        while(ecs_query_next(&it))
-        {
-          TransformComponent *transformComp = ecs_column(&it, TransformComponent, 1);
-          RenderingComponent *renderingComp = ecs_column(&it, RenderingComponent, 2);
-
-          for(int i = 0; i < it.count; ++i)
-          {
-            for(int primitiveIdx = 0; primitiveIdx < renderingComp->meshRenderData.length; ++primitiveIdx)
-            {
-              Renderer.draw(renderingComp->meshRenderData.data[primitiveIdx], transformComp[i].worldTransform);
-            }
-          }
-        }
-
-        ev_log_trace("Ending frame : Renderer.endFrame()");
-        Renderer.endFrame();
-        ev_log_trace("Ended frame : Renderer.endFrame()");
-      }
+      Physics.step();
       World.unlockSceneAccess();
-      old = new;
+
+      remainingTime = waitTime;
     }
-    else
+
     {
-      /* ev_log_trace("Gameloop going to sleep for %f milliseconds", remainingTime * 1000); */
-      /* sleep_ms(remainingTime * 1000); */
+      const MainCamera *cam = World_GetComponent(MainCamera);
+
+      const CameraComponent *cameraData         = Entity_GetComponent(cam->entityId, CameraComponent);
+      const TransformComponent *cameraTransform = Entity_GetComponent(cam->entityId, TransformComponent);
+
+      ev_RenderCamera renderCamera;
+
+      glm_mat4_dup((vec4*)cameraData->projectionMatrix, renderCamera.projectionMatrix);
+      glm_mat4_dup((vec4*)cameraTransform->worldTransform, renderCamera.viewMatrix);
+      glm_inv_tr(renderCamera.viewMatrix);
+
+      ev_log_trace("Initializing new frame : Renderer.startFrame()");
+      Renderer.startFrame(&renderCamera);
+      ev_log_trace("Finished initializing new frame : Renderer.startFrame()");
+
+      World.progress();
+
+      ev_log_trace("Ending frame : Renderer.endFrame()");
+      Renderer.endFrame();
+      ev_log_trace("Ended frame : Renderer.endFrame()");
     }
     ev_log_trace("Finished gameloop iteration");
   }
@@ -204,6 +186,13 @@ void sandbox()
     ev_Vector3 cameraPosition = {0, -5, 5};
     glm_mat4_identity(transformComp->worldTransform);
     glm_translate(transformComp->worldTransform, (real*)&cameraPosition);
+
+    /* Entity_SetComponent(camera, */
+    /*   RigidBodyComponent, { */
+    /*   .mass = 1, */
+    /*   .restitution = 0.5, */
+    /*   .collisionShape = Physics.createSphere(1), */
+    /*   }); */
   }
 
   Entity sphere = CreateEntity();
@@ -221,4 +210,15 @@ void sandbox()
     .collisionShape = Physics.createBox(2, 2, 2),
     });
   World.unlockSceneAccess();
+}
+
+void RendererDispatchDrawCalls(SystemArgs *args)
+{
+  RenderingComponent *renderingComp = ecs_column(args, RenderingComponent, 1);
+  TransformComponent *transformComp = ecs_column(args, TransformComponent, 2);
+
+  for(int i = 0; i < args->count; ++i)
+  {
+    Renderer.draw(renderingComp->meshRenderData, transformComp[i].worldTransform);
+  }
 }

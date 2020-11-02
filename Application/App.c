@@ -225,10 +225,12 @@ static int destroy(void) {
     ev_log_debug("EventSystem Destroyed");
   }
 
-  ev_log_trace("Closing Log file");
   if (App.logs)
+  {
+    ev_log_trace("Closing Log file");
     fclose(App.logs);
-  ev_log_debug("Closed Log file");
+    ev_log_debug("Closed Log file");
+  }
 
   return 0;
 }

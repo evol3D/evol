@@ -6,9 +6,8 @@
 
 typedef enum
 {
-  EV_DESCRIPTOR_SET_LAYOUT_TEXTURE,
   EV_DESCRIPTOR_SET_LAYOUT_CAMERA_PARAM,
-  EV_DESCRIPTOR_SET_LAYOUT_RIG,
+  EV_DESCRIPTOR_SET_LAYOUT_BUFFER_ARR,
 
   // Add before this line
   DESCRIPTOR_SET_LAYOUT_COUNT
@@ -17,6 +16,7 @@ typedef enum
 typedef enum
 {
   EV_BASE_SHADER_PBR_VERT, EV_BASE_SHADER_PBR_FRAG,
+  EV_BASE_SHADER_DUMMY_VERT, EV_BASE_SHADER_DUMMY_FRAG,
 
   // Add before this line
   EV_BASE_SHADER_COUNT
@@ -24,6 +24,7 @@ typedef enum
 
 typedef enum
 {
+  EV_GRAPHICS_PIPELINE_BASE,
   EV_GRAPHICS_PIPELINE_PBR,
 
   // Add before this line
@@ -42,6 +43,10 @@ typedef struct {
   ev_Matrix4 viewMatrix;
 } ev_RenderCamera;
 
-typedef vec_t(PrimitiveRenderData) MeshRenderData;
+/* typedef vec_t(PrimitiveRenderData) MeshRenderData; */
+typedef struct {
+  vec_t(PrimitiveRenderData) primitives;
+  GraphicsPipelineType pipelineType;
+} MeshRenderData;
 
 #endif
