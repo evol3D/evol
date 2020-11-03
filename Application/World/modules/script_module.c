@@ -17,9 +17,11 @@ void ScriptModuleImport(ecs_world_t *world)
 
   ECS_COMPONENT(world, ScriptComponent);
   ECS_COMPONENT(world, CScriptOnUpdate);
+  ECS_COMPONENT(world, CScriptOnCollision);
 
   ECS_SYSTEM(world, RunOnUpdateC, EcsOnUpdate, CScriptOnUpdate);
 
   ECS_EXPORT_COMPONENT(ScriptComponent);
   ECS_EXPORT_COMPONENT(CScriptOnUpdate);
+  ECS_EXPORT_COMPONENT(CScriptOnCollision);
 }
