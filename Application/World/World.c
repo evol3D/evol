@@ -191,6 +191,9 @@ void ev_flecs_dash_init()
   ECS_META(World.getInstance(), NodeComponent);
   ev_log_trace("FlecsMeta Entry: NodeComponent");
 
+  ECS_META(World.getInstance(), RenderingComponent);
+  ev_log_trace("FlecsMeta Entry: RenderingComponent");
+
   short port = 8001;
   ecs_set(World.getInstance(), 0, EcsDashServer, {.port = port});
   ev_log_debug("Set Flecs Dashboard server to port: %d", port);

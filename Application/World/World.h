@@ -69,6 +69,8 @@ extern struct ev_World {
 #define Entity_GetComponentSet(entt)       ecs_get_type(World.getInstance(), entt)
 #define Entity_PrintComponents(entt)       ecs_type_str(World.getInstance(), ecs_get_type(World.getInstance(), entt))
 
+#define World_GetComponent(entt) ecs_singleton_get(World.getInstance(), entt);
+
 #define ImportModule(...) ECS_IMPORT(World.getInstance(), __VA_ARGS__)
 
 #endif //EVOL_WORLD_H

@@ -51,7 +51,10 @@ extern struct ev_Vulkan {
     void (*startNewFrame)(void);
     void (*endFrame)(void);
 
+    void (*allocatePrimaryCommandBuffer)(QueueType queueType, VkCommandBuffer *cmdBuffer);
+
     VkDevice (*getDevice)(void);
+    VkPhysicalDevice (*getPhysicalDevice)(void);
     VkCommandPool (*getCommandPool)(QueueType);
 
     VmaAllocator (*getAllocator)();

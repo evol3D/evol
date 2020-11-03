@@ -2,11 +2,6 @@
 #include "AssetLoader.h"
 #include "Renderer/Renderer.h"
 #include "World/World.h"
-#include "cglm/affine.h"
-#include "cglm/call/quat.h"
-#include "cglm/mat4.h"
-#include "cglm/quat.h"
-#include "flecs.h"
 #include "physics_types.h"
 #include <Physics/Physics.h>
 
@@ -52,6 +47,7 @@ static void ev_assetloader_load_gltf_node(cgltf_node curr_node, Entity parent, c
     ImportModule(GeometryModule);
     ImportModule(PhysicsModule);
     ImportModule(NodeModule);
+    ImportModule(RenderingModule);
 
     Entity curr;
 
@@ -103,16 +99,20 @@ static void ev_assetloader_load_gltf_node(cgltf_node curr_node, Entity parent, c
             rbType = EV_RIGIDBODY_KINEMATIC;
       }
       const MeshComponent *meshComponent = Entity_GetComponent(curr, MeshComponent);
-      Entity_SetComponent(curr, RigidBodyComponent, {
-        .mass = 1,
-        .type = rbType,
-        .collisionShape =
-          Physics.generateConvexHull(
-            meshComponent->primitives->vertexCount,
-            meshComponent->primitives->positionBuffer
-          ),
-        .restitution = 0,
-      });
+      if(rbType != EV_RIGIDBODY_KINEMATIC)
+      {
+        Entity_SetComponent(curr, RigidBodyComponent, {
+            .mass = 1,
+            .type = rbType,
+            .collisionShape =
+            Physics.createBox(2, 1, 1),
+            /* Physics.generateConvexHull( */
+            /*     meshComponent->primitives->vertexCount, */
+            /*     meshComponent->primitives->positionBuffer */
+            /* ), */
+            .restitution = 1,
+        });
+      }
       ev_log_trace("Added RigidBodyComponent to entity: %s", curr_node.name);
     }
 
@@ -121,7 +121,10 @@ static void ev_assetloader_load_gltf_node(cgltf_node curr_node, Entity parent, c
 
     ev_log_trace("Starting to loop on children of entity: %s", curr_node.name);
     for(int child_idx = 0; child_idx < curr_node.children_count; ++child_idx)
+    {
+      ev_log_debug("Loading child of Entity: %s", Entity_GetName(curr));
       ev_assetloader_load_gltf_node(*curr_node.children[child_idx], curr, data, mesh_entities);
+    }
 }
 
 static int ev_assetloader_load_gltf(const char *path)
@@ -140,7 +143,7 @@ static int ev_assetloader_load_gltf(const char *path)
   for(unsigned int mesh_idx = 0; mesh_idx < data->meshes_count; ++mesh_idx)
   {
     mesh_entities[mesh_idx] = CreateEntity();
-    Entity_SetComponent(mesh_entities[mesh_idx], EcsName, {"mesh"});
+    /* Entity_SetComponent(mesh_entities[mesh_idx], EcsName, {"Mesh"}); */
 
     Entity_AddComponent(mesh_entities[mesh_idx], MeshComponent);
     MeshComponent* meshComp = Entity_GetComponent_mut(mesh_entities[mesh_idx], MeshComponent);
@@ -227,18 +230,22 @@ static int ev_assetloader_load_gltf(const char *path)
   // have the same RenderingComponent
   for(unsigned int mesh_idx = 0; mesh_idx < data->meshes_count; ++mesh_idx)
   {
+    // This should be done at the beginning of the function as this leads to a switch in
+    // the archetype and, in turn, leads to a change in the internal data layout.
+    Entity_AddComponent(mesh_entities[mesh_idx], RenderingComponent);
+
     const MeshComponent* meshComp = Entity_GetComponent(mesh_entities[mesh_idx], MeshComponent);
     RenderingComponent* rendComp = Entity_GetComponent_mut(mesh_entities[mesh_idx], RenderingComponent);
-    rendComp->primitivesCount = meshComp->primitives_count;
-    rendComp->primitives = malloc(rendComp->primitivesCount * sizeof(RenderingPrimitive));
-    for(unsigned int primitive_idx = 0; primitive_idx < rendComp->primitivesCount; ++primitive_idx)
+    for(unsigned int primitive_idx = 0; primitive_idx < meshComp->primitives_count; ++primitive_idx)
     {
-      MeshPrimitive *meshPrim = meshComp->primitives + primitive_idx;
-      RenderingPrimitive *rendPrim = rendComp->primitives + primitive_idx;
-      rendPrim->triangleCount = meshPrim->indexCount / 3;
-      rendPrim->indexBuffer = Renderer.registerIndexBuffer(meshPrim->indexBuffer, meshPrim->indexCount * sizeof(*meshPrim->indexBuffer));
-      rendPrim->vertexBuffer = Renderer.registerVertexBuffer((real*)meshPrim->positionBuffer, meshPrim->vertexCount * sizeof(*meshPrim->positionBuffer));
+      MeshPrimitive meshPrim = meshComp->primitives[primitive_idx];
+      PrimitiveRenderData primRendData;
+      primRendData.indexCount = meshPrim.indexCount;
+      primRendData.indexBufferId = Renderer.registerIndexBuffer(meshPrim.indexBuffer, meshPrim.indexCount * sizeof(*meshPrim.indexBuffer));
+      primRendData.vertexBufferId = Renderer.registerVertexBuffer((real*)meshPrim.positionBuffer, meshPrim.vertexCount * sizeof(*meshPrim.positionBuffer));
+      vec_push(&rendComp->meshRenderData.primitives, primRendData);
     }
+    rendComp->meshRenderData.pipelineType = EV_GRAPHICS_PIPELINE_PBR;
   }
 
   World.lockSceneAccess();
@@ -251,6 +258,7 @@ static int ev_assetloader_load_gltf(const char *path)
     ev_assetloader_load_gltf_node(curr_node, 0, data, mesh_entities);
   }
   World.unlockSceneAccess();
+
 
   cgltf_free(data);
 

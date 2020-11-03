@@ -1,19 +1,30 @@
 #include "Renderer.h"
 #include "EventSystem.h"
-#include "events/events.h"
-#include "World/modules/geometry_module.h"
 #include "vec.h"
+#include <ev_log/ev_log.h>
+#include <stdio.h>
+#include <cglm/cglm.h>
 
 static int ev_renderer_init();
 static int ev_renderer_deinit();
 
+static int ev_renderer_startframe(ev_RenderCamera *camera);
+static int ev_renderer_endframe();
+
+
+static void ev_renderer_draw(MeshRenderData meshRenderData, ev_Matrix4 transformMatrix);
+
 static unsigned int ev_renderer_registerindexbuffer(unsigned int *indices, unsigned long long size);
 static unsigned int ev_renderer_registervertexbuffer(real *vertices, unsigned long long size);
 
-
 struct ev_Renderer Renderer = {
   .init   = ev_renderer_init,
-  .deinit = ev_renderer_deinit,
+  .deinit   = ev_renderer_deinit,
+
+  .startFrame = ev_renderer_startframe,
+  .endFrame = ev_renderer_endframe,
+
+  .draw = ev_renderer_draw,
 
   .registerIndexBuffer = ev_renderer_registerindexbuffer,
   .registerVertexBuffer = ev_renderer_registervertexbuffer,
@@ -27,54 +38,64 @@ struct ev_Renderer_Data {
   MemoryBufferVec indexBuffers;
   MemoryBufferVec vertexBuffers;
 
+  UBO cameraUBO;
+
 } RendererData;
 
 static int ev_renderer_init()
 {
+  ev_log_trace("Initializing RendererBackend");
   RendererBackend.init();
+  ev_log_debug("Initialized RendererBackend");
   vec_init(&RendererData.indexBuffers);
   vec_init(&RendererData.vertexBuffers);
 
+  ev_log_trace("Loading BaseShaders");
   RendererBackend.loadBaseShaders();
+  ev_log_debug("Loaded BaseShaders");
+  ev_log_trace("Loading BaseDescriptorSetLayouts");
   RendererBackend.loadBaseDescriptorSetLayouts();
+  ev_log_debug("Loaded BaseDescriptorSetLayouts");
+  ev_log_trace("Loading BasePipelines");
   RendererBackend.loadBasePipelines();
+  ev_log_debug("Loaded BasePipelines");
 
+  ev_log_trace("Allocating ResourceMemoryPool");
   RendererBackend.createResourceMemoryPool(128ull * 1024 * 1024, 1, 4, &RendererData.resourcePool);
+  ev_log_debug("Allocated ResourceMemoryPool");
 
-  /* DescriptorSet descriptorSet; */
-  /* RendererBackend.allocateDescriptorSet(EV_DESCRIPTOR_SET_LAYOUT_TEXTURE, &descriptorSet); */
-
-
-  /* Descriptor *descriptors = malloc(sizeof(MemoryBuffer) * RendererData.vertexBuffers.length); */
-
-  /* for(int i = 0; i < RendererData.vertexBuffers.length; ++i) */
-  /* { */
-  /*   descriptors[i] = (Descriptor){EV_DESCRIPTOR_TYPE_UNIFORM_BUFFER, RendererData.vertexBuffers.data + i}; */
-  /* } */
-
-  /* RendererBackend.pushDescriptorsToSet(descriptorSet, descriptors, RendererData.vertexBuffers.length); */
-
-  /* RendererBackend.startNewFrame(); */
-
-  /* RendererBackend.bindPipeline(EV_GRAPHICS_PIPELINE_PBR); */
-  /* RendererBackend.bindDescriptorSets(&descriptorSet, 1); */
-
-  /* /1* { *1/ */
-  /* /1*   vkCmdDrawIndexed(RendererBackend.getCurrentFrameCommandBuffer(), ARRAYSIZE(indices), 1, 0, 0, 0); *1/ */
-  /* /1* } *1/ */
-
-  /* RendererBackend.endFrame(); */
-
-  /* free(descriptors); */
-
-
-  RendererBackend.memoryDump();
+  // Create a persistent UBO for the main camera
+  RendererBackend.allocateUBO(sizeof(ev_RenderCamera), true, &RendererData.cameraUBO);
 
   return 0;
 }
 
 static int ev_renderer_deinit()
 {
+  RendererBackend.deinit();
+
+  // Free the persistent UBO used for the main camera
+  RendererBackend.freeUBO(&RendererData.cameraUBO);
+
+  // Free all buffers used for index-buffer storage
+  MemoryBuffer *buffer; unsigned int idx;
+  vec_foreach_ptr(&RendererData.indexBuffers, buffer, idx)
+  {
+    RendererBackend.freeMemoryBuffer(buffer);
+  }
+  vec_deinit(&RendererData.indexBuffers);
+
+  // Free all buffers used for vertex-buffer storage
+  vec_foreach_ptr(&RendererData.vertexBuffers, buffer, idx)
+  {
+    RendererBackend.freeMemoryBuffer(buffer);
+  }
+  vec_deinit(&RendererData.vertexBuffers);
+
+  // After freeing all the buffers in this pool, free the pool itself
+  RendererBackend.freeMemoryPool(RendererData.resourcePool);
+
+  RendererBackend.memoryDump();
   return 0;
 }
 
@@ -83,13 +104,15 @@ static unsigned int ev_renderer_registerindexbuffer(unsigned int *indices, unsig
   unsigned int idx = RendererData.indexBuffers.length;
 
   MemoryBuffer newIndexBuffer;
-  RendererBackend.allocateBufferInPool(RendererData.resourcePool, size, EV_USAGEFLAGS_RESOURCE_BUFFER, &newIndexBuffer);
+  RendererBackend.allocateBufferInPool(RendererData.resourcePool, size, EV_BUFFER_USAGE_INDEX_BUFFER_BIT, &newIndexBuffer);
 
   MemoryBuffer indexStagingBuffer;
   RendererBackend.allocateStagingBuffer(size, &indexStagingBuffer);
   RendererBackend.updateStagingBuffer(&indexStagingBuffer, size, indices); 
   RendererBackend.copyBuffer(size, &indexStagingBuffer, &newIndexBuffer);
-  // TODO free/reuse staging buffer
+
+  //TODO We should have a system that controls staging buffers
+  RendererBackend.freeMemoryBuffer(&indexStagingBuffer);
 
   vec_push(&RendererData.indexBuffers, newIndexBuffer);
 
@@ -107,39 +130,76 @@ static unsigned int ev_renderer_registervertexbuffer(real *vertices, unsigned lo
   RendererBackend.allocateStagingBuffer(size, &vertexStagingBuffer);
   RendererBackend.updateStagingBuffer(&vertexStagingBuffer, size, vertices); 
   RendererBackend.copyBuffer(size, &vertexStagingBuffer, &newVertexBuffer);
-  // TODO free/reuse staging buffer
+
+  //TODO We should have a system that controls staging buffers
+  RendererBackend.freeMemoryBuffer(&vertexStagingBuffer);
 
   vec_push(&RendererData.vertexBuffers, newVertexBuffer);
 
   return idx;
 }
 
-/* static void ev_renderer_bind() // TODO */
-/* { */
-/*   //TODO look into using secondary command buffer and recording for every pipeline */
-
-/*   //TODO LOOK MORE INTO THIS */
-/*   vkCmdBindPipeline(RendererBackend.getCurrentFrameCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, RendererData.graphicsPipelines[EV_GRAPHICS_PIPELINE_PBR]); */
-
-/*   //Also not sure how we will handle this. but there it is -- will we have one big buffer with all meshes and we will cherry pick from it for every pipeline' */
-/*   //or will we have specific buffer or each type of mesh that requires a specific type of pipeline and bind it seperatly. */
-/*   //TODO LOOK FURTHER INTO THIS */
-/*   { */
-/*     // VkBuffer vertexBuffers[] = { 0 }; */
-/*     // VkDeviceSize offsets[] = { 0 }; */
-/*     // vkCmdBindVertexBuffers(Vulkan.getCurrentFrameCommandBuffer(), 0, ARRAYSIZE(vertexBuffers), vertexBuffers, offsets); */
-/*     //TODO SUPPORT HAVING A MODEL WITH NO VERTEX BUFFER ? */
-/*     /1* vkCmdBindIndexBuffer(Vulkan.getCurrentFrameCommandBuffer(), indexBuffer.buffer, 0, VK_INDEX_TYPE_UINT32); *1/ */
-/*   } */
-
-/*   //TODO DRAW LOOP HERE nad also look into supporting shaders with no indexes */
-/*   { */
-/*     //vkCmdDrawIndexed(Vulkan.getCurrentFrameCommandBuffer(), indices_counts[TYPE][i], 1, indices_offsets[TYPE][i], vertices_offsets[TYPE][i], 0); */
-/*     vkCmdDraw(RendererBackend.getCurrentFrameCommandBuffer(), 3, 1, 0, 0); */
-
-/*   } */
-/* } */
-
-static void EV_UNUSED ev_renderer_update_resources(MeshComponent* meshes, unsigned int meshes_count)
+static int ev_renderer_startframe(ev_RenderCamera *camera)
 {
+  ev_log_trace("Starting API specific new frame initialization : RendererBackend.startNewFrame()");
+  RendererBackend.startNewFrame();
+  ev_log_trace("Finished API specific new frame initialization : RendererBackend.startNewFrame()");
+
+  // Create a descriptor set that contains the Projection/View Matrices
+  DescriptorSet cameraDescriptorSet;
+  RendererBackend.allocateDescriptorSet(EV_DESCRIPTOR_SET_LAYOUT_CAMERA_PARAM, &cameraDescriptorSet);
+  Descriptor cameraDescriptors[] = {{EV_DESCRIPTOR_TYPE_UNIFORM_BUFFER, &RendererData.cameraUBO.buffer},};
+  RendererBackend.pushDescriptorsToSet(cameraDescriptorSet, cameraDescriptors, ARRAYSIZE(cameraDescriptors));
+
+  // Update Camera UBO
+  RendererBackend.updateUBO(sizeof(ev_RenderCamera), camera, &RendererData.cameraUBO);
+
+  // Create a descriptor set that contains all the resources needed by the shader
+  DescriptorSet resourceDescriptorSet;
+  RendererBackend.allocateDescriptorSet(EV_DESCRIPTOR_SET_LAYOUT_BUFFER_ARR, &resourceDescriptorSet);
+  Descriptor *resourceDescriptors = malloc(sizeof(Descriptor) * RendererData.vertexBuffers.length);
+  for(int i = 0; i < RendererData.vertexBuffers.length; ++i)
+    resourceDescriptors[i] = (Descriptor){EV_DESCRIPTOR_TYPE_STORAGE_BUFFER, &RendererData.vertexBuffers.data[i]};
+  RendererBackend.pushDescriptorsToSet(resourceDescriptorSet, resourceDescriptors, RendererData.vertexBuffers.length);
+  free(resourceDescriptors);
+
+  DescriptorSet descriptorSets[] = {
+    cameraDescriptorSet,
+    resourceDescriptorSet,
+  };
+
+  RendererBackend.bindPipeline(EV_GRAPHICS_PIPELINE_BASE);
+  RendererBackend.bindDescriptorSets(descriptorSets, ARRAYSIZE(descriptorSets));
+
+  return 0;
 }
+
+static void ev_renderer_draw(MeshRenderData meshRenderData, ev_Matrix4 transformMatrix)
+{
+  RendererBackend.bindPipeline(meshRenderData.pipelineType);
+
+  int primitiveIdx = meshRenderData.primitives.length - 1;
+  for(;primitiveIdx >= 0; --primitiveIdx)
+  {
+    PrimitiveRenderData *currentPrimitive = &meshRenderData.primitives.data[primitiveIdx];
+
+    struct {
+      unsigned int vertexBufferIndex;
+      ev_Matrix4 modelMatrix;
+    } params;
+    params.vertexBufferIndex = currentPrimitive->vertexBufferId;
+    glm_mat4_dup(transformMatrix, params.modelMatrix);
+
+    RendererBackend.pushConstant(&params, sizeof(params));
+    RendererBackend.bindIndexBuffer(&(RendererData.indexBuffers.data[currentPrimitive->indexBufferId]));
+    RendererBackend.drawIndexed(currentPrimitive->indexCount);
+  }
+}
+
+static int ev_renderer_endframe()
+{
+  // TODO Error reporting
+  RendererBackend.endFrame();
+  return 0;
+}
+

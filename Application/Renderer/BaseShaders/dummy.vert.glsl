@@ -23,5 +23,5 @@ layout(location=0) out vec4 color;
 void main()
 {
   gl_Position = Camera.projection * Camera.view * RenderData.model * vec4(VertexBuffers[nonuniformEXT(RenderData.vertexBufferIndex)].vertices[gl_VertexIndex], 1);
-  color = gl_Position;
+  color = vec4(abs(Camera.view[3][2] - RenderData.model[3][2])  * vec3(1, 1, 1) * 0.1, 1);
 }

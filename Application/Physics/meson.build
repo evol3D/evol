@@ -30,10 +30,14 @@ library_name_suffix = []
 #library_name_suffix = 'lib'
 #endif
 
+cglm_dep = dependency('cglm')
+
 evphys_dep_list = [
   bullet_dynamics_dep,
   bullet_collision_dep,
   linear_math_dep,
+
+  cglm_dep,
 
   # Remove if not debugging
   physics_debug_dep,
