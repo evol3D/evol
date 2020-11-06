@@ -10,4 +10,6 @@ REGISTER_EVENT(WindowResizedEvent, EVENT_STRUCT(
     unsigned int newWindowWidth, newWindowHeight;
 ));
 
+void INIT_WINDOW_EVENTS();
+
 #endif //EVOL_WINDOWEVENT_H

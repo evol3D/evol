@@ -8,4 +8,6 @@ REGISTER_EVENT(EngineEvent, EVENT_STRUCT());
 // Secondary
 REGISTER_EVENT(SceneUpdatedEvent, EVENT_STRUCT());
 
+void INIT_ENGINE_EVENTS();
+
 #endif //EVOL_ENGINEEVENT_H

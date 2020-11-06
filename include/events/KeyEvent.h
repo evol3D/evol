@@ -19,4 +19,6 @@ REGISTER_EVENT(KeyRepeatEvent, EVENT_STRUCT(
       unsigned int mods;
 ));
 
+void INIT_KEY_EVENTS();
+
 #endif //EVOL_KEYEVENT_H

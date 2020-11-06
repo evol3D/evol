@@ -20,4 +20,6 @@ REGISTER_EVENT(MouseMovedEvent, EVENT_STRUCT(
       MousePosition cursorPosition;
       ));
 
+void INIT_MOUSE_EVENTS();
+
 #endif //EVOL_MOUSEEVENT_H
