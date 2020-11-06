@@ -20,10 +20,4 @@ REGISTER_EVENT(MouseMovedEvent, EVENT_STRUCT(
       MousePosition cursorPosition;
       ));
 
-#define INIT_MOUSE_EVENTS \
-  INIT_EVENT_PRIMARY(MouseEvent); \
-  INIT_EVENT_SECONDARY(MouseButtonPressedEvent, MouseEvent); \
-  INIT_EVENT_SECONDARY(MouseButtonReleasedEvent, MouseEvent); \
-  INIT_EVENT_SECONDARY(MouseMovedEvent, MouseEvent);
-
 #endif //EVOL_MOUSEEVENT_H
