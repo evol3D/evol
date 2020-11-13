@@ -59,6 +59,11 @@ srcfiles = files('src/main.c',
             'Application/World/modules/node_module.c',
             'Application/Asset/AssetLoader.c',
             'Application/EventDebug/EventDebug.c',
+            'include/events/MouseEvent.c',
+            'include/events/ControlEvent.c',
+            'include/events/KeyEvent.c',
+            'include/events/EngineEvent.c',
+            'include/events/WindowEvent.c',
             )
 
 if RENDERING_BACKEND == 'VULKAN'

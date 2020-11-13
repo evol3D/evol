@@ -41,6 +41,7 @@ extern struct ev_Vulkan {
     void (*destroyBuffer)(EvBuffer *);
 
     void (*allocateMemoryPool)(VmaPoolCreateInfo *poolCreateInfo, VmaPool* pool);
+    void (*freeMemoryPool)(VmaPool pool);
     void (*allocateBufferInPool)(VkBufferCreateInfo *bufferCreateInfo, VmaPool pool, EvBuffer *buffer);
 
     void (*memoryDump)();
@@ -60,6 +61,5 @@ extern struct ev_Vulkan {
     VmaAllocator (*getAllocator)();
 
 } Vulkan;
-
 
 #endif //EVOL_VULKAN_H 

@@ -1031,27 +1031,6 @@ static int ev_rendererbackend_loadbasedescriptorsetlayouts()
     VK_ASSERT(vkCreateDescriptorSetLayout(Vulkan.getDevice(), &descriptorSetLayoutCreateInfo, NULL, &BASE_DESCRIPTOR_SET_LAYOUTS[EV_DESCRIPTOR_SET_LAYOUT_CAMERA_PARAM]));
   }
 
-   //SET 1 FOR rigging
-  /* { */
-  /*   VkDescriptorSetLayoutBinding bindings[] = */
-  /*   { */ 
-  /*     { */
-  /*       .binding = 0, */
-  /*       .descriptorCount = 1, */
-  /*       .descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, */
-  /*       .pImmutableSamplers = NULL, */
-  /*       .stageFlags = VK_SHADER_STAGE_VERTEX_BIT */
-  /*     } */
-  /*   }; */
-
-  /*   VkDescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo = { */
-  /*     .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO, */
-  /*     .bindingCount = ARRAYSIZE(bindings), */
-  /*     .pBindings = bindings */
-  /*   }; */
-
-  /*   VK_ASSERT(vkCreateDescriptorSetLayout(Vulkan.getDevice(), &descriptorSetLayoutCreateInfo, NULL, &BASE_DESCRIPTOR_SET_LAYOUTS[EV_DESCRIPTOR_SET_LAYOUT_RIG])); */
-  /* } */
   return 0;
 }
 
@@ -1154,5 +1133,5 @@ static void ev_rendererbackend_freememorybuffer(MemoryBuffer *buffer)
 
 static void ev_rendererbackend_freememorypool(MemoryPool pool)
 {
-  vmaDestroyPool(Vulkan.getAllocator(), pool);
+  Vulkan.freeMemoryPool(pool);
 }
