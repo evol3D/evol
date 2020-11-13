@@ -50,12 +50,13 @@ static int ev_game_init()
   ev_log_trace("New scene started");
 
   ev_log_trace("Registering systems");
-  ImportModule(GeometryModule);
-  ImportModule(TransformModule);
-  ImportModule(RenderingModule);
 
-  RegisterSystem_OnUpdate(MaintainTransformConstraints, CASCADE: transform.module.TransformComponent, transform.module.TransformComponent);
-  RegisterSystem_PostUpdate(RendererDispatchDrawCalls, SHARED: rendering.module.RenderingComponent, transform.module.TransformComponent);
+
+  DEFINE_GLOBAL_COMPONENTS(World.getInstance());
+  REGISTER_GLOBAL_SYSTEMS(World.getInstance());
+
+  RegisterSystem_OnUpdate(MaintainTransformConstraints, CASCADE: TransformComponent, TransformComponent);
+  RegisterSystem_PostUpdate(RendererDispatchDrawCalls, SHARED: RenderingComponent, TransformComponent);
   ev_log_trace("Registered systems");
 
   ev_log_trace("Finished initializing the game");
@@ -73,9 +74,6 @@ void sandbox();
 static void ev_game_loop()
 {
   sandbox();
-
-  ImportModule(CameraModule);
-  ImportModule(TransformModule);
 
   double old = Window.getTime();
   unsigned int physics_steprate = 60;
@@ -157,6 +155,13 @@ void sphereOnUpdate(unsigned int entt)
   printf("OnUpdate in Entity #%d, Name: %s\n", entt, Entity_GetName(entt));
 }
 
+void cameraOnUpdate(unsigned int entt)
+{
+  TransformComponent *transComp = Entity_GetComponent_mut(entt, TransformComponent);
+  vec3 speed = {0.01, 0, 0};
+  glm_translate(transComp->worldTransform, speed);
+}
+
 void sandbox()
 {
   ev_log_trace("Loading GLTF file");
@@ -174,13 +179,10 @@ void sandbox()
 
 
   World.lockSceneAccess();
-  ImportModule(TransformModule);
-  ImportModule(PhysicsModule);
-  ImportModule(ScriptModule);
-  ImportModule(CameraModule);
 
   {
     Entity camera = CreateEntity();
+    Entity_SetComponent(camera, CScriptOnUpdate, {cameraOnUpdate});
     Entity_SetComponent(camera, CameraComponent, {
         .viewType = EV_CAMERA_PERSPECTIVE_VIEW,
         .hfov = 90,
@@ -192,13 +194,6 @@ void sandbox()
     ev_Vector3 cameraPosition = {0, -5, 5};
     glm_mat4_identity(transformComp->worldTransform);
     glm_translate(transformComp->worldTransform, (real*)&cameraPosition);
-
-    /* Entity_SetComponent(camera, */
-    /*   RigidBodyComponent, { */
-    /*   .mass = 1, */
-    /*   .restitution = 0.5, */
-    /*   .collisionShape = Physics.createSphere(1), */
-    /*   }); */
   }
 
   Entity sphere = CreateEntity();

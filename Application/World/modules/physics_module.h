@@ -2,8 +2,6 @@
 #define WORLD_PHYSICS_MODULE_H
 
 #include "flecs.h"
-#include <flecs_meta.h>
-#include "types.h"
 #include "physics_types.h"
 
 typedef struct
@@ -21,48 +19,25 @@ typedef struct
 
 } RigidBodyComponent;
 
-ECS_UNUSED
-static EcsMetaType __RigidBodyComponent__ = {
-    .kind = EcsStructType,
-    .size = sizeof(RigidBodyComponent),
-    .alignment = 8, //ECS_ALIGNOF(RigidBodyComponent),
-    .descriptor = 
-      "{"
-      "float linearVelocity_x; float linearVelocity_y; float linearVelocity_z; float linearVelocity_w;"
-      "float angularVelocity_x; float angularVelocity_y; float angularVelocity_z; float angularVelocity_w;"
-      "float mass; float restitution;"
-      "uint64_t collisionShape;"
-      "uint32_t type;"
-      "char padding[8];"
-      "}"
-      ,
-    .alias = NULL
-};
-
 typedef struct RigidBodyHandleComponent
 {
   RigidBodyHandle handle;
 } RigidBodyHandleComponent;
 
-ECS_UNUSED
-static EcsMetaType __RigidBodyHandleComponent__ = {
-    .kind = EcsStructType,
-    .size = sizeof(RigidBodyHandleComponent),
-    .alignment = ECS_ALIGNOF(RigidBodyHandleComponent),
-    .descriptor = "{uint64_t handle;}",
-    .alias = NULL
-};
+ECS_COMPONENT_EXTERN(RigidBodyComponent);
+ECS_COMPONENT_EXTERN(RigidBodyHandleComponent);
 
-typedef struct
-{
-  ECS_DECLARE_COMPONENT(RigidBodyComponent);
-  ECS_DECLARE_COMPONENT(RigidBodyHandleComponent);
-} PhysicsModule;
+void SetRigidBody(ecs_iter_t *it);
+void AddRigidBody(ecs_iter_t *it);
+void RemoveRigidBody(ecs_iter_t *it);
 
-void PhysicsModuleImport(ecs_world_t *world);
+#define DEFINE_COMPONENTS_PHYSICS(world) \
+  ECS_COMPONENT_DEFINE(world, RigidBodyComponent); \
+  ECS_COMPONENT_DEFINE(world, RigidBodyHandleComponent)
 
-#define PhysicsModuleImportHandles(module)\
-  ECS_IMPORT_COMPONENT(module, RigidBodyComponent); \
-  ECS_IMPORT_COMPONENT(module, RigidBodyHandleComponent);
+#define REGISTER_SYSTEMS_PHYSICS(world) \
+  ECS_TRIGGER(world, AddRigidBody, EcsOnAdd, RigidBodyComponent); \
+  ECS_TRIGGER(world, RemoveRigidBody, EcsOnRemove, RigidBodyComponent); \
+  ECS_SYSTEM(world, SetRigidBody, EcsOnSet, RigidBodyComponent, RigidBodyHandleComponent, TransformComponent)
 
 #endif

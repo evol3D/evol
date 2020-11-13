@@ -2,7 +2,6 @@
 #define WORLD_GEOMETRY_MODULE_H
 
 #include "flecs.h"
-#include "flecs_meta.h"
 #include "Asset/Asset.h"
 #include "types.h"
 
@@ -17,51 +16,22 @@ typedef struct
   unsigned int vertexCount;
 } MeshPrimitive;
 
-static ECS_UNUSED EcsMetaType __MeshPrimitive__ = {
-    .kind = EcsStructType,
-    .size = sizeof(MeshPrimitive),
-    .alignment = ECS_ALIGNOF(MeshPrimitive),
-    .descriptor =
-      "{"
-      "uint64_t positionBuffer;"
-      "uint64_t normalBuffer;"
-      "uint64_t indexBuffer;"
-      "uint32_t indexCount;"
-      "uint32_t vertexCount;"
-      "}"
-      ,
-    .alias = NULL
-};
-
 typedef struct
 {
   MeshPrimitive* primitives;
   unsigned int primitives_count;
 } MeshComponent;
 
-static ECS_UNUSED EcsMetaType __MeshComponent__ = {
-    .kind = EcsStructType,
-    .size = sizeof(MeshComponent),
-    .alignment = ECS_ALIGNOF(MeshComponent),
-    .descriptor =
-      "{"
-      "uint64_t primitives;"
-      "uint32_t primitive_count;"
-      "}"
-      ,
-    .alias = NULL
-};
+ECS_COMPONENT_EXTERN(MeshComponent);
 
 // TODO: Auto free `MeshPrimitive* primitives` on component destroy
 
-typedef struct
-{
-  ECS_DECLARE_COMPONENT(MeshComponent);
-} GeometryModule;
+#define DEFINE_COMPONENTS_GEOMETRY(world) \
+  ECS_COMPONENT_DEFINE(world, MeshComponent)
 
-void GeometryModuleImport(ecs_world_t *world);
+#define REGISTER_SYSTEMS_GEOMETRY(world) \
 
-#define GeometryModuleImportHandles(module)\
-  ECS_IMPORT_COMPONENT(module, MeshComponent);\
+
+
 
 #endif

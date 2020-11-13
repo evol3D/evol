@@ -19,19 +19,19 @@ typedef struct
   void (*fn) (void *collisionData);
 } CScriptOnCollision;
 
-typedef struct
-{
-  ECS_DECLARE_COMPONENT(ScriptComponent);
-  ECS_DECLARE_COMPONENT(CScriptOnUpdate);
-  ECS_DECLARE_COMPONENT(CScriptOnCollision);
-} ScriptModule;
+ECS_COMPONENT_EXTERN(ScriptComponent);
+ECS_COMPONENT_EXTERN(CScriptOnUpdate);
+ECS_COMPONENT_EXTERN(CScriptOnCollision);
 
-void ScriptModuleImport(ecs_world_t *world);
+void RunOnUpdateC(ecs_iter_t *it);
 
-#define ScriptModuleImportHandles(module)        \
-  ECS_IMPORT_COMPONENT(module, ScriptComponent); \
-  ECS_IMPORT_COMPONENT(module, CScriptOnUpdate);\
-  ECS_IMPORT_COMPONENT(module, CScriptOnCollision);\
+#define DEFINE_COMPONENTS_SCRIPT(world) \
+  ECS_COMPONENT_DEFINE(world, ScriptComponent); \
+  ECS_COMPONENT_DEFINE(world, CScriptOnUpdate); \
+  ECS_COMPONENT_DEFINE(world, CScriptOnCollision)
+
+#define REGISTER_SYSTEMS_SCRIPT(world) \
+  ECS_SYSTEM(world, RunOnUpdateC, EcsOnUpdate, CScriptOnUpdate)
 
 
 #endif

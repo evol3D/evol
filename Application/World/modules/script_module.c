@@ -1,6 +1,10 @@
 //TODO Comments / Logging
 #include "script_module.h"
 
+ECS_COMPONENT_DECLARE(ScriptComponent);
+ECS_COMPONENT_DECLARE(CScriptOnUpdate);
+ECS_COMPONENT_DECLARE(CScriptOnCollision);
+
 void RunOnUpdateC(ecs_iter_t *it)
 {
   ECS_COLUMN(it, CScriptOnUpdate, script, 1);
@@ -11,17 +15,4 @@ void RunOnUpdateC(ecs_iter_t *it)
   }
 }
 
-void ScriptModuleImport(ecs_world_t *world)
-{
-  ECS_MODULE(world, ScriptModule);
 
-  ECS_COMPONENT(world, ScriptComponent);
-  ECS_COMPONENT(world, CScriptOnUpdate);
-  ECS_COMPONENT(world, CScriptOnCollision);
-
-  ECS_SYSTEM(world, RunOnUpdateC, EcsOnUpdate, CScriptOnUpdate);
-
-  ECS_EXPORT_COMPONENT(ScriptComponent);
-  ECS_EXPORT_COMPONENT(CScriptOnUpdate);
-  ECS_EXPORT_COMPONENT(CScriptOnCollision);
-}

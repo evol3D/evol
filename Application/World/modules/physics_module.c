@@ -5,6 +5,9 @@
 #include "physics_types.h"
 #include "Physics.h"
 
+ECS_COMPONENT_DECLARE(RigidBodyComponent);
+ECS_COMPONENT_DECLARE(RigidBodyHandleComponent);
+
 // When a RigidBodyComponent's value is updated
 void SetRigidBody(ecs_iter_t *it) {
 
@@ -35,7 +38,6 @@ void SetRigidBody(ecs_iter_t *it) {
 // Automatically add a RigidBodyHandleComponent with any RigidBodyComponent
 // added. 
 void AddRigidBody(ecs_iter_t *it) {
-  ECS_IMPORT(it->world, PhysicsModule);
   
 // Set the handle to NULL so that when the RigidBodyComponent value
 // is set, it adds a new RigidBody to the simulation instead of updating an
@@ -46,24 +48,4 @@ void AddRigidBody(ecs_iter_t *it) {
 void RemoveRigidBody(ecs_iter_t *it) {
   // TODO
   assert(!"TODO: RemoveRigidBody not implemented");
-}
-
-void PhysicsModuleImport(ecs_world_t *world)
-{
-  ECS_IMPORT(world, TransformModule);
-
-  ECS_MODULE(world, PhysicsModule);
-
-  ECS_COMPONENT(world, RigidBodyComponent);
-  ECS_COMPONENT(world, RigidBodyHandleComponent);
-
-  ECS_EXPORT_COMPONENT(RigidBodyComponent);
-  ECS_EXPORT_COMPONENT(RigidBodyHandleComponent);
-
-  ECS_TRIGGER(world, AddRigidBody, EcsOnAdd, RigidBodyComponent);
-  ECS_TRIGGER(world, RemoveRigidBody, EcsOnRemove, RigidBodyComponent);
-
-  ECS_SYSTEM(world, SetRigidBody, EcsOnSet, RigidBodyComponent, RigidBodyHandleComponent, transform.module.TransformComponent);
-
-  ECS_IMPORT(world, FlecsMeta);
 }

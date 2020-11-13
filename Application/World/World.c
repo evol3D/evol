@@ -177,22 +177,22 @@ void ev_flecs_dash_init()
   ECS_IMPORT(World.getInstance(), FlecsSystemsCivetweb);
   ECS_IMPORT(World.getInstance(), FlecsDash);
 
-  ECS_META(World.getInstance(), TransformComponent);
-  ev_log_trace("FlecsMeta Entry: TransformComponent");
-  ECS_META(World.getInstance(), RigidBodyComponent);
-  ev_log_trace("FlecsMeta Entry: RigidBodyComponent");
-  ECS_META(World.getInstance(), RigidBodyHandleComponent);
-  ev_log_trace("FlecsMeta Entry: RigidBodyHandleComponent");
+  /* ECS_META(World.getInstance(), TransformComponent); */
+  /* ev_log_trace("FlecsMeta Entry: TransformComponent"); */
+  /* ECS_META(World.getInstance(), RigidBodyComponent); */
+  /* ev_log_trace("FlecsMeta Entry: RigidBodyComponent"); */
+  /* ECS_META(World.getInstance(), RigidBodyHandleComponent); */
+  /* ev_log_trace("FlecsMeta Entry: RigidBodyHandleComponent"); */
 
-  ECS_META(World.getInstance(), MeshPrimitive);
-  ev_log_trace("FlecsMeta Entry: MeshPrimitive");
-  ECS_META(World.getInstance(), MeshComponent);
-  ev_log_trace("FlecsMeta Entry: MeshComponent");
-  ECS_META(World.getInstance(), NodeComponent);
-  ev_log_trace("FlecsMeta Entry: NodeComponent");
+  /* ECS_META(World.getInstance(), MeshPrimitive); */
+  /* ev_log_trace("FlecsMeta Entry: MeshPrimitive"); */
+  /* ECS_META(World.getInstance(), MeshComponent); */
+  /* ev_log_trace("FlecsMeta Entry: MeshComponent"); */
+  /* ECS_META(World.getInstance(), NodeComponent); */
+  /* ev_log_trace("FlecsMeta Entry: NodeComponent"); */
 
-  ECS_META(World.getInstance(), RenderingComponent);
-  ev_log_trace("FlecsMeta Entry: RenderingComponent");
+  /* ECS_META(World.getInstance(), RenderingComponent); */
+  /* ev_log_trace("FlecsMeta Entry: RenderingComponent"); */
 
   short port = 8001;
   ecs_set(World.getInstance(), 0, EcsDashServer, {.port = port});

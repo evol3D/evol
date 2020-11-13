@@ -1,12 +1,12 @@
 //TODO Comments / Logging
 #include "camera_module.h"
 #include "cglm/cglm.h"
-#include "cglm/util.h"
+
+ECS_COMPONENT_DECLARE(CameraComponent);
+ECS_COMPONENT_DECLARE(MainCamera);
 
 void OnAddCameraComponent(ecs_iter_t *it)
 {
-  ECS_IMPORT(it->world, CameraModule);
-
   CameraComponent *cameraComp = ecs_column(it, CameraComponent, 1);
   for(int i = 0; i < it->count; ++i)
   {
@@ -15,10 +15,6 @@ void OnAddCameraComponent(ecs_iter_t *it)
     ecs_singleton_set(it->world, MainCamera, {it->entities[i]});
   }
 
-}
-
-void EV_UNUSED OnRemoveCameraComponent(ecs_iter_t *it)
-{
 }
 
 void OnChangeCameraParameters(ecs_iter_t *it)
@@ -36,24 +32,4 @@ void OnChangeCameraParameters(ecs_iter_t *it)
       assert(!"Unimplemented: Orthographic Camera");
     }
   }
-}
-
-void CameraModuleImport(ecs_world_t *world)
-{
-  ECS_MODULE(world, CameraModule);
-
-  ECS_COMPONENT(world, CameraComponent);
-  ECS_COMPONENT(world, MainCamera);
-
-  ECS_TRIGGER(world, OnAddCameraComponent   , EcsOnAdd   , CameraComponent);
-  /* ECS_TRIGGER(world, OnRemoveCameraComponent, EcsOnRemove, CameraComponent); */
-
-#ifdef FLECS_DASHBOARD
-  ECS_SYSTEM(world, OnChangeCameraParameters, EcsOnSet, CameraComponent);
-#else
-  ECS_SYSTEM(world, OnChangeCameraParameters, EcsOnSet, CameraComponent);
-#endif
-
-  ECS_EXPORT_COMPONENT(CameraComponent);
-  ECS_EXPORT_COMPONENT(MainCamera);
 }

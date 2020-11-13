@@ -30,16 +30,19 @@ typedef struct
   unsigned long entityId;
 } MainCamera;
 
-typedef struct
-{
-  ECS_DECLARE_COMPONENT(CameraComponent);
-  ECS_DECLARE_COMPONENT(MainCamera);
-} CameraModule;
+ECS_COMPONENT_EXTERN(CameraComponent);
+ECS_COMPONENT_EXTERN(MainCamera);
 
-void CameraModuleImport(ecs_world_t *world);
+void OnAddCameraComponent(ecs_iter_t *it);
+void OnChangeCameraParameters(ecs_iter_t *it);
 
-#define CameraModuleImportHandles(module)\
-  ECS_IMPORT_COMPONENT(module, CameraComponent);\
-  ECS_IMPORT_COMPONENT(module, MainCamera);\
+#define DEFINE_COMPONENTS_CAMERA(world) \
+  ECS_COMPONENT_DEFINE(world, CameraComponent); \
+  ECS_COMPONENT_DEFINE(world, MainCamera)
+
+#define REGISTER_SYSTEMS_CAMERA(world) \
+  ECS_SYSTEM(world, OnChangeCameraParameters, EcsOnSet, CameraComponent); \
+  ECS_TRIGGER(world, OnAddCameraComponent   , EcsOnAdd, CameraComponent)
+
 
 #endif
