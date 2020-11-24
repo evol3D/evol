@@ -1,7 +1,0 @@
-[wrap-git]
-directory = flecs-player
-url = https://github.com/flecs-hub/flecs-player.git
-revision = master
-depth = 1
-
-patch_directory = flecs-player

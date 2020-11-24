@@ -64,6 +64,4 @@ void PhysicsModuleImport(ecs_world_t *world)
   ECS_TRIGGER(world, RemoveRigidBody, EcsOnRemove, RigidBodyComponent);
 
   ECS_SYSTEM(world, SetRigidBody, EcsOnSet, RigidBodyComponent, RigidBodyHandleComponent, transform.module.TransformComponent);
-
-  ECS_IMPORT(world, FlecsMeta);
 }

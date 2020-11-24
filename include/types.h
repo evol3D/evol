@@ -11,7 +11,7 @@
 # define EV_PACKED   __pragma(pack(1))
 #else
 # define EV_UNUSED
-# define EV_ALIGN
+# define EV_ALIGN(x)
 # define EV_PACKED
 #endif
 
