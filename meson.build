@@ -67,8 +67,6 @@ endif
 
 vma_dep = dependency('vma')
 
-
-
 evol_exe = executable( 'evol', srcfiles,
   include_directories: global_incdir,
   dependencies: [
@@ -86,20 +84,4 @@ evol_exe = executable( 'evol', srcfiles,
     ],
   )
 
-custom_target(
-  'env_setup',
-  depends: evol_exe,
-  output: 'dummy',
-  command: [meson.current_source_dir() + '/scripts/baseshaders.sh', meson.current_source_dir(), meson.current_build_dir()],
-  build_by_default: true,
-)
-
-if build_machine.system() == 'windows'
-  custom_target(
-    'dllcopy',
-    depends: evol_exe,
-    output: 'dummy',
-    command: [meson.current_source_dir() + '/scripts/dllcopy.sh', meson.current_source_dir(), meson.current_build_dir()],
-    build_by_default: true,
-  )
-endif
+subdir('scripts')

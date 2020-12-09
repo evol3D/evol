@@ -1,6 +1,9 @@
 **/.vs/**
 **/.vscode/**
-**/build**
+
+**/build/**
+**/builddir/**
+**/.cache/**
 **/out/**
 
 **/.idea/**
