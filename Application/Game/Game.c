@@ -158,7 +158,7 @@ void sandbox()
   /* AssetLoader.loadGLTF("Triangle.gltf"); */
   /* AssetLoader.loadGLTF("Cube.gltf"); */
   /* AssetLoader.loadGLTF("InterpolationTest.gltf"); */
-  AssetLoader.loadGLTF("CesiumMilkTruck.gltf");
+  AssetLoader.loadGLTF("DamagedHelmet.gltf");
   /* AssetLoader.loadGLTF("Duck.gltf"); */
   /* AssetLoader.loadGLTF("RiggedFigure.gltf"); */
   /* AssetLoader.loadGLTF("CesiumMan.gltf"); */

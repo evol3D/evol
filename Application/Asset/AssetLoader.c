@@ -16,6 +16,8 @@
 
 #include <cglm/cglm.h>
 
+#include "material.h"
+
 static int ev_assetloader_init();
 static int ev_assetloader_deinit();
 static int ev_assetloader_load_gltf(const char *path);
@@ -138,6 +140,37 @@ static int ev_assetloader_load_gltf(const char *path)
   // Component Module Imports
   ImportModule(GeometryModule);
   ImportModule(RenderingModule);
+
+  {
+      MaterialSystem.init();
+
+      for (size_t idx = 0; idx < data->materials_count; idx++) {
+          cgltf_material* m_gltf = &data->materials[idx];
+          Material m =
+          {
+              //TODO we cannot fill vec3 & 4 like that change it
+              .albedoTexture = find_gltf_texture(m_gltf->pbr_metallic_roughness.base_color_texture.texture),
+              .albdoFactor = *data->materials[idx].pbr_metallic_roughness.base_color_factor,
+
+              .metalic_RoughnessTexture = find_gltf_texture(m_gltf->pbr_metallic_roughness.metallic_roughness_texture.texture),
+              .metalicFactor = data->materials[idx].pbr_metallic_roughness.metallic_factor,
+              .roughnessFactor = data->materials[idx].pbr_metallic_roughness.roughness_factor,
+
+              .normalTexture = find_gltf_texture(m_gltf->normal_texture.texture),
+              .normalScale = data->materials[idx].normal_texture.scale,
+
+              .occlusionTexture = find_gltf_texture(m_gltf->occlusion_texture.texcoord),
+              .occlusionStrength = data->materials[idx].occlusion_texture.scale,
+
+              .emissiveTexture = find_gltf_texture(m_gltf->emissive_texture.texture),
+              .emissiveFactor = *data->materials[idx].emissive_factor
+          };
+
+          MaterialSystem.registerMaterial(&m);
+      }
+
+      Renderer.registerMaterialBuffer(get_material_array(), data->materials_count* sizeof(Material));
+  }
 
   Entity *mesh_entities = malloc(sizeof(Entity) * data->meshes_count);
   for(unsigned int mesh_idx = 0; mesh_idx < data->meshes_count; ++mesh_idx)

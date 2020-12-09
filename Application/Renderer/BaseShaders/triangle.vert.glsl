@@ -2,6 +2,25 @@
 
 #extension GL_EXT_nonuniform_qualifier : require
 
+struct material
+{
+	uint albedoTexture;
+	vec4 albdoFactor;
+
+	uint metalic_RoughnessTexture;
+	float metalicFactor;
+	float roughnessFactor;
+
+	uint normalTexture;
+	float normalScale;
+
+	uint occlusionTexture;
+	float occlusionStrength;
+
+	uint emissiveTexture;
+	vec3 emissiveFactor;
+};
+
 layout (push_constant) uniform PushConstant
 {
   int vertexBufferIndex;
@@ -17,11 +36,16 @@ layout(set = 1, binding = 0) buffer VertexBuffer {
   layout(align = 16) vec3 vertices[];
 } VertexBuffers[];
 
+layout(set = 2, binding = 0) buffer materials
+{
+    material m[];
+};
 
 layout(location=0) out vec4 color;
 
 void main()
 {
+	material m1 = m[0];
   gl_Position = Camera.projection * Camera.view * RenderData.model * vec4(VertexBuffers[nonuniformEXT(RenderData.vertexBufferIndex)].vertices[gl_VertexIndex], 1);
   color = gl_Position;
 }

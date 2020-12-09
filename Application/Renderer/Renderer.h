@@ -3,6 +3,7 @@
 
 #include "renderer_types.h"
 #include "RendererBackend.h"
+#include "Asset/material.h"
 
 extern struct ev_Renderer {
   int (*init)();
@@ -10,6 +11,7 @@ extern struct ev_Renderer {
 
   unsigned int (*registerIndexBuffer)(unsigned int *indices, unsigned long long size);
   unsigned int (*registerVertexBuffer)(real *vertices, unsigned long long size);
+  void (*registerMaterialBuffer)(Material* materials, unsigned long long size);
 
   int (*startFrame)(ev_RenderCamera *camera);
   int (*endFrame)();

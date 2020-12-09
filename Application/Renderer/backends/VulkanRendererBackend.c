@@ -261,7 +261,7 @@ static int ev_rendererbackend_init()
   {
     {
       .type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, // TODO: Measure performance difference of using VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER vs VK_DESCRIPTOR_TYPE_STORAGE_BUFFER
-      .descriptorCount = 10, //TODO CHANGE THIS COUNT
+      .descriptorCount = 100, //TODO CHANGE THIS COUNT
     },
   };
 
@@ -889,6 +889,7 @@ static int ev_rendererbackend_loadbasepipelines()
   VkDescriptorSetLayout setLayouts[] = {
     BASE_DESCRIPTOR_SET_LAYOUTS[EV_DESCRIPTOR_SET_LAYOUT_CAMERA_PARAM],
     BASE_DESCRIPTOR_SET_LAYOUTS[EV_DESCRIPTOR_SET_LAYOUT_BUFFER_ARR],
+    BASE_DESCRIPTOR_SET_LAYOUTS[EV_DESCRIPTOR_SET_LAYOUT_BUFFER_MAT],
   };
 
   VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo = {
@@ -980,7 +981,6 @@ static int ev_rendererbackend_loadbaseshaders()
 
 static int ev_rendererbackend_loadbasedescriptorsetlayouts()
 {
-  //SET 0 FOR TEXTURES
   {
     VkDescriptorSetLayoutBinding bindings[] =
     { 
@@ -1029,6 +1029,27 @@ static int ev_rendererbackend_loadbasedescriptorsetlayouts()
     };
 
     VK_ASSERT(vkCreateDescriptorSetLayout(Vulkan.getDevice(), &descriptorSetLayoutCreateInfo, NULL, &BASE_DESCRIPTOR_SET_LAYOUTS[EV_DESCRIPTOR_SET_LAYOUT_CAMERA_PARAM]));
+  }
+
+  {
+      VkDescriptorSetLayoutBinding bindings[] =
+      {
+        {
+          .binding = 0,
+          .descriptorCount = 1, //TODO look into changing this
+          .descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+          .stageFlags = VK_SHADER_STAGE_ALL_GRAPHICS,
+        }
+      };
+
+      VkDescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo =
+      {
+        .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
+        .bindingCount = ARRAYSIZE(bindings),
+        .pBindings = bindings
+      };
+
+      VK_ASSERT(vkCreateDescriptorSetLayout(Vulkan.getDevice(), &descriptorSetLayoutCreateInfo, NULL, &BASE_DESCRIPTOR_SET_LAYOUTS[EV_DESCRIPTOR_SET_LAYOUT_BUFFER_MAT]));
   }
 
   return 0;

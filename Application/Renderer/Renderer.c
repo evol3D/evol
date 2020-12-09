@@ -1,9 +1,10 @@
 #include "Renderer.h"
+
+#include "ev_log/ev_log.h"
 #include "EventSystem.h"
+#include "cglm/cglm.h"
+#include "stdio.h"
 #include "vec.h"
-#include <ev_log/ev_log.h>
-#include <stdio.h>
-#include <cglm/cglm.h>
 
 static int ev_renderer_init();
 static int ev_renderer_deinit();
@@ -11,11 +12,13 @@ static int ev_renderer_deinit();
 static int ev_renderer_startframe(ev_RenderCamera *camera);
 static int ev_renderer_endframe();
 
-
 static void ev_renderer_draw(MeshRenderData meshRenderData, ev_Matrix4 transformMatrix);
 
 static unsigned int ev_renderer_registerindexbuffer(unsigned int *indices, unsigned long long size);
 static unsigned int ev_renderer_registervertexbuffer(real *vertices, unsigned long long size);
+static void ev_renderer_registermaterialbuffer(Material* materials, unsigned long long size);
+
+typedef vec_t(MemoryBuffer) MemoryBufferVec;
 
 struct ev_Renderer Renderer = {
   .init   = ev_renderer_init,
@@ -28,18 +31,17 @@ struct ev_Renderer Renderer = {
 
   .registerIndexBuffer = ev_renderer_registerindexbuffer,
   .registerVertexBuffer = ev_renderer_registervertexbuffer,
+  .registerMaterialBuffer = ev_renderer_registermaterialbuffer,
 };
-
-typedef vec_t(MemoryBuffer) MemoryBufferVec;
 
 struct ev_Renderer_Data {
   MemoryPool resourcePool;
 
   MemoryBufferVec indexBuffers;
   MemoryBufferVec vertexBuffers;
+  MemoryBuffer materialBuffer;
 
   UBO cameraUBO;
-
 } RendererData;
 
 static int ev_renderer_init()
@@ -139,6 +141,22 @@ static unsigned int ev_renderer_registervertexbuffer(real *vertices, unsigned lo
   return idx;
 }
 
+static void ev_renderer_registermaterialbuffer(Material* materials, unsigned long long size) 
+{
+    MemoryBuffer newMaterialBuffer;
+    RendererBackend.allocateBufferInPool(RendererData.resourcePool, size, EV_USAGEFLAGS_RESOURCE_BUFFER, &newMaterialBuffer);
+
+    MemoryBuffer materialStagingBuffer;
+    RendererBackend.allocateStagingBuffer(size, &materialStagingBuffer);
+    RendererBackend.updateStagingBuffer(&materialStagingBuffer, size, materials);
+    RendererBackend.copyBuffer(size, &materialStagingBuffer, &newMaterialBuffer);
+
+    //TODO We should have a system that controls staging buffers
+    RendererBackend.freeMemoryBuffer(&materialStagingBuffer);
+
+    RendererData.materialBuffer = newMaterialBuffer;
+}
+
 static int ev_renderer_startframe(ev_RenderCamera *camera)
 {
   ev_log_trace("Starting API specific new frame initialization : RendererBackend.startNewFrame()");
@@ -163,9 +181,18 @@ static int ev_renderer_startframe(ev_RenderCamera *camera)
   RendererBackend.pushDescriptorsToSet(resourceDescriptorSet, resourceDescriptors, RendererData.vertexBuffers.length);
   free(resourceDescriptors);
 
+  DescriptorSet materialDescriptorSet;
+  RendererBackend.allocateDescriptorSet(EV_DESCRIPTOR_SET_LAYOUT_BUFFER_MAT, &materialDescriptorSet);
+  Descriptor materialDescriptor = 
+  {
+      EV_DESCRIPTOR_TYPE_STORAGE_BUFFER, &RendererData.materialBuffer.buffer 
+  };
+  RendererBackend.pushDescriptorsToSet(materialDescriptorSet, &materialDescriptor, 1);
+
   DescriptorSet descriptorSets[] = {
     cameraDescriptorSet,
     resourceDescriptorSet,
+    materialDescriptorSet
   };
 
   RendererBackend.bindPipeline(EV_GRAPHICS_PIPELINE_BASE);
@@ -202,4 +229,3 @@ static int ev_renderer_endframe()
   RendererBackend.endFrame();
   return 0;
 }
-
