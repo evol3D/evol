@@ -1,5 +1,7 @@
 #include "Renderer.h"
 
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb-master/stb_image.h"
 #include "ev_log/ev_log.h"
 #include "EventSystem.h"
 #include "cglm/cglm.h"
@@ -17,7 +19,11 @@ static void ev_renderer_draw(MeshRenderData meshRenderData, ev_Matrix4 transform
 static unsigned int ev_renderer_registerindexbuffer(unsigned int *indices, unsigned long long size);
 static unsigned int ev_renderer_registervertexbuffer(real *vertices, unsigned long long size);
 static void ev_renderer_registermaterialbuffer(Material* materials, unsigned long long size);
-static void ev_renderer_registerimagebuffer (void* pixels, uint32_t width, uint32_t height);
+static void ev_renderer_registertexturebuffer(Texture* texture);
+static void ev_renderer_registerimagebuffer(uint32_t imageIndex, EvImage* newImageBuffer, VkImageView* imageView);
+
+
+stbi_uc* loadImage(char* image, int* width, int* height, int* channel);
 
 typedef vec_t(MemoryBuffer) MemoryBufferVec;
 typedef vec_t(EvTexture) MemoryTextureVec;
@@ -34,7 +40,9 @@ struct ev_Renderer Renderer = {
   .registerIndexBuffer = ev_renderer_registerindexbuffer,
   .registerVertexBuffer = ev_renderer_registervertexbuffer,
   .registerMaterialBuffer = ev_renderer_registermaterialbuffer,
-  .registerImageslBuffer = ev_renderer_registerimagebuffer
+  .registerImageslBuffer = ev_renderer_registerimagebuffer,
+
+  .registertexture = ev_renderer_registertexturebuffer
 };
 
 struct ev_Renderer_Data {
@@ -166,29 +174,11 @@ static void ev_renderer_registermaterialbuffer(Material* materials, unsigned lon
     RendererData.materialBuffer = newMaterialBuffer;
 }
 
-static void ev_renderer_registerimagebuffer(void* pixels, uint32_t width, uint32_t height)
+static void ev_renderer_registertexturebuffer(Texture *texture) 
 {
-    unsigned int idx = RendererData.textureBuffers.length;
-
     EvImage newImageBuffer;
-    {
-        VkDeviceSize imageSize = width * height * 4;
-
-        MemoryBuffer imageStagingBuffer;
-        RendererBackend.allocateStagingBuffer(imageSize, &imageStagingBuffer);
-        RendererBackend.updateStagingBuffer(&imageStagingBuffer, imageSize, pixels);
-
-        RendererBackend.allocateImageInPool(RendererData.TexturePool, width, height, EV_IMAGE_USAGE_RESOURCE_BUFFER, &newImageBuffer);
-
-        RendererBackend.transitionImageLayout(newImageBuffer.image, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
-        RendererBackend.copyBufferToImage(imageStagingBuffer.buffer, newImageBuffer.image, width, height);
-        RendererBackend.transitionImageLayout(newImageBuffer.image, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-
-        RendererBackend.freeMemoryBuffer(&imageStagingBuffer);
-    }
-
-    VkImageView *imageView;
-    RendererBackend.createImageView(1, VK_FORMAT_R8G8B8A8_SRGB,&newImageBuffer.image, &imageView);
+    VkImageView imageView;
+    ev_renderer_registerimagebuffer(texture->imageIndex, &newImageBuffer, &imageView);
 
     VkSampler sampler;
     VkSamplerCreateInfo samplerInfo =
@@ -213,14 +203,45 @@ static void ev_renderer_registerimagebuffer(void* pixels, uint32_t width, uint32
         .maxAnisotropy = 1.0f
     };
     vkCreateSampler(Vulkan.getDevice(), &samplerInfo, NULL, &sampler);
-    
-    EvTexture texture = 
+
+    EvTexture evtexture =
     {
         .image = newImageBuffer,
-        .imageView = *imageView,
+        .imageView = imageView,
         .sampler = sampler
     };
-    vec_push(&RendererData.textureBuffers, texture);
+    vec_push(&RendererData.textureBuffers, evtexture);
+}
+
+static void ev_renderer_registerimagebuffer(uint32_t imageIndex, EvImage* newImageBuffer, VkImageView* imageView)
+{
+    {
+        char* image = MaterialSystem.getImages().data[imageIndex];
+
+        int width = 0, height = 0, channel = 0;
+        void* pixels = loadImage(image, &width, &height, &channel);
+        VkDeviceSize imageSize = width * height * 4;
+
+        MemoryBuffer imageStagingBuffer;
+        RendererBackend.allocateStagingBuffer(imageSize, &imageStagingBuffer);
+        RendererBackend.updateStagingBuffer(&imageStagingBuffer, imageSize, pixels);
+
+        RendererBackend.allocateImageInPool(RendererData.TexturePool, width, height, EV_IMAGE_USAGE_RESOURCE_BUFFER, newImageBuffer);
+
+        RendererBackend.transitionImageLayout(newImageBuffer->image, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+        RendererBackend.copyBufferToImage(imageStagingBuffer.buffer, newImageBuffer->image, width, height);
+        RendererBackend.transitionImageLayout(newImageBuffer->image, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+
+        RendererBackend.freeMemoryBuffer(&imageStagingBuffer);
+        free(pixels);
+    }
+
+    RendererBackend.createImageView(VK_FORMAT_R8G8B8A8_SRGB, newImageBuffer->image, imageView);
+}
+stbi_uc* loadImage(char *image,int *width, int *height, int *channel)
+{
+    stbi_uc* pixels = stbi_load(image, width, height, channel, STBI_rgb_alpha);
+    assert(pixels);
 }
 
 static int ev_renderer_startframe(ev_RenderCamera *camera)

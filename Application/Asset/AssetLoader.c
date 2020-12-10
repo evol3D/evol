@@ -147,7 +147,7 @@ static int ev_assetloader_load_gltf(const char *path)
       for (size_t idx = 0; idx < data->materials_count; idx++) 
           MaterialSystem.registerGltfMaterial(&data->materials[idx]);
 
-      Renderer.registerMaterialBuffer(get_material_array(), data->materials_count* sizeof(Material));
+      Renderer.registerMaterialBuffer(MaterialSystem.getMaterials().data, data->materials_count* sizeof(Material));
   }
 
   Entity *mesh_entities = malloc(sizeof(Entity) * data->meshes_count);

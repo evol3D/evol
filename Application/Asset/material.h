@@ -1,10 +1,10 @@
 #ifndef EVOL_MATERIAL_HEADER
 #define EVOL_MATERIAL_HEADER
 
-#include <cglm\types.h>
-#include <vec.h>
-#include <cgltf.h>
+#include <cglm/types.h>
 #include <stdint.h>
+#include <cgltf.h>
+#include <vec.h>
 
 typedef struct
 {
@@ -35,13 +35,20 @@ typedef struct
 	vec3 emissiveFactor;
 } Material;
 
+typedef vec_t(Sampler)  sampler_vec_t;
+typedef vec_t(Texture)  texture_vec_t;
+typedef vec_t(Material) material_vec_t;
+
 extern struct ev_MaterialSystem
 {
 	uint32_t(*init)();
 	uint32_t(*deinit)();
 
 	uint32_t (*registerGltfMaterial)(cgltf_material* m_gltf);
-} MaterialSystem;
 
-Material* get_material_array();
+	material_vec_t(*getMaterials)();
+	texture_vec_t (*getTextures) ();
+	sampler_vec_t (*getSamplers) ();
+	vec_str_t	  (*getImages)   ();
+} MaterialSystem;
 #endif

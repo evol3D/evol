@@ -1386,7 +1386,7 @@ void ev_rendererbackend_copybuffertoimage(VkBuffer* buffer, VkImage* image, uint
     vkFreeCommandBuffers(Vulkan.getDevice(), Vulkan.getCommandPool(TRANSFER), 1, &commandBuffer);
 }
 
-void ev_rendererbackend_create_image_view(unsigned int imageCount, VkFormat imageFormat, VkImage* images, VkImageView** views)
+void ev_rendererbackend_create_image_view(VkFormat imageFormat, VkImage* images, VkImageView** views)
 {
-    Vulkan.createImageViews(imageCount, imageFormat, images, views);
+    Vulkan.createImageView(imageFormat, images, views);
 }

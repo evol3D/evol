@@ -26,6 +26,7 @@ static void ev_vulkan_retrieveswapchainimages(VkSwapchainKHR swapchain, unsigned
 static void ev_vulkan_destroyswapchain(VkSwapchainKHR swapchain);
 
 static void ev_vulkan_createimageviews(unsigned int imageCount, VkFormat imageFormat, VkImage *images, VkImageView **views);
+static void ev_vulkan_createimageview(VkFormat imageFormat, VkImage* images, VkImageView* views);
 static void ev_vulkan_createframebuffer(VkImageView* attachments, unsigned int attachmentCount, VkRenderPass renderPass, VkFramebuffer *framebuffer);
 
 static void ev_vulkan_create_image(VkImageCreateInfo *imageCreateInfo, VmaAllocationCreateInfo *allocationCreateInfo, EvImage *image);
@@ -73,6 +74,8 @@ struct ev_Vulkan Vulkan = {
   .allocateImageInPool          = ev_vulkan_allocateimageinpool,
 
   .createImageViews             = ev_vulkan_createimageviews,
+  .createImageView              = ev_vulkan_createimageview,
+
   .createFramebuffer            =  ev_vulkan_createframebuffer,
 
   // Getters
@@ -407,6 +410,25 @@ static void ev_vulkan_createimageviews(unsigned int imageCount, VkFormat imageFo
     VK_ASSERT(vkCreateImageView(VulkanData.logicalDevice, &imageViewCreateInfo, NULL, *views + i));
     
   }
+}
+static void ev_vulkan_createimageview(VkFormat imageFormat, VkImage* images, VkImageView* views) {
+    VkImageViewCreateInfo imageViewCreateInfo =
+    {
+        .sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
+        .image = images,
+        .viewType = VK_IMAGE_VIEW_TYPE_2D,
+        .format = imageFormat,
+        .components = {0, 0, 0, 0},
+        .subresourceRange =
+         {
+            .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
+            .baseMipLevel = 0,
+            .levelCount = 1,
+            .baseArrayLayer = 0,
+            .layerCount = 1,
+         },
+    };
+    VK_ASSERT(vkCreateImageView(VulkanData.logicalDevice, &imageViewCreateInfo, NULL, views));
 }
 
 static void ev_vulkan_createframebuffer(VkImageView* attachments, unsigned int attachmentCount, VkRenderPass renderPass, VkFramebuffer *framebuffer)
