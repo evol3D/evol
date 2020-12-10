@@ -1,6 +1,7 @@
+#define STB_IMAGE_IMPLEMENTATION
+
 #include <Asset/material.h>
 
-#define STB_IMAGE_IMPLEMENTATION
 #include "stb-master/stb_image.h"
 #include "Renderer/Renderer.h"
 
@@ -16,6 +17,23 @@ material_vec_t materials;
 uint32_t material_system_init();
 uint32_t material_system_deinit();
 
+uint32_t material_system_register_GLTF_material(cgltf_material* m_gltf);
+
+struct ev_MaterialSystem MaterialSystem = 
+{
+  .init = material_system_init,
+  .deinit = material_system_deinit,
+
+  .registerGltfMaterial = material_system_register_GLTF_material,
+};
+
+
+
+
+
+
+uint32_t material_system_register_GLTF_texture(cgltf_texture* t);
+
 uint32_t material_system_register_image(const char* imageuri);
 uint32_t material_system_register_sampler(int mag, int min);
 uint32_t material_system_register_texture(uint32_t samplerIdx, uint32_t imageIdx);
@@ -26,19 +44,11 @@ uint32_t create_sampler(int mag, int min);
 uint32_t create_texture(uint32_t samplerIdx, uint32_t imageIdx);
 uint32_t create_material(Material* newMaterial);
 
-struct ev_MaterialSystem MaterialSystem = {
-  .init = material_system_init,
-  .deinit = material_system_deinit,
 
-  .registerImage = material_system_register_image,
-  .registerSampler = material_system_register_sampler,
-  .registerTexture = material_system_register_texture,
-  .registerMaterial = material_system_register_material
-};
-//----------------------------------------------------------------------
-//----------------------------------------------------------------------
-//----------------------------------------------------------------------
-//----------------------------------------------------------------------
+
+
+
+
 uint32_t material_system_init()
 {
 	vec_init(&images);
@@ -52,6 +62,34 @@ uint32_t material_system_deinit()
 	vec_deinit(&samplers);
 	vec_deinit(&textures);
 	vec_deinit(&materials);
+}
+
+uint32_t material_system_register_GLTF_material(cgltf_material* m_gltf) {
+	Material m =
+	{
+		.albedoTexture = material_system_register_GLTF_texture(m_gltf->pbr_metallic_roughness.base_color_texture.texture),
+		.albdoFactor[0] = m_gltf->pbr_metallic_roughness.base_color_factor[0],
+		.albdoFactor[1] = m_gltf->pbr_metallic_roughness.base_color_factor[1],
+		.albdoFactor[2] = m_gltf->pbr_metallic_roughness.base_color_factor[2],
+		.albdoFactor[3] = m_gltf->pbr_metallic_roughness.base_color_factor[3],
+
+		.metalic_RoughnessTexture = material_system_register_GLTF_texture(m_gltf->pbr_metallic_roughness.metallic_roughness_texture.texture),
+		.metalicFactor = m_gltf->pbr_metallic_roughness.metallic_factor,
+		.roughnessFactor = m_gltf->pbr_metallic_roughness.roughness_factor,
+
+		.normalTexture = material_system_register_GLTF_texture(m_gltf->normal_texture.texture),
+		.normalScale = m_gltf->normal_texture.scale,
+
+		.occlusionTexture = material_system_register_GLTF_texture(m_gltf->occlusion_texture.texcoord),
+		.occlusionStrength = m_gltf->occlusion_texture.scale,
+
+		.emissiveTexture = material_system_register_GLTF_texture(m_gltf->emissive_texture.texture),
+		.emissiveFactor[0] = m_gltf->emissive_factor[0],
+		.emissiveFactor[1] = m_gltf->emissive_factor[1],
+		.emissiveFactor[2] = m_gltf->emissive_factor[2],
+	};
+
+	return material_system_register_material(&m);
 }
 
 uint32_t material_system_register_image(const char *imageuri)
@@ -107,10 +145,7 @@ uint32_t material_system_register_material(Material *newMaterial)
 
 	return create_material(newMaterial);
 }
-//----------------------------------------------------------------------
-//----------------------------------------------------------------------
-//----------------------------------------------------------------------
-//----------------------------------------------------------------------
+
 uint32_t create_image(const char* imageuri)
 {
 	uint32_t idx = images.length;
@@ -159,37 +194,32 @@ uint32_t create_material(Material* newMaterial)
 
 	return idx;
 }
-//----------------------------------------------------------------------
-//----------------------------------------------------------------------
-//----------------------------------------------------------------------
-//----------------------------------------------------------------------
-//remove this later on
-Material* get_material(uint32_t idx)
-{
-	return &materials.data[idx];
-}
+
 //gltf specific
-uint32_t find_gltf_texture(cgltf_texture *t)
+uint32_t material_system_register_GLTF_texture(cgltf_texture* t) 
 {
 	if (!t)
-		return 0;
+		return ~0u;
 
 	cgltf_sampler* sampler = t->sampler;
-	cgltf_image   *image   = t->image;
-	
+	cgltf_image* image = t->image;
+
 	uint32_t samplerIdx;
 	{
 		if (!sampler)
-			samplerIdx = MaterialSystem.registerSampler(0, 0);
+			samplerIdx = material_system_register_sampler(0, 0);
 		else
-			samplerIdx = MaterialSystem.registerSampler(sampler->mag_filter, sampler->min_filter);
+			samplerIdx = material_system_register_sampler(sampler->mag_filter, sampler->min_filter);
 	}
 
-	uint32_t imageIdx   = MaterialSystem.registerImage(image->uri);
+	uint32_t imageIdx = material_system_register_image(image->uri);
 
-	return MaterialSystem.registerTexture(samplerIdx, imageIdx);
+	return material_system_register_texture(samplerIdx, imageIdx);
 }
 
-Material* get_material_array() 	{
+
+//TODO REMOVE
+Material* get_material_array() 
+{
 	return materials.data;
 }

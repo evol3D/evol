@@ -144,30 +144,8 @@ static int ev_assetloader_load_gltf(const char *path)
   {
       MaterialSystem.init();
 
-      for (size_t idx = 0; idx < data->materials_count; idx++) {
-          cgltf_material* m_gltf = &data->materials[idx];
-          Material m =
-          {
-              //TODO we cannot fill vec3 & 4 like that change it
-              .albedoTexture = find_gltf_texture(m_gltf->pbr_metallic_roughness.base_color_texture.texture),
-              .albdoFactor = *data->materials[idx].pbr_metallic_roughness.base_color_factor,
-
-              .metalic_RoughnessTexture = find_gltf_texture(m_gltf->pbr_metallic_roughness.metallic_roughness_texture.texture),
-              .metalicFactor = data->materials[idx].pbr_metallic_roughness.metallic_factor,
-              .roughnessFactor = data->materials[idx].pbr_metallic_roughness.roughness_factor,
-
-              .normalTexture = find_gltf_texture(m_gltf->normal_texture.texture),
-              .normalScale = data->materials[idx].normal_texture.scale,
-
-              .occlusionTexture = find_gltf_texture(m_gltf->occlusion_texture.texcoord),
-              .occlusionStrength = data->materials[idx].occlusion_texture.scale,
-
-              .emissiveTexture = find_gltf_texture(m_gltf->emissive_texture.texture),
-              .emissiveFactor = *data->materials[idx].emissive_factor
-          };
-
-          MaterialSystem.registerMaterial(&m);
-      }
+      for (size_t idx = 0; idx < data->materials_count; idx++) 
+          MaterialSystem.registerGltfMaterial(&data->materials[idx]);
 
       Renderer.registerMaterialBuffer(get_material_array(), data->materials_count* sizeof(Material));
   }
