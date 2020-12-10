@@ -17,8 +17,10 @@ static void ev_renderer_draw(MeshRenderData meshRenderData, ev_Matrix4 transform
 static unsigned int ev_renderer_registerindexbuffer(unsigned int *indices, unsigned long long size);
 static unsigned int ev_renderer_registervertexbuffer(real *vertices, unsigned long long size);
 static void ev_renderer_registermaterialbuffer(Material* materials, unsigned long long size);
+static void ev_renderer_registerimagebuffer (void* pixels, uint32_t width, uint32_t height);
 
 typedef vec_t(MemoryBuffer) MemoryBufferVec;
+typedef vec_t(EvTexture) MemoryTextureVec;
 
 struct ev_Renderer Renderer = {
   .init   = ev_renderer_init,
@@ -32,14 +34,17 @@ struct ev_Renderer Renderer = {
   .registerIndexBuffer = ev_renderer_registerindexbuffer,
   .registerVertexBuffer = ev_renderer_registervertexbuffer,
   .registerMaterialBuffer = ev_renderer_registermaterialbuffer,
+  .registerImageslBuffer = ev_renderer_registerimagebuffer
 };
 
 struct ev_Renderer_Data {
   MemoryPool resourcePool;
+  MemoryPool TexturePool;
 
   MemoryBufferVec indexBuffers;
   MemoryBufferVec vertexBuffers;
   MemoryBuffer materialBuffer;
+  MemoryTextureVec textureBuffers;
 
   UBO cameraUBO;
 } RendererData;
@@ -65,6 +70,10 @@ static int ev_renderer_init()
   ev_log_trace("Allocating ResourceMemoryPool");
   RendererBackend.createResourceMemoryPool(128ull * 1024 * 1024, 1, 4, &RendererData.resourcePool);
   ev_log_debug("Allocated ResourceMemoryPool");
+
+  ev_log_trace("Allocating TextureMemoryPool");
+  RendererBackend.createTextureMemoryPool(128ull * 1024 * 1024, 1, 4, &RendererData.TexturePool);
+  ev_log_debug("Allocated TextureMemoryPool");
 
   // Create a persistent UBO for the main camera
   RendererBackend.allocateUBO(sizeof(ev_RenderCamera), true, &RendererData.cameraUBO);
@@ -157,6 +166,63 @@ static void ev_renderer_registermaterialbuffer(Material* materials, unsigned lon
     RendererData.materialBuffer = newMaterialBuffer;
 }
 
+static void ev_renderer_registerimagebuffer(void* pixels, uint32_t width, uint32_t height)
+{
+    unsigned int idx = RendererData.textureBuffers.length;
+
+    EvImage newImageBuffer;
+    {
+        VkDeviceSize imageSize = width * height * 4;
+
+        MemoryBuffer imageStagingBuffer;
+        RendererBackend.allocateStagingBuffer(imageSize, &imageStagingBuffer);
+        RendererBackend.updateStagingBuffer(&imageStagingBuffer, imageSize, pixels);
+
+        RendererBackend.allocateImageInPool(RendererData.TexturePool, width, height, EV_IMAGE_USAGE_RESOURCE_BUFFER, &newImageBuffer);
+
+        RendererBackend.transitionImageLayout(newImageBuffer.image, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+        RendererBackend.copyBufferToImage(imageStagingBuffer.buffer, newImageBuffer.image, width, height);
+        RendererBackend.transitionImageLayout(newImageBuffer.image, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+
+        RendererBackend.freeMemoryBuffer(&imageStagingBuffer);
+    }
+
+    VkImageView *imageView;
+    RendererBackend.createImageView(1, VK_FORMAT_R8G8B8A8_SRGB,&newImageBuffer.image, &imageView);
+
+    VkSampler sampler;
+    VkSamplerCreateInfo samplerInfo =
+    {
+        .sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO,
+        .magFilter = VK_FILTER_LINEAR,
+        .minFilter = VK_FILTER_LINEAR,
+        .addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT,
+        .addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT,
+        .addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT,
+        .anisotropyEnable = VK_TRUE,
+        .maxAnisotropy = 16.0f,
+        .borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK,
+        .unnormalizedCoordinates = VK_FALSE,
+        .compareEnable = VK_FALSE,
+        .compareOp = VK_COMPARE_OP_ALWAYS,
+        .mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR,
+        .mipLodBias = 0.0f,
+        .minLod = 0.0f,
+        .maxLod = 0.0f,
+        .anisotropyEnable = VK_FALSE,
+        .maxAnisotropy = 1.0f
+    };
+    vkCreateSampler(Vulkan.getDevice(), &samplerInfo, NULL, &sampler);
+    
+    EvTexture texture = 
+    {
+        .image = newImageBuffer,
+        .imageView = *imageView,
+        .sampler = sampler
+    };
+    vec_push(&RendererData.textureBuffers, texture);
+}
+
 static int ev_renderer_startframe(ev_RenderCamera *camera)
 {
   ev_log_trace("Starting API specific new frame initialization : RendererBackend.startNewFrame()");
@@ -189,10 +255,20 @@ static int ev_renderer_startframe(ev_RenderCamera *camera)
   };
   RendererBackend.pushDescriptorsToSet(materialDescriptorSet, &materialDescriptor, 1);
 
+    //textures
+  DescriptorSet textureDescriptorSet;
+  RendererBackend.allocateDescriptorSet(EV_DESCRIPTOR_SET_LAYOUT_BUFFER_TEX, &textureDescriptorSet);
+  Descriptor* textureDescriptors = malloc(sizeof(Descriptor) * RendererData.textureBuffers.length);
+  for (int i = 0; i < RendererData.textureBuffers.length; ++i)      
+      textureDescriptors[i] = (Descriptor){ EV_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, &RendererData.textureBuffers.data[i] };
+  RendererBackend.pushDescriptorsToSet(textureDescriptorSet, textureDescriptors, RendererData.textureBuffers.length);
+  free(textureDescriptors);
+
   DescriptorSet descriptorSets[] = {
     cameraDescriptorSet,
     resourceDescriptorSet,
-    materialDescriptorSet
+    materialDescriptorSet,
+    textureDescriptorSet
   };
 
   RendererBackend.bindPipeline(EV_GRAPHICS_PIPELINE_BASE);

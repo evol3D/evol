@@ -20,6 +20,7 @@
 
 # define EV_USAGEFLAGS_RESOURCE_BUFFER          VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT
 # define EV_BUFFER_USAGE_INDEX_BUFFER_BIT       VK_BUFFER_USAGE_INDEX_BUFFER_BIT   | VK_BUFFER_USAGE_TRANSFER_DST_BIT
+# define EV_IMAGE_USAGE_RESOURCE_BUFFER         VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT
 
   typedef enum DescriptorType {
      EV_DESCRIPTOR_TYPE_SAMPLER                = VK_DESCRIPTOR_TYPE_SAMPLER,
@@ -36,6 +37,13 @@
   } DescriptorType;
 
 #endif
+
+typedef struct EvTexture
+{
+    EvImage image;
+    VkImageView imageView;
+    VkSampler sampler;
+} EvTexture;
 
 typedef struct Descriptor
 {
@@ -80,8 +88,11 @@ extern struct ev_RendererBackend {
     void (*unloadShader)(ShaderModule);
 
     void (*createResourceMemoryPool)(unsigned long long blockSize, unsigned int minBlockCount, unsigned int maxBlockCount, MemoryPool *pool);
+    void (*createTextureMemoryPool)(unsigned long long blockSize, unsigned int minBlockCount, unsigned int maxBlockCount, MemoryPool* pool);
+    
     void (*freeMemoryPool)(MemoryPool pool);
     void (*allocateBufferInPool)(MemoryPool pool, unsigned long long bufferSize, unsigned long long usageFlags, MemoryBuffer *buffer);
+    void (*allocateImageInPool)(MemoryPool pool, uint32_t width, uint32_t height, unsigned long long usageFlags, EvImage* Image);
     void (*freeMemoryBuffer)(MemoryBuffer *buffer);
 
     void (*allocateStagingBuffer)(unsigned long long bufferSize, MemoryBuffer *buffer);
@@ -98,7 +109,12 @@ extern struct ev_RendererBackend {
     void (*pushConstant)(void *data, unsigned int size);
 
     void (*drawIndexed)(unsigned int indexCount);
+    
+    void (*transitionImageLayout)(VkImage* image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout);
+    
+    void (*copyBufferToImage)(VkBuffer* buffer, VkImage* image, uint32_t width, uint32_t height);
 
+    void (*createImageView)(unsigned int imageCount, VkFormat imageFormat, VkImage* images, VkImageView** views);
 } RendererBackend;
 
 

@@ -41,11 +41,15 @@ layout(set = 2, binding = 0) buffer materials
     material m[];
 };
 
+layout(set = 3, binding = 0) uniform sampler2D texSampler[];
+
 layout(location=0) out vec4 color;
 
 void main()
 {
 	material m1 = m[0];
+	vec2 a = vec2(0,0);
+	texture(texSampler[0], a);
   gl_Position = Camera.projection * Camera.view * RenderData.model * vec4(VertexBuffers[nonuniformEXT(RenderData.vertexBufferIndex)].vertices[gl_VertexIndex], 1);
   color = gl_Position;
 }

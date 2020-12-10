@@ -1,6 +1,7 @@
 #ifndef EVOL_MATERIAL_HEADER
 #define EVOL_MATERIAL_HEADER
 
+
 #include <cglm\types.h>
 #include <vec.h>
 #include <cgltf.h>

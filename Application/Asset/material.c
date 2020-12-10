@@ -2,6 +2,7 @@
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb-master/stb_image.h"
+#include "Renderer/Renderer.h"
 
 typedef vec_t(Sampler)  sampler_vec_t;
 typedef vec_t(Texture)  texture_vec_t;
@@ -116,15 +117,13 @@ uint32_t create_image(const char* imageuri)
 
 	vec_push(&images, imageuri);
 
-	////Registering images onto the gpu
-	//{
-	//		int texWidth = 0, texHeight = 0, texChannels = 0;
-	//		stbi_uc* pixels = stbi_load(data->images->uri, &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
-	//		assert(pixels);
-	//		unsigned int imageSize = texWidth * texHeight * 4;
-
-	//		imageIdx[idx] = Renderer.registerImageBuffer(pixels , imageSize);
-	//}
+	//Registering images onto the gpu
+	{
+		int texWidth = 0, texHeight = 0, texChannels = 0;
+		stbi_uc* pixels = stbi_load(imageuri, &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
+		assert(pixels);
+		Renderer.registerImageslBuffer(pixels, texWidth, texHeight);
+	}
 
 	return idx;
 }

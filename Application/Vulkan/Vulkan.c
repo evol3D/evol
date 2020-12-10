@@ -38,6 +38,7 @@ static void ev_vulkan_allocatememorypool(VmaPoolCreateInfo *poolCreateInfo, VmaP
 static void ev_vulkan_freememorypool(VmaPool pool);
 
 static void ev_vulkan_allocatebufferinpool(VkBufferCreateInfo *bufferCreateInfo, VmaPool pool, EvBuffer *buffer);
+static void ev_vulkan_allocateimageinpool(VkImageCreateInfo* imageCreateInfo, VmaPool pool, EvImage* image);
 
 static void ev_vulkan_allocateprimarycommandbuffer(QueueType queueType, VkCommandBuffer *cmdBuffer);
 
@@ -69,6 +70,7 @@ struct ev_Vulkan Vulkan = {
   .freeMemoryPool               = ev_vulkan_freememorypool,
 
   .allocateBufferInPool         = ev_vulkan_allocatebufferinpool,
+  .allocateImageInPool          = ev_vulkan_allocateimageinpool,
 
   .createImageViews             = ev_vulkan_createimageviews,
   .createFramebuffer            =  ev_vulkan_createframebuffer,
@@ -402,8 +404,8 @@ static void ev_vulkan_createimageviews(unsigned int imageCount, VkFormat imageFo
         .layerCount = 1,
       },
     };
-
-    vkCreateImageView(VulkanData.logicalDevice, &imageViewCreateInfo, NULL, *views + i);
+    VK_ASSERT(vkCreateImageView(VulkanData.logicalDevice, &imageViewCreateInfo, NULL, *views + i));
+    
   }
 }
 
@@ -441,6 +443,15 @@ static void ev_vulkan_allocatebufferinpool(VkBufferCreateInfo *bufferCreateInfo,
   };
 
   ev_vulkan_create_buffer(bufferCreateInfo, &allocationCreateInfo, buffer);
+}
+static void ev_vulkan_allocateimageinpool(VkImageCreateInfo* imageCreateInfo, VmaPool pool, EvImage* image) 
+{
+    VmaAllocationCreateInfo allocationCreateInfo = 
+    {
+      .pool = pool,
+    };
+
+    ev_vulkan_create_image(imageCreateInfo, &allocationCreateInfo, image);
 }
 
 inline VmaAllocator ev_vulkan_getallocator()
