@@ -1032,7 +1032,8 @@ static int ev_rendererbackend_loadbasepipelines()
     BASE_DESCRIPTOR_SET_LAYOUTS[EV_DESCRIPTOR_SET_LAYOUT_CAMERA_PARAM],
     BASE_DESCRIPTOR_SET_LAYOUTS[EV_DESCRIPTOR_SET_LAYOUT_BUFFER_ARR],
     BASE_DESCRIPTOR_SET_LAYOUTS[EV_DESCRIPTOR_SET_LAYOUT_BUFFER_MAT],
-    BASE_DESCRIPTOR_SET_LAYOUTS[EV_DESCRIPTOR_SET_LAYOUT_BUFFER_TEX]
+    BASE_DESCRIPTOR_SET_LAYOUTS[EV_DESCRIPTOR_SET_LAYOUT_BUFFER_TEX],
+    BASE_DESCRIPTOR_SET_LAYOUTS[EV_DESCRIPTOR_SET_LAYOUT_BUFFER_NOR]
   };
 
   VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo = {
@@ -1214,6 +1215,35 @@ static int ev_rendererbackend_loadbasedescriptorsetlayouts()
       };
 
       VK_ASSERT(vkCreateDescriptorSetLayout(Vulkan.getDevice(), &descriptorSetLayoutCreateInfo, NULL, &BASE_DESCRIPTOR_SET_LAYOUTS[EV_DESCRIPTOR_SET_LAYOUT_BUFFER_TEX]));
+  }
+
+  {
+      VkDescriptorSetLayoutBinding bindings[] =
+      {
+        {
+          .binding = 0,
+          .descriptorCount = 10 , //TODO look into changing this
+          .descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+          .stageFlags = VK_SHADER_STAGE_ALL_GRAPHICS,
+        }
+      };
+
+      VkDescriptorBindingFlagsEXT bindingFlags = VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT; // | VK_DESCRIPTOR_BINDING_VARIABLE_DESCRIPTOR_COUNT_BIT;
+      VkDescriptorSetLayoutBindingFlagsCreateInfoEXT descriptorSetLayoutBindingFlagsCreateInfo = {
+        .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_BINDING_FLAGS_CREATE_INFO_EXT,
+        .bindingCount = ARRAYSIZE(bindings),
+        .pBindingFlags = &bindingFlags,
+      };
+
+      VkDescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo =
+      {
+        .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
+        .pNext = &descriptorSetLayoutBindingFlagsCreateInfo,
+        .bindingCount = ARRAYSIZE(bindings),
+        .pBindings = bindings
+      };
+
+      VK_ASSERT(vkCreateDescriptorSetLayout(Vulkan.getDevice(), &descriptorSetLayoutCreateInfo, NULL, &BASE_DESCRIPTOR_SET_LAYOUTS[EV_DESCRIPTOR_SET_LAYOUT_BUFFER_NOR]));
   }
 
   return 0;

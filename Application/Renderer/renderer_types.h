@@ -10,6 +10,7 @@ typedef enum
   EV_DESCRIPTOR_SET_LAYOUT_BUFFER_ARR,
   EV_DESCRIPTOR_SET_LAYOUT_BUFFER_MAT,
   EV_DESCRIPTOR_SET_LAYOUT_BUFFER_TEX,
+  EV_DESCRIPTOR_SET_LAYOUT_BUFFER_NOR,
 
   // Add before this line
   DESCRIPTOR_SET_LAYOUT_COUNT
@@ -36,6 +37,7 @@ typedef enum
 typedef struct {
   unsigned int indexBufferId;
   unsigned int vertexBufferId;
+  unsigned int normalBufferId;
 
   unsigned int indexCount;
 } PrimitiveRenderData;

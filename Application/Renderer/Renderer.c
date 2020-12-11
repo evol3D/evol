@@ -16,17 +16,19 @@ static int ev_renderer_endframe();
 
 static void ev_renderer_draw(MeshRenderData meshRenderData, ev_Matrix4 transformMatrix);
 
+static unsigned int ev_renderer_registervertexbuffer(real* vertices, unsigned long long size);
+static unsigned int ev_renderer_registernormalbuffer(real* uvs, unsigned long long size);
 static unsigned int ev_renderer_registerindexbuffer(unsigned int *indices, unsigned long long size);
-static unsigned int ev_renderer_registervertexbuffer(real *vertices, unsigned long long size);
-static void ev_renderer_registermaterialbuffer(Material* materials, unsigned long long size);
+
 static void ev_renderer_registertexturebuffer(Texture* texture);
+static void ev_renderer_registermaterialbuffer(Material* materials, unsigned long long size);
 static void ev_renderer_registerimagebuffer(uint32_t imageIndex, EvImage* newImageBuffer, VkImageView* imageView);
 
-
+//TODO REMOVE STB FROM HERE
 stbi_uc* loadImage(char* image, int* width, int* height, int* channel);
 
-typedef vec_t(MemoryBuffer) MemoryBufferVec;
 typedef vec_t(EvTexture) MemoryTextureVec;
+typedef vec_t(MemoryBuffer) MemoryBufferVec;
 
 struct ev_Renderer Renderer = {
   .init   = ev_renderer_init,
@@ -39,10 +41,11 @@ struct ev_Renderer Renderer = {
 
   .registerIndexBuffer = ev_renderer_registerindexbuffer,
   .registerVertexBuffer = ev_renderer_registervertexbuffer,
-  .registerMaterialBuffer = ev_renderer_registermaterialbuffer,
-  .registerImageslBuffer = ev_renderer_registerimagebuffer,
+  .registerNormalBuffer = ev_renderer_registernormalbuffer,
 
-  .registertexture = ev_renderer_registertexturebuffer
+  .registertexture = ev_renderer_registertexturebuffer,
+  .registerImageslBuffer = ev_renderer_registerimagebuffer,
+  .registerMaterialBuffer = ev_renderer_registermaterialbuffer,
 };
 
 struct ev_Renderer_Data {
@@ -51,6 +54,8 @@ struct ev_Renderer_Data {
 
   MemoryBufferVec indexBuffers;
   MemoryBufferVec vertexBuffers;
+  MemoryBufferVec normalBuffers;
+
   MemoryBuffer materialBuffer;
   MemoryTextureVec textureBuffers;
 
@@ -64,6 +69,7 @@ static int ev_renderer_init()
   ev_log_debug("Initialized RendererBackend");
   vec_init(&RendererData.indexBuffers);
   vec_init(&RendererData.vertexBuffers);
+  vec_init(&RendererData.normalBuffers);
 
   ev_log_trace("Loading BaseShaders");
   RendererBackend.loadBaseShaders();
@@ -88,7 +94,6 @@ static int ev_renderer_init()
 
   return 0;
 }
-
 static int ev_renderer_deinit()
 {
   RendererBackend.deinit();
@@ -137,7 +142,6 @@ static unsigned int ev_renderer_registerindexbuffer(unsigned int *indices, unsig
 
   return idx;
 }
-
 static unsigned int ev_renderer_registervertexbuffer(real *vertices, unsigned long long size)
 {
   unsigned int idx = RendererData.vertexBuffers.length;
@@ -157,6 +161,25 @@ static unsigned int ev_renderer_registervertexbuffer(real *vertices, unsigned lo
 
   return idx;
 }
+static unsigned int ev_renderer_registernormalbuffer(real* uvs, unsigned long long size) 
+{
+    unsigned int idx = RendererData.normalBuffers.length;
+
+    MemoryBuffer newNormalBuffer;
+    RendererBackend.allocateBufferInPool(RendererData.resourcePool, size, EV_USAGEFLAGS_RESOURCE_BUFFER, &newNormalBuffer);
+
+    MemoryBuffer normalStagingBuffer;
+    RendererBackend.allocateStagingBuffer(size, &normalStagingBuffer);
+    RendererBackend.updateStagingBuffer(&normalStagingBuffer, size, uvs);
+    RendererBackend.copyBuffer(size, &normalStagingBuffer, &newNormalBuffer);
+
+    //TODO We should have a system that controls staging buffers
+    RendererBackend.freeMemoryBuffer(&normalStagingBuffer);
+
+    vec_push(&RendererData.normalBuffers, newNormalBuffer);
+
+    return idx;
+}
 
 static void ev_renderer_registermaterialbuffer(Material* materials, unsigned long long size) 
 {
@@ -168,12 +191,10 @@ static void ev_renderer_registermaterialbuffer(Material* materials, unsigned lon
     RendererBackend.updateStagingBuffer(&materialStagingBuffer, size, materials);
     RendererBackend.copyBuffer(size, &materialStagingBuffer, &newMaterialBuffer);
 
-    //TODO We should have a system that controls staging buffers
     RendererBackend.freeMemoryBuffer(&materialStagingBuffer);
 
     RendererData.materialBuffer = newMaterialBuffer;
 }
-
 static void ev_renderer_registertexturebuffer(Texture *texture) 
 {
     EvImage newImageBuffer;
@@ -212,7 +233,6 @@ static void ev_renderer_registertexturebuffer(Texture *texture)
     };
     vec_push(&RendererData.textureBuffers, evtexture);
 }
-
 static void ev_renderer_registerimagebuffer(uint32_t imageIndex, EvImage* newImageBuffer, VkImageView* imageView)
 {
     {
@@ -238,6 +258,7 @@ static void ev_renderer_registerimagebuffer(uint32_t imageIndex, EvImage* newIma
 
     RendererBackend.createImageView(VK_FORMAT_R8G8B8A8_SRGB, newImageBuffer->image, imageView);
 }
+
 stbi_uc* loadImage(char *image,int *width, int *height, int *channel)
 {
     stbi_uc* pixels = stbi_load(image, width, height, channel, STBI_rgb_alpha);
@@ -255,7 +276,6 @@ static int ev_renderer_startframe(ev_RenderCamera *camera)
   RendererBackend.allocateDescriptorSet(EV_DESCRIPTOR_SET_LAYOUT_CAMERA_PARAM, &cameraDescriptorSet);
   Descriptor cameraDescriptors[] = {{EV_DESCRIPTOR_TYPE_UNIFORM_BUFFER, &RendererData.cameraUBO.buffer},};
   RendererBackend.pushDescriptorsToSet(cameraDescriptorSet, cameraDescriptors, ARRAYSIZE(cameraDescriptors));
-
   // Update Camera UBO
   RendererBackend.updateUBO(sizeof(ev_RenderCamera), camera, &RendererData.cameraUBO);
 
@@ -276,7 +296,7 @@ static int ev_renderer_startframe(ev_RenderCamera *camera)
   };
   RendererBackend.pushDescriptorsToSet(materialDescriptorSet, &materialDescriptor, 1);
 
-    //textures
+  //textures
   DescriptorSet textureDescriptorSet;
   RendererBackend.allocateDescriptorSet(EV_DESCRIPTOR_SET_LAYOUT_BUFFER_TEX, &textureDescriptorSet);
   Descriptor* textureDescriptors = malloc(sizeof(Descriptor) * RendererData.textureBuffers.length);
@@ -285,11 +305,21 @@ static int ev_renderer_startframe(ev_RenderCamera *camera)
   RendererBackend.pushDescriptorsToSet(textureDescriptorSet, textureDescriptors, RendererData.textureBuffers.length);
   free(textureDescriptors);
 
+  //normals
+  DescriptorSet normalDescriptorSet;
+  RendererBackend.allocateDescriptorSet(EV_DESCRIPTOR_SET_LAYOUT_BUFFER_NOR, &normalDescriptorSet);
+  Descriptor* normalDescriptors = malloc(sizeof(Descriptor) * RendererData.normalBuffers.length);
+  for (int i = 0; i < RendererData.normalBuffers.length; ++i)
+      normalDescriptors[i] = (Descriptor){ EV_DESCRIPTOR_TYPE_STORAGE_BUFFER, &RendererData.normalBuffers.data[i] };
+  RendererBackend.pushDescriptorsToSet(normalDescriptorSet, normalDescriptors, RendererData.normalBuffers.length);
+  free(normalDescriptors);
+
   DescriptorSet descriptorSets[] = {
     cameraDescriptorSet,
     resourceDescriptorSet,
     materialDescriptorSet,
-    textureDescriptorSet
+    textureDescriptorSet,
+    normalDescriptorSet
   };
 
   RendererBackend.bindPipeline(EV_GRAPHICS_PIPELINE_BASE);
