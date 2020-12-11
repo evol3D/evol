@@ -38,6 +38,7 @@ typedef struct {
   unsigned int indexBufferId;
   unsigned int vertexBufferId;
   unsigned int normalBufferId;
+  unsigned int uvBufferId;
 
   unsigned int indexCount;
 } PrimitiveRenderData;

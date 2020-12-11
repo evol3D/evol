@@ -22,13 +22,15 @@ static int ev_assetloader_init();
 static int ev_assetloader_deinit();
 static int ev_assetloader_load_gltf(const char* path);
 
-struct ev_AssetLoader AssetLoader = {
+struct ev_AssetLoader AssetLoader = 
+{
 		.init = ev_assetloader_init,
 		.deinit = ev_assetloader_deinit,
 		.loadGLTF = ev_assetloader_load_gltf,
 };
 
-struct ev_AssetLoader_Data {
+struct ev_AssetLoader_Data 
+{
 	unsigned int dummy;
 } AssetLoaderData;
 
@@ -120,16 +122,19 @@ static void ev_assetloader_load_gltf_node(cgltf_node curr_node, Entity parent, c
 	}
 }
 
-static int ev_assetloader_load_gltf(const char* path) {
-	cgltf_options options = { 0 };
-	cgltf_data* data = NULL;
-	cgltf_result result = cgltf_parse_file(&options, path, &data);
-	cgltf_load_buffers(&options, data, path);
-	assert(result == cgltf_result_success);
-
+static int ev_assetloader_load_gltf(const char* path) 
+{
 	// Component Module Imports
 	ImportModule(GeometryModule);
 	ImportModule(RenderingModule);
+
+	cgltf_data* data;
+	{
+		cgltf_options options = { 0 };
+		cgltf_result result = cgltf_parse_file(&options, path, &data);
+		cgltf_load_buffers(&options, data, path);
+		assert(result == cgltf_result_success);
+	}
 
 	{
 		MaterialSystem.init();
@@ -141,9 +146,9 @@ static int ev_assetloader_load_gltf(const char* path) {
 	}
 
 	Entity* mesh_entities = malloc(sizeof(Entity) * data->meshes_count);
-	for (unsigned int mesh_idx = 0; mesh_idx < data->meshes_count; ++mesh_idx) {
+	for (unsigned int mesh_idx = 0; mesh_idx < data->meshes_count; ++mesh_idx) 
+	{
 		mesh_entities[mesh_idx] = CreateEntity();
-		/* Entity_SetComponent(mesh_entities[mesh_idx], EcsName, {"Mesh"}); */
 
 		Entity_AddComponent(mesh_entities[mesh_idx], MeshComponent);
 		MeshComponent* meshComp = Entity_GetComponent_mut(mesh_entities[mesh_idx], MeshComponent);
@@ -154,60 +159,60 @@ static int ev_assetloader_load_gltf(const char* path) {
 		for (int primitive_idx = 0; primitive_idx < meshComp->primitives_count; primitive_idx++) 
 		{
 			cgltf_primitive curr_primitive = data->meshes[mesh_idx].primitives[primitive_idx];
-
 			unsigned int indices_count = curr_primitive.indices->count;
+
 			meshComp->primitives[primitive_idx].indexCount = indices_count;
 			meshComp->primitives[primitive_idx].indexBuffer = malloc(indices_count * sizeof(unsigned int));
-			for (unsigned int idx = 0; idx < indices_count; ++idx) {
+			for (unsigned int idx = 0; idx < indices_count; ++idx) 
+			{
 				meshComp->primitives[primitive_idx].indexBuffer[idx] = cgltf_accessor_read_index(curr_primitive.indices, idx);
 			}
 
-			/* ev_log_info("Indices loaded for mesh #%d, primitive #%d", mesh_idx, primitive_idx); */
-			/* for(unsigned int idx = 0; idx < indices_count; ++idx) */
-			/*   printf("%u, ", meshComp->primitives[primitive_idx].indexBuffer[idx]); */
-			/* printf("\n"); */
-			/* ev_log_info("End of Indices"); */
+			for (unsigned int attribute_idx = 0; attribute_idx < curr_primitive.attributes_count; attribute_idx++) 
+			{
+				unsigned int vertex_count = ev_assetloader_get_vertex_count(&curr_primitive);
+				meshComp->primitives[primitive_idx].vertexCount = vertex_count;
 
-			for (unsigned int attribute_idx = 0; attribute_idx < curr_primitive.attributes_count; attribute_idx++) {
-				switch (curr_primitive.attributes[attribute_idx].type) {
-				// Positions Buffer
-				case cgltf_attribute_type_position:
+				switch (curr_primitive.attributes[attribute_idx].type) 
 				{
-					unsigned int vertex_count = curr_primitive.attributes[attribute_idx].data->count;
-					meshComp->primitives[primitive_idx].vertexCount = vertex_count;
-					meshComp->primitives[primitive_idx].positionBuffer = malloc(vertex_count * sizeof(ev_Vector3));
-					for (unsigned int vertex_idx = 0; vertex_idx < vertex_count; ++vertex_idx) {
-						cgltf_accessor_read_float(curr_primitive.attributes[attribute_idx].data, vertex_idx,
-							(cgltf_float*)&meshComp->primitives[primitive_idx].positionBuffer[vertex_idx], 3);
-					}
-
-					/* ev_log_info("Positions loaded for mesh #%d, primitive #%d", mesh_idx, primitive_idx); */
-					/* for(unsigned int vertex_idx = 0; vertex_idx < vertex_count; ++vertex_idx) */
-					/*   printf("\t\tVertex #%d: ( %f, %f, %f)\n", vertex_idx, */
-					/*       meshComp->primitives[primitive_idx].positionBuffer[vertex_idx].x, */
-					/*       meshComp->primitives[primitive_idx].positionBuffer[vertex_idx].y, */
-					/*       meshComp->primitives[primitive_idx].positionBuffer[vertex_idx].z */
-					/*       ); */
-					/* ev_log_info("End of Positions"); */
-				}
-				break;
-
-				//Normal buffer 
-				case cgltf_attribute_type_normal:
-				{
-					unsigned int vertex_count = curr_primitive.attributes[attribute_idx].data->count;
-					meshComp->primitives[primitive_idx].vertexCount = vertex_count;
-					meshComp->primitives[primitive_idx].normalBuffer = malloc(vertex_count * sizeof(ev_Vector3));
-					for (unsigned int vertex_idx = 0; vertex_idx < vertex_count; ++vertex_idx)
+					// Positions Buffer
+					case cgltf_attribute_type_position:
 					{
-						cgltf_accessor_read_float(curr_primitive.attributes[attribute_idx].data, vertex_idx,
-							(cgltf_float*)&meshComp->primitives[primitive_idx].normalBuffer[vertex_idx], 3);
+						meshComp->primitives[primitive_idx].positionBuffer = malloc(vertex_count * sizeof(ev_Vector3));
+						for (unsigned int vertex_idx = 0; vertex_idx < vertex_count; ++vertex_idx) 
+						{
+							cgltf_accessor_read_float(curr_primitive.attributes[attribute_idx].data, vertex_idx,
+								(cgltf_float*)&meshComp->primitives[primitive_idx].positionBuffer[vertex_idx], 3);
+						}
 					}
-				}
-				break;
-
-				default:
 					break;
+
+					//Normal buffer 
+					case cgltf_attribute_type_normal:
+					{
+						meshComp->primitives[primitive_idx].normalBuffer = malloc(vertex_count * sizeof(ev_Vector3));
+						for (unsigned int vertex_idx = 0; vertex_idx < vertex_count; ++vertex_idx)
+						{
+							cgltf_accessor_read_float(curr_primitive.attributes[attribute_idx].data, vertex_idx,
+								(cgltf_float*)&meshComp->primitives[primitive_idx].normalBuffer[vertex_idx], 3);
+						}
+					}
+					break;
+
+					//UV buffer 
+					case cgltf_attribute_type_texcoord:
+					{
+						meshComp->primitives[primitive_idx].uvBuffer = malloc(vertex_count * sizeof(ev_Vector2));
+						for (unsigned int vertex_idx = 0; vertex_idx < vertex_count; ++vertex_idx) 
+						{
+							cgltf_accessor_read_float(curr_primitive.attributes[attribute_idx].data, vertex_idx,
+								(cgltf_float*)&meshComp->primitives[primitive_idx].uvBuffer[vertex_idx], 2);
+						}
+					}
+					break;
+
+					default:
+						break;
 				}
 			}
 		}
@@ -215,20 +220,25 @@ static int ev_assetloader_load_gltf(const char* path) {
 
 	// Giving a RenderingComponent to the mesh entities so that all instanced entities
 	// have the same RenderingComponent
-	for (unsigned int mesh_idx = 0; mesh_idx < data->meshes_count; ++mesh_idx) {
+	for (unsigned int mesh_idx = 0; mesh_idx < data->meshes_count; ++mesh_idx) 
+	{
 		// This should be done at the beginning of the function as this leads to a switch in
 		// the archetype and, in turn, leads to a change in the internal data layout.
 		Entity_AddComponent(mesh_entities[mesh_idx], RenderingComponent);
 
 		const MeshComponent* meshComp = Entity_GetComponent(mesh_entities[mesh_idx], MeshComponent);
 		RenderingComponent* rendComp = Entity_GetComponent_mut(mesh_entities[mesh_idx], RenderingComponent);
-		for (unsigned int primitive_idx = 0; primitive_idx < meshComp->primitives_count; ++primitive_idx) {
+		for (unsigned int primitive_idx = 0; primitive_idx < meshComp->primitives_count; ++primitive_idx) 
+		{
 			MeshPrimitive meshPrim = meshComp->primitives[primitive_idx];
 			PrimitiveRenderData primRendData;
 			primRendData.indexCount = meshPrim.indexCount;
-			primRendData.indexBufferId = Renderer.registerIndexBuffer(meshPrim.indexBuffer, meshPrim.indexCount * sizeof(*meshPrim.indexBuffer));
+
+			primRendData.indexBufferId  = Renderer.registerIndexBuffer(meshPrim.indexBuffer, meshPrim.indexCount * sizeof(*meshPrim.indexBuffer));
 			primRendData.vertexBufferId = Renderer.registerVertexBuffer((real*)meshPrim.positionBuffer, meshPrim.vertexCount * sizeof(*meshPrim.positionBuffer));
-			//primRendData.normalBufferId = (primRendData.normalBufferId == NULL) ? ~0u : Renderer.registerNormalBuffer((real*)meshPrim.normalBuffer, meshPrim.vertexCount * sizeof(*meshPrim.normalBuffer));
+			primRendData.normalBufferId = (meshPrim.normalBuffer == NULL) ? ~0u : Renderer.registerNormalBuffer((real*)meshPrim.normalBuffer, meshPrim.vertexCount * sizeof(*meshPrim.normalBuffer));
+			//primRendData.uvBufferId     = (meshPrim.uvBuffer     == NULL) ? ~0u : Renderer.registerUVBuffer((real*)meshPrim.uvBuffer, meshPrim.vertexCount * sizeof(*meshPrim.uvBuffer));
+			
 			vec_push(&rendComp->meshRenderData.primitives, primRendData);
 		}
 		rendComp->meshRenderData.pipelineType = EV_GRAPHICS_PIPELINE_PBR;
@@ -249,4 +259,15 @@ static int ev_assetloader_load_gltf(const char* path) {
 
 	free(mesh_entities);
 	return 0;
+}
+
+static unsigned int ev_assetloader_get_vertex_count(cgltf_primitive *curr_primitive)
+{
+	for (unsigned int attribute_idx = 0; attribute_idx < curr_primitive->attributes_count; attribute_idx++) 
+	{
+		if (curr_primitive->attributes[attribute_idx].type == cgltf_attribute_type_position) 
+		{
+			return curr_primitive->attributes[attribute_idx].data->count;
+		}
+	}
 }
