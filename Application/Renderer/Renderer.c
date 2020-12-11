@@ -341,7 +341,8 @@ static int ev_renderer_startframe(ev_RenderCamera *camera)
     resourceDescriptorSet,
     materialDescriptorSet,
     textureDescriptorSet,
-    normalDescriptorSet
+    normalDescriptorSet,
+    uvDescriptorSet
   };
 
   RendererBackend.bindPipeline(EV_GRAPHICS_PIPELINE_BASE);
