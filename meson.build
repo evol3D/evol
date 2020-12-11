@@ -51,7 +51,6 @@ srcfiles = files('src/main.c',
             'Application/World/modules/geometry_module.c',
             'Application/World/modules/rendering_module.c',
             'Application/World/modules/camera_module.c',
-            'Application/World/modules/node_module.c',
             'Application/Asset/AssetLoader.c',
             'Application/EventDebug/EventDebug.c',
             'include/events/MouseEvent.c',
@@ -81,7 +80,7 @@ evol_exe = executable( 'evol', srcfiles,
     cglm_dep,
     vec_dep,
     vma_dep,
-    ],
-  )
+  ],
+)
 
 subdir('scripts')

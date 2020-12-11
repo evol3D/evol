@@ -10,14 +10,14 @@ typedef struct
   ev_Matrix4 worldTransform EV_ALIGN(16);
 } TransformComponent EV_ALIGN(16);
 
-typedef struct
-{
-  ECS_DECLARE_COMPONENT(TransformComponent);
-} TransformModule;
+ECS_COMPONENT_EXTERN(TransformComponent);
 
-void TransformModuleImport(ecs_world_t *world);
+void SetTransform(ecs_iter_t *it);
 
-#define TransformModuleImportHandles(module)\
-  ECS_IMPORT_COMPONENT(module, TransformComponent);
+#define DEFINE_COMPONENTS_TRANSFORM(world) \
+  ECS_COMPONENT_DEFINE(world, TransformComponent)
+
+#define REGISTER_SYSTEMS_TRANSFORM(world) \
+  ECS_SYSTEM(world, SetTransform, EcsOnSet, CASCADE: TransformComponent, TransformComponent)
 
 #endif

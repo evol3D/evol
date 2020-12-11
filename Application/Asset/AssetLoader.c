@@ -42,13 +42,6 @@ static int ev_assetloader_deinit()
 
 static void ev_assetloader_load_gltf_node(cgltf_node curr_node, Entity parent, cgltf_data *data, Entity *mesh_entities)
 {
-    // World module imports
-    ImportModule(TransformModule);
-    ImportModule(GeometryModule);
-    ImportModule(PhysicsModule);
-    ImportModule(NodeModule);
-    ImportModule(RenderingModule);
-
     Entity curr;
 
     if(parent)
@@ -134,10 +127,6 @@ static int ev_assetloader_load_gltf(const char *path)
   cgltf_result result = cgltf_parse_file(&options, path, &data);
   cgltf_load_buffers(&options, data, path);
   assert(result == cgltf_result_success);
-
-  // Component Module Imports
-  ImportModule(GeometryModule);
-  ImportModule(RenderingModule);
 
   Entity *mesh_entities = malloc(sizeof(Entity) * data->meshes_count);
   for(unsigned int mesh_idx = 0; mesh_idx < data->meshes_count; ++mesh_idx)

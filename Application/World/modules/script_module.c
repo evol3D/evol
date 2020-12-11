@@ -1,22 +1,18 @@
 //TODO Comments / Logging
 #include "script_module.h"
 
-void RunOnUpdate(ecs_iter_t *it)
-{
-  ECS_COLUMN(it, ScriptComponent, script, 1);
+ECS_COMPONENT_DECLARE(ScriptComponent);
+ECS_COMPONENT_DECLARE(CScriptOnUpdate);
+ECS_COMPONENT_DECLARE(CScriptOnCollision);
 
-  // Somehow run the OnUpdate function in the script
-  printf("Scriptname: %s, OnUpdate\n", script->script_path);
+void RunOnUpdateC(ecs_iter_t *it)
+{
+  ECS_COLUMN(it, CScriptOnUpdate, script, 1);
+
+  for(int i = 0; i < it->count; ++i)
+  {
+    script[i].fn(it->entities[i]);
+  }
 }
 
-void ScriptModuleImport(ecs_world_t *world)
-{
-  ECS_MODULE(world, ScriptModule);
 
-  ECS_COMPONENT(world, ScriptComponent);
-
-  ECS_SYSTEM(world, RunOnUpdate, EcsOnUpdate, ScriptComponent);
-
-  ECS_EXPORT_COMPONENT(ScriptComponent);
-  ECS_EXPORT_ENTITY(RunOnUpdate);
-}

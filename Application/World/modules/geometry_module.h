@@ -22,16 +22,16 @@ typedef struct
   unsigned int primitives_count;
 } MeshComponent;
 
+ECS_COMPONENT_EXTERN(MeshComponent);
+
 // TODO: Auto free `MeshPrimitive* primitives` on component destroy
 
-typedef struct
-{
-  ECS_DECLARE_COMPONENT(MeshComponent);
-} GeometryModule;
+#define DEFINE_COMPONENTS_GEOMETRY(world) \
+  ECS_COMPONENT_DEFINE(world, MeshComponent)
 
-void GeometryModuleImport(ecs_world_t *world);
+#define REGISTER_SYSTEMS_GEOMETRY(world) \
 
-#define GeometryModuleImportHandles(module)\
-  ECS_IMPORT_COMPONENT(module, MeshComponent);\
+
+
 
 #endif

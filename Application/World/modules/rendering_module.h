@@ -9,17 +9,17 @@ typedef struct
   MeshRenderData meshRenderData;
 } RenderingComponent;
 
-typedef struct
-{
-  ECS_DECLARE_COMPONENT(RenderingComponent);
-  /* ECS_DECLARE_COMPONENT(component); */
-  /* ECS_DECLARE_TYPE(type); */
-} RenderingModule;
+ECS_COMPONENT_EXTERN(RenderingComponent);
 
-void RenderingModuleImport(ecs_world_t *world);
+void OnAddRenderingComponent(ecs_iter_t *it);
+void OnRemoveRenderingComponent(ecs_iter_t *it);
 
-#define RenderingModuleImportHandles(module)\
-  ECS_IMPORT_COMPONENT(module, RenderingComponent);\
-/*   ECS_IMPORT_TYPE(module, type); */
+#define DEFINE_COMPONENTS_RENDERING(world) \
+  ECS_COMPONENT_DEFINE(world, RenderingComponent)
+
+#define REGISTER_SYSTEMS_RENDERING(world) \
+  ECS_TRIGGER(world, OnAddRenderingComponent, EcsOnAdd, RenderingComponent); \
+  ECS_TRIGGER(world, OnRemoveRenderingComponent, EcsOnRemove, RenderingComponent)
+
 
 #endif
