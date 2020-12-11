@@ -1,25 +1,5 @@
 #version 450
-
 #extension GL_EXT_nonuniform_qualifier : require
-
-struct material
-{
-	uint albedoTexture;
-	vec4 albdoFactor;
-
-	uint metalic_RoughnessTexture;
-	float metalicFactor;
-	float roughnessFactor;
-
-	uint normalTexture;
-	float normalScale;
-
-	uint occlusionTexture;
-	float occlusionStrength;
-
-	uint emissiveTexture;
-	vec3 emissiveFactor;
-};
 
 layout (push_constant) uniform PushConstant
 {
@@ -36,20 +16,17 @@ layout(set = 1, binding = 0) buffer VertexBuffer {
   layout(align = 16) vec3 vertices[];
 } VertexBuffers[];
 
-layout(set = 2, binding = 0) buffer materials
-{
-    material m[];
-};
+layout(set = 5, binding = 0) buffer uvBuffer {
+  layout(align = 16) vec2 uvs[];
+} UVBuffers[];
 
-layout(set = 3, binding = 0) uniform sampler2D texSampler[];
-
-layout(location=0) out vec4 color;
+layout (location = 0) out vec2 outuv;
 
 void main()
 {
-	material m1 = m[0];
-	vec2 a = vec2(0,0);
-	texture(texSampler[0], a);
-  gl_Position = Camera.projection * Camera.view * RenderData.model * vec4(VertexBuffers[nonuniformEXT(RenderData.vertexBufferIndex)].vertices[gl_VertexIndex], 1);
-  color = gl_Position;
+  outuv =  UVBuffers[nonuniformEXT(0)].uvs[gl_VertexIndex];
+  //vec3 pos = VertexBuffers[nonuniformEXT(RenderData.vertexBufferIndex)].vertices[gl_VertexIndex].xyz;
+  
+ gl_Position = Camera.projection * Camera.view * vec4(VertexBuffers[nonuniformEXT(RenderData.vertexBufferIndex)].vertices[gl_VertexIndex], 1);
+//gl_Position =  Camera.projection * Camera.view * vec4(VertexBuffers[nonuniformEXT(RenderData.vertexBufferIndex)].vertices[gl_VertexIndex], 1);
 }
