@@ -16,8 +16,9 @@ static int ev_renderer_endframe();
 
 static void ev_renderer_draw(MeshRenderData meshRenderData, ev_Matrix4 transformMatrix);
 
+static unsigned int ev_renderer_registeruvbuffer(real* uvs, unsigned long long size);
+static unsigned int ev_renderer_registernormalbuffer(real* normals, unsigned long long size);
 static unsigned int ev_renderer_registervertexbuffer(real* vertices, unsigned long long size);
-static unsigned int ev_renderer_registernormalbuffer(real* uvs, unsigned long long size);
 static unsigned int ev_renderer_registerindexbuffer(unsigned int *indices, unsigned long long size);
 
 static void ev_renderer_registertexturebuffer(Texture* texture);
@@ -42,6 +43,7 @@ struct ev_Renderer Renderer = {
   .registerIndexBuffer = ev_renderer_registerindexbuffer,
   .registerVertexBuffer = ev_renderer_registervertexbuffer,
   .registerNormalBuffer = ev_renderer_registernormalbuffer,
+  .registerUVBuffer = ev_renderer_registeruvbuffer,
 
   .registertexture = ev_renderer_registertexturebuffer,
   .registerImageslBuffer = ev_renderer_registerimagebuffer,
@@ -55,6 +57,7 @@ struct ev_Renderer_Data {
   MemoryBufferVec indexBuffers;
   MemoryBufferVec vertexBuffers;
   MemoryBufferVec normalBuffers;
+  MemoryBufferVec uvBuffers;
 
   MemoryBuffer materialBuffer;
   MemoryTextureVec textureBuffers;
@@ -123,24 +126,41 @@ static int ev_renderer_deinit()
   return 0;
 }
 
-static unsigned int ev_renderer_registerindexbuffer(unsigned int *indices, unsigned long long size)
-{
-  unsigned int idx = RendererData.indexBuffers.length;
+static unsigned int ev_renderer_registeruvbuffer(real* uvs, unsigned long long size) {
+    unsigned int idx = RendererData.uvBuffers.length;
 
-  MemoryBuffer newIndexBuffer;
-  RendererBackend.allocateBufferInPool(RendererData.resourcePool, size, EV_BUFFER_USAGE_INDEX_BUFFER_BIT, &newIndexBuffer);
+    MemoryBuffer newUVBuffer;
+    RendererBackend.allocateBufferInPool(RendererData.resourcePool, size, EV_USAGEFLAGS_RESOURCE_BUFFER, &newUVBuffer);
 
-  MemoryBuffer indexStagingBuffer;
-  RendererBackend.allocateStagingBuffer(size, &indexStagingBuffer);
-  RendererBackend.updateStagingBuffer(&indexStagingBuffer, size, indices); 
-  RendererBackend.copyBuffer(size, &indexStagingBuffer, &newIndexBuffer);
+    MemoryBuffer uvStagingBuffer;
+    RendererBackend.allocateStagingBuffer(size, &uvStagingBuffer);
+    RendererBackend.updateStagingBuffer(&uvStagingBuffer, size, uvs);
+    RendererBackend.copyBuffer(size, &uvStagingBuffer, &newUVBuffer);
 
-  //TODO We should have a system that controls staging buffers
-  RendererBackend.freeMemoryBuffer(&indexStagingBuffer);
+    //TODO We should have a system that controls staging buffers
+    RendererBackend.freeMemoryBuffer(&uvStagingBuffer);
 
-  vec_push(&RendererData.indexBuffers, newIndexBuffer);
+    vec_push(&RendererData.uvBuffers, newUVBuffer);
 
-  return idx;
+    return idx;
+}
+static unsigned int ev_renderer_registernormalbuffer(real* normals, unsigned long long size) {
+    unsigned int idx = RendererData.normalBuffers.length;
+
+    MemoryBuffer newNormalBuffer;
+    RendererBackend.allocateBufferInPool(RendererData.resourcePool, size, EV_USAGEFLAGS_RESOURCE_BUFFER, &newNormalBuffer);
+
+    MemoryBuffer normalStagingBuffer;
+    RendererBackend.allocateStagingBuffer(size, &normalStagingBuffer);
+    RendererBackend.updateStagingBuffer(&normalStagingBuffer, size, normals);
+    RendererBackend.copyBuffer(size, &normalStagingBuffer, &newNormalBuffer);
+
+    //TODO We should have a system that controls staging buffers
+    RendererBackend.freeMemoryBuffer(&normalStagingBuffer);
+
+    vec_push(&RendererData.normalBuffers, newNormalBuffer);
+
+    return idx;
 }
 static unsigned int ev_renderer_registervertexbuffer(real *vertices, unsigned long long size)
 {
@@ -161,42 +181,26 @@ static unsigned int ev_renderer_registervertexbuffer(real *vertices, unsigned lo
 
   return idx;
 }
-static unsigned int ev_renderer_registernormalbuffer(real* uvs, unsigned long long size) 
-{
-    unsigned int idx = RendererData.normalBuffers.length;
+static unsigned int ev_renderer_registerindexbuffer(unsigned int* indices, unsigned long long size) {
+    unsigned int idx = RendererData.indexBuffers.length;
 
-    MemoryBuffer newNormalBuffer;
-    RendererBackend.allocateBufferInPool(RendererData.resourcePool, size, EV_USAGEFLAGS_RESOURCE_BUFFER, &newNormalBuffer);
+    MemoryBuffer newIndexBuffer;
+    RendererBackend.allocateBufferInPool(RendererData.resourcePool, size, EV_BUFFER_USAGE_INDEX_BUFFER_BIT, &newIndexBuffer);
 
-    MemoryBuffer normalStagingBuffer;
-    RendererBackend.allocateStagingBuffer(size, &normalStagingBuffer);
-    RendererBackend.updateStagingBuffer(&normalStagingBuffer, size, uvs);
-    RendererBackend.copyBuffer(size, &normalStagingBuffer, &newNormalBuffer);
+    MemoryBuffer indexStagingBuffer;
+    RendererBackend.allocateStagingBuffer(size, &indexStagingBuffer);
+    RendererBackend.updateStagingBuffer(&indexStagingBuffer, size, indices);
+    RendererBackend.copyBuffer(size, &indexStagingBuffer, &newIndexBuffer);
 
     //TODO We should have a system that controls staging buffers
-    RendererBackend.freeMemoryBuffer(&normalStagingBuffer);
+    RendererBackend.freeMemoryBuffer(&indexStagingBuffer);
 
-    vec_push(&RendererData.normalBuffers, newNormalBuffer);
+    vec_push(&RendererData.indexBuffers, newIndexBuffer);
 
     return idx;
 }
 
-static void ev_renderer_registermaterialbuffer(Material* materials, unsigned long long size) 
-{
-    MemoryBuffer newMaterialBuffer;
-    RendererBackend.allocateBufferInPool(RendererData.resourcePool, size, EV_USAGEFLAGS_RESOURCE_BUFFER, &newMaterialBuffer);
-
-    MemoryBuffer materialStagingBuffer;
-    RendererBackend.allocateStagingBuffer(size, &materialStagingBuffer);
-    RendererBackend.updateStagingBuffer(&materialStagingBuffer, size, materials);
-    RendererBackend.copyBuffer(size, &materialStagingBuffer, &newMaterialBuffer);
-
-    RendererBackend.freeMemoryBuffer(&materialStagingBuffer);
-
-    RendererData.materialBuffer = newMaterialBuffer;
-}
-static void ev_renderer_registertexturebuffer(Texture *texture) 
-{
+static void ev_renderer_registertexturebuffer(Texture* texture) {
     EvImage newImageBuffer;
     VkImageView imageView;
     ev_renderer_registerimagebuffer(texture->imageIndex, &newImageBuffer, &imageView);
@@ -233,6 +237,20 @@ static void ev_renderer_registertexturebuffer(Texture *texture)
     };
     vec_push(&RendererData.textureBuffers, evtexture);
 }
+static void ev_renderer_registermaterialbuffer(Material* materials, unsigned long long size) 
+{
+    MemoryBuffer newMaterialBuffer;
+    RendererBackend.allocateBufferInPool(RendererData.resourcePool, size, EV_USAGEFLAGS_RESOURCE_BUFFER, &newMaterialBuffer);
+
+    MemoryBuffer materialStagingBuffer;
+    RendererBackend.allocateStagingBuffer(size, &materialStagingBuffer);
+    RendererBackend.updateStagingBuffer(&materialStagingBuffer, size, materials);
+    RendererBackend.copyBuffer(size, &materialStagingBuffer, &newMaterialBuffer);
+
+    RendererBackend.freeMemoryBuffer(&materialStagingBuffer);
+
+    RendererData.materialBuffer = newMaterialBuffer;
+}
 static void ev_renderer_registerimagebuffer(uint32_t imageIndex, EvImage* newImageBuffer, VkImageView* imageView)
 {
     {
@@ -259,12 +277,6 @@ static void ev_renderer_registerimagebuffer(uint32_t imageIndex, EvImage* newIma
     RendererBackend.createImageView(VK_FORMAT_R8G8B8A8_SRGB, newImageBuffer->image, imageView);
 }
 
-stbi_uc* loadImage(char *image,int *width, int *height, int *channel)
-{
-    stbi_uc* pixels = stbi_load(image, width, height, channel, STBI_rgb_alpha);
-    assert(pixels);
-}
-
 static int ev_renderer_startframe(ev_RenderCamera *camera)
 {
   ev_log_trace("Starting API specific new frame initialization : RendererBackend.startNewFrame()");
@@ -279,7 +291,7 @@ static int ev_renderer_startframe(ev_RenderCamera *camera)
   // Update Camera UBO
   RendererBackend.updateUBO(sizeof(ev_RenderCamera), camera, &RendererData.cameraUBO);
 
-  // Create a descriptor set that contains all the resources needed by the shader
+  //vertecies
   DescriptorSet resourceDescriptorSet;
   RendererBackend.allocateDescriptorSet(EV_DESCRIPTOR_SET_LAYOUT_BUFFER_ARR, &resourceDescriptorSet);
   Descriptor *resourceDescriptors = malloc(sizeof(Descriptor) * RendererData.vertexBuffers.length);
@@ -288,6 +300,7 @@ static int ev_renderer_startframe(ev_RenderCamera *camera)
   RendererBackend.pushDescriptorsToSet(resourceDescriptorSet, resourceDescriptors, RendererData.vertexBuffers.length);
   free(resourceDescriptors);
 
+  //materials
   DescriptorSet materialDescriptorSet;
   RendererBackend.allocateDescriptorSet(EV_DESCRIPTOR_SET_LAYOUT_BUFFER_MAT, &materialDescriptorSet);
   Descriptor materialDescriptor = 
@@ -314,6 +327,15 @@ static int ev_renderer_startframe(ev_RenderCamera *camera)
   RendererBackend.pushDescriptorsToSet(normalDescriptorSet, normalDescriptors, RendererData.normalBuffers.length);
   free(normalDescriptors);
 
+  //uvs
+  DescriptorSet uvDescriptorSet;
+  RendererBackend.allocateDescriptorSet(EV_DESCRIPTOR_SET_LAYOUT_BUFFER_UV, &uvDescriptorSet);
+  Descriptor* uvDescriptors = malloc(sizeof(Descriptor) * RendererData.uvBuffers.length);
+  for (int i = 0; i < RendererData.uvBuffers.length; ++i)
+      uvDescriptors[i] = (Descriptor){ EV_DESCRIPTOR_TYPE_STORAGE_BUFFER, &RendererData.uvBuffers.data[i] };
+  RendererBackend.pushDescriptorsToSet(uvDescriptorSet, uvDescriptors, RendererData.uvBuffers.length);
+  free(uvDescriptors);
+
   DescriptorSet descriptorSets[] = {
     cameraDescriptorSet,
     resourceDescriptorSet,
@@ -326,6 +348,11 @@ static int ev_renderer_startframe(ev_RenderCamera *camera)
   RendererBackend.bindDescriptorSets(descriptorSets, ARRAYSIZE(descriptorSets));
 
   return 0;
+}
+static int ev_renderer_endframe() {
+    // TODO Error reporting
+    RendererBackend.endFrame();
+    return 0;
 }
 
 static void ev_renderer_draw(MeshRenderData meshRenderData, ev_Matrix4 transformMatrix)
@@ -350,9 +377,7 @@ static void ev_renderer_draw(MeshRenderData meshRenderData, ev_Matrix4 transform
   }
 }
 
-static int ev_renderer_endframe()
-{
-  // TODO Error reporting
-  RendererBackend.endFrame();
-  return 0;
+stbi_uc* loadImage(char* image, int* width, int* height, int* channel) {
+    stbi_uc* pixels = stbi_load(image, width, height, channel, STBI_rgb_alpha);
+    assert(pixels);
 }

@@ -9,13 +9,14 @@ extern struct ev_Renderer {
   int (*init)();
   int (*deinit)();
 
+  unsigned int (*registerUVBuffer)(real* uvs, unsigned long long size);
+  unsigned int (*registerNormalBuffer)(real* normals, unsigned long long size);
+  unsigned int (*registerVertexBuffer)(real* vertices, unsigned long long size);
   unsigned int (*registerIndexBuffer)(unsigned int *indices, unsigned long long size);
-  unsigned int (*registerVertexBuffer)(real *vertices, unsigned long long size);
-  unsigned int (*registerNormalBuffer)(real *vertices, unsigned long long size);
 
+  void (*registertexture)(Texture* texture);
   void (*registerMaterialBuffer)(Material *materials, unsigned long long size);
-  void (*registerImageslBuffer)(void *pixels, uint32_t width, uint32_t height);
-  void (*registertexture)(Texture *texture);
+  void (*registerImageslBuffer)(uint32_t imageIndex, EvImage* newImageBuffer, VkImageView* imageView);
 
   int (*startFrame)(ev_RenderCamera *camera);
   int (*endFrame)();

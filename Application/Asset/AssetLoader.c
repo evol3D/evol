@@ -237,7 +237,7 @@ static int ev_assetloader_load_gltf(const char* path)
 			primRendData.indexBufferId  = Renderer.registerIndexBuffer(meshPrim.indexBuffer, meshPrim.indexCount * sizeof(*meshPrim.indexBuffer));
 			primRendData.vertexBufferId = Renderer.registerVertexBuffer((real*)meshPrim.positionBuffer, meshPrim.vertexCount * sizeof(*meshPrim.positionBuffer));
 			primRendData.normalBufferId = (meshPrim.normalBuffer == NULL) ? ~0u : Renderer.registerNormalBuffer((real*)meshPrim.normalBuffer, meshPrim.vertexCount * sizeof(*meshPrim.normalBuffer));
-			//primRendData.uvBufferId     = (meshPrim.uvBuffer     == NULL) ? ~0u : Renderer.registerUVBuffer((real*)meshPrim.uvBuffer, meshPrim.vertexCount * sizeof(*meshPrim.uvBuffer));
+			primRendData.uvBufferId     = (meshPrim.uvBuffer     == NULL) ? ~0u : Renderer.registerUVBuffer((real*)meshPrim.uvBuffer, meshPrim.vertexCount * sizeof(*meshPrim.uvBuffer));
 			
 			vec_push(&rendComp->meshRenderData.primitives, primRendData);
 		}
