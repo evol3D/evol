@@ -6,8 +6,6 @@ cc = meson.get_compiler('c')
 RENDERING_BACKEND = 'VULKAN'
 add_project_arguments('-DVULKAN_BACKEND', language : 'c')
 
-# add_project_arguments('-DFLECS_DASHBOARD', language: 'c')
-
 global_incdir = include_directories( './include', './Application', '.')
 add_global_arguments('-Dc_std=c99', language: 'c')
 
@@ -21,9 +19,6 @@ vulk_dep = dependency('Vulkan')
 cmake = import('cmake')
 
 flecs_dep = dependency('flecs')
-flecs_meta_dep = dependency('flecs-meta')
-flecs_dash_dep = dependency('flecs-dash')
-flecs_systems_civetweb_dep = dependency('flecs-systems-civetweb')
 
 evol_eventsystem_proj = subproject('evol-eventsystem')
 evol_eventsystem_dep = evol_eventsystem_proj.get_variable('eventsystem_dependency')
@@ -87,12 +82,8 @@ evol_exe = executable( 'evol', srcfiles,
     cglm_dep,
     vec_dep,
     vma_dep,
-    # debug
-    flecs_meta_dep,
-    flecs_dash_dep,
-    flecs_systems_civetweb_dep,
-    ],
-  )
+  ],
+)
 
 custom_target(
   'env_setup',
