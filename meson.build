@@ -1,6 +1,13 @@
 project('evol', ['c'], version: '0.1', default_options : ['default_library=static'])
 
 cc = meson.get_compiler('c')
+cc_id = cc.get_id()
+
+if cc_id == 'gcc'
+  add_project_arguments('-DEV_CC_GCC', language: 'c')
+elif cc_id == 'msvc'
+  add_project_arguments('-DEV_CC_MSVC', language: 'c')
+endif
 
 # Options: ['VULKAN']
 RENDERING_BACKEND = 'VULKAN'
