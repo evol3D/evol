@@ -20,11 +20,17 @@ function add_module(module_path, module_metadata)
   if not mod_def then
     print(err)
     return -1
-  else
-    mod_def()
-    mod.path = module_path
-    modulesystem.modules[mod.name] = mod
-    modulesystem.size = modulesystem.size + 1
+  end
+
+  mod_def()
+  mod.path = module_path
+  modulesystem.modules[mod.name] = mod
+  modulesystem.size = modulesystem.size + 1
+
+  for _,v in ipairs(mod.categories) do
+    if not modulesystem.categories[v] then
+      modulesystem.categories[v] = mod.name
+    end
   end
 
   return 0
@@ -41,15 +47,10 @@ end
 
 function get_module_with_category(module_category)
   if modulesystem.categories[module_category] then
-    return modulesystem.categories[module_category].path
+    return modulesystem.modules[modulesystem.categories[module_category]].path
+  else
+    return nil
   end
-  for name, data in pairs(modulesystem.modules) do
-    if has_value(data.categories, module_category) then
-      modulesystem.categories[module_category] = data
-      return data.path
-    end
-  end
-  return nil
 end
 
 function get_module(module)
