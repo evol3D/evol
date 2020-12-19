@@ -39,8 +39,8 @@ ev_modulemanager_detect(const char *module_dir)
     int res = 0;
 
     evolmodule_t mod = ev_module_open(*iter);
-    char *(*meta)() = (char*(*)())ev_module_getfn(mod, "getMetadata");
-    if(meta) {
+    char *(*meta)()  = (char *(*)())ev_module_getfn(mod, "getMetadata");
+    if (meta) {
       ev_lua_callfn("add_module", "ss>i", *iter, meta(), &res);
     }
     ev_module_close(mod);
@@ -53,6 +53,12 @@ ev_modulemanager_detect(const char *module_dir)
   }
 
   vec_fini(modules);
+
+  bool valid = false;
+  ev_lua_callfn("validate_modulesystem", ">b", &valid);
+  if (!valid)
+    return EV_MODULEMANAGER_ERROR_DEPENDENCY_INVALID;
+
   return EV_MODULEMANAGER_SUCCESS;
 }
 

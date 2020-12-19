@@ -3,16 +3,6 @@ modulesystem.modules = {}
 modulesystem.size = 0
 modulesystem.categories = {}
 
-local function access(lib, symbol) return lib[symbol] end
-local function has_value(arr, val)
-  for _,v in ipairs(arr) do
-    if(v == val) then
-      return true
-    end
-  end
-  return false
-end
-
 function add_module(module_path, module_metadata)
 
   local mod_def, err = loadstring("mod = " .. module_metadata)
@@ -34,6 +24,17 @@ function add_module(module_path, module_metadata)
   end
 
   return 0
+end
+
+function validate_modulesystem()
+  for _,mod in pairs(modulesystem.modules) do
+    for _,dep in ipairs(mod.dependencies) do
+      if not get_module(dep) then
+        return false
+      end
+    end
+  end
+  return true
 end
 
 function get_module_with_name(module_name)
