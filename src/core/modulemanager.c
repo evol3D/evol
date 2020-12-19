@@ -35,9 +35,15 @@ ev_modulemanager_detect(const char *module_dir)
 #include <src/lua/modulesystem.lua.h>
 
   for (sds *iter = vec_iter_begin(modules); iter != vec_iter_end(modules);
-       vec_iter_next(modules, (void**)&iter)) {
+       vec_iter_next(modules, (void **)&iter)) {
     int res = 0;
-    ev_lua_callfn("add_module", "s>i", *iter, &res);
+
+    evolmodule_t mod = ev_module_open(*iter);
+    char *(*meta)() = (char*(*)())ev_module_getfn(mod, "getMetadata");
+    if(meta) {
+      ev_lua_callfn("add_module", "ss>i", *iter, meta(), &res);
+    }
+    ev_module_close(mod);
 
     if (res) {
       // Do something?

@@ -1,6 +1,3 @@
-local ffi = require 'ffi'
-ffi.cdef[[ const char * getMetadata() ]]
-
 modulesystem = {}
 modulesystem.modules = {}
 modulesystem.size = 0
@@ -16,28 +13,20 @@ local function has_value(arr, val)
   return false
 end
 
-function add_module(module_path)
-  local ev_mod = ffi.load(module_path)
+function add_module(module_path, module_metadata)
 
-  if pcall(access, ev_mod, "getMetadata") then
+  local mod_def, err = loadstring("mod = " .. module_metadata)
 
-    local luadata = ffi.string(ev_mod.getMetadata())
-    local mod_def, err = loadstring("mod = " .. luadata)
-
-    if not mod_def then
-      print(err)
-      return -1
-    else
-      mod_def()
-      mod.path = module_path
-      modulesystem.modules[mod.name] = mod
-      modulesystem.size = modulesystem.size + 1
-    end
-
-  else
-    print("Module '" .. module_path .. "' doesn't implement the getMetadata() function. Ignoring ...")
+  if not mod_def then
+    print(err)
     return -1
+  else
+    mod_def()
+    mod.path = module_path
+    modulesystem.modules[mod.name] = mod
+    modulesystem.size = modulesystem.size + 1
   end
+
   return 0
 end
 
