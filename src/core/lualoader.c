@@ -174,6 +174,9 @@ ev_lua_callfn(const char *fn_name, const char *sig, ...)
     case 's':
       lua_pushstring(L, va_arg(vl, char *));
       break;
+    case 'b':
+      lua_pushboolean(L, va_arg(vl, bool));
+      break;
     case '>':
       sig++;
       goto endwhile;
@@ -217,6 +220,12 @@ endwhile:
         luaL_error(L, "Wrong result type");
       }
       *va_arg(vl, const char **) = lua_tostring(L, nres);
+      break;
+    case 'b':
+      if(!lua_isboolean(L, nres)) {
+        luaL_error(L, "Wrong result type");
+      }
+      *va_arg(vl, bool *) = lua_toboolean(L, nres);
       break;
     default:
       luaL_error(L, "invalid option (%c)", *(sig - 1));
