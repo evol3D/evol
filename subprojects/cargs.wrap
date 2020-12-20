@@ -1,0 +1,7 @@
+[wrap-git]
+directory = cargs
+url = https://github.com/likle/cargs
+revision = master
+depth = 1
+
+; patch_directory = 
