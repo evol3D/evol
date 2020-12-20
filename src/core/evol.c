@@ -13,6 +13,7 @@
 #include <evol/core/modulemanager.h>
 
 #include <evol/meta/configvars.h>
+#include <time.h>
 
 typedef struct evconfig {
   char        name[EV_ENGINE_NAME_MAXLEN + 1];
@@ -94,6 +95,7 @@ evol_init(evolengine_t *evengine)
   if (luaLoader_init_result != EV_LUALOADER_SUCCESS) {
     ev_log_error("LuaLoader error: %s",
                  RES_STRING(EvLuaLoaderResult, luaLoader_init_result));
+    return EV_ENGINE_ERROR_LUA;
   }
 
   if (evengine->config.configfile) {
@@ -102,7 +104,13 @@ evol_init(evolengine_t *evengine)
       return luaConfig_load_result;
   }
 
-  ev_modulemanager_detect(evengine->config.module_directory);
+  EvModuleManagerResult modulemanager_det_result =
+    ev_modulemanager_detect(evengine->config.module_directory);
+  if (modulemanager_det_result != EV_MODULEMANAGER_SUCCESS) {
+    ev_log_error("ModuleManager error: %s",
+                 RES_STRING(EvModuleManagerResult, modulemanager_det_result));
+    return EV_ENGINE_ERROR_MODULEMANAGER;
+  }
 
   return EV_ENGINE_SUCCESS;
 }
@@ -164,6 +172,8 @@ evol_loadmodule(const char *modquery)
 inline void
 evol_unloadmodule(evolmodule_t module)
 {
+  if (!module)
+    return;
   ev_module_close(module);
 }
 

@@ -10,9 +10,26 @@
 #define RES_TYPE EvLuaLoaderResult
 #include <evol/meta/resdef.h>
 
+/*
+ * \brief Returns whether the lualoader is initialized or not
+ *
+ * \returns
+ * - `true` if initialized
+ * - `false` otherwise
+ */
 bool
 ev_lua_isactive(void);
 
+/*
+ * \brief Initializes the lualoader
+ *
+ * \details
+ * Creates a new lua state and loads the base lua libraries in it.
+ *
+ * \returns
+ * If the lua state creation was successful, returns `EV_LUALOADER_SUCCESS`,
+ * otherwise returns `EV_LUALOADER_INITIALIZATION_ERROR_STATECREATIONFAILED`
+ */
 EvLuaLoaderResult
 ev_lua_init(void);
 
