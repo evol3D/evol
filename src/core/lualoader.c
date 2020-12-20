@@ -1,3 +1,6 @@
+/*!
+ * \file lualoader.c
+ */
 #include <evol/core/lualoader.h>
 #include <evol/common/ev_log.h>
 
@@ -222,7 +225,7 @@ endwhile:
       *va_arg(vl, const char **) = lua_tostring(L, nres);
       break;
     case 'b':
-      if(!lua_isboolean(L, nres)) {
+      if (!lua_isboolean(L, nres)) {
         luaL_error(L, "Wrong result type");
       }
       *va_arg(vl, bool *) = lua_toboolean(L, nres);

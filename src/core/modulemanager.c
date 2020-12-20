@@ -1,3 +1,6 @@
+/*!
+ * \file modulemanager.c
+ */
 #include "evol/common/types/vec.h"
 #include <evol/core/modulemanager.h>
 #include <evol/core/lualoader.h>

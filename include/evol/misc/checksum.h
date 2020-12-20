@@ -1,3 +1,6 @@
+/*!
+ * \file checksum.h
+ */
 #pragma once
 
 #include <stdint.h>

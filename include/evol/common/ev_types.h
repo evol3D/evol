@@ -1,13 +1,14 @@
+/*!
+ * \file ev_types.h
+ */
 #pragma once
 
 #include <stdint.h>
 #include <stdbool.h>
 
-#include <evol/common/ev_macros.h>
-
-#define RES_PREFIX EV_
-#define RES_FILE <evol/meta/results/evolresults.h>
-#define RES_TYPE EvResult
+#define RES_PREFIX EV_ /*!< The prefix of all error types defined. */
+#define RES_FILE <evol/meta/results/evolresults.h> /*!< The file in which the result types are defined. */
+#define RES_TYPE EvResult /*!< The name of the result enum that this file defines. */
 #include <evol/meta/resdef.h>
 
 #include <evol/common/types/vec.h>

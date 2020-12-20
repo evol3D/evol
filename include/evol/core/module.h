@@ -1,3 +1,6 @@
+/*!
+ * \file module.h
+ */
 #pragma once
 
 typedef void *evolmodule_t;

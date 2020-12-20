@@ -1,3 +1,6 @@
+/*!
+ * \file lualoader.h
+ */
 #pragma once
 
 #include <evol/common/ev_types.h>

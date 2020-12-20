@@ -1,3 +1,6 @@
+/*!
+ * \file resdef.h
+ */
 
 #include <evol/common/ev_macros.h>
 

@@ -1,3 +1,6 @@
+/*!
+ * \file module.c
+ */
 #include <evol/core/module.h>
 
 #if defined(EV_CC_GCC)

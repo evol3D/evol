@@ -1,3 +1,6 @@
+/*!
+ * \file modulemanager.h
+ */
 #pragma once
 
 #include <evol/common/ev_types.h>

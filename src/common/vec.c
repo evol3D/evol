@@ -1,14 +1,22 @@
+/*!
+ * \file vec.c
+ */
 #include <evol/common/types/vec.h>
 #include <stdlib.h>
 #include <string.h>
 
+//! Metadata that is stored with a vector. Unique to each vector.
 struct vec_meta {
+  //! The number of elements in the vector.
   size_t length;
+  //! The maximum length of the vector before it needs to be resized.
   size_t capacity;
-
+  //! The size (in bytes) of memory that each element takes.
   size_t elemsize;
 
-  elem_copy  copy_fn;
+  //! If set, the vector uses this function to copy new values into the vector.
+  elem_copy copy_fn;
+  //! If set, the vector uses this function to destroy stored values.
   elem_destr destr_fn;
 };
 
@@ -66,8 +74,6 @@ vec_fini(vec_t v)
   }
   free((char *)v - sizeof(struct vec_meta));
 }
-
-#define vec_init(type, copy, destr) vec_init_impl(sizeof(type), copy, destr)
 
 int32_t
 vec_push(vec_t *v, void *val)

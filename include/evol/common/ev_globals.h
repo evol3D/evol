@@ -1,3 +1,6 @@
+/*!
+ * \file ev_globals.h
+ */
 #pragma once
 
 #define EV_ENGINE_NAME_MAXLEN 255

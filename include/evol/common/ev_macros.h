@@ -1,3 +1,6 @@
+/*!
+ * \file ev_macros.h
+ */
 #pragma once
 
 #if defined(EV_CC_MSVC)

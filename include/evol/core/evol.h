@@ -1,3 +1,6 @@
+/*!
+ * \file evol.h
+ */
 #pragma once
 
 #include <evol/common/ev_types.h>
@@ -15,6 +18,9 @@ evol_create();
 void
 evol_destroy(evolengine_t *engine);
 
+/*! \fn EvEngineResult evol_init(evolengine_t *engine)
+    \brief Initializes the engine.
+*/
 EvEngineResult
 evol_init(evolengine_t *engine);
 

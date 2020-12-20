@@ -1,3 +1,6 @@
+/*!
+ * \file lualoaderresults.h
+ */
 // Initialization Codes
 RESULT_VAL(SUCCESS, EV_SUCCESS)
 RESULT(INITIALIZATION_ERROR_STATECREATIONFAILED)

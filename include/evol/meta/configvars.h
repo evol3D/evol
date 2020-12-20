@@ -1,3 +1,6 @@
+/*!
+ * \file configvars.h
+ */
 #pragma once
 
 #define CONFIGVAR_NAME "name"

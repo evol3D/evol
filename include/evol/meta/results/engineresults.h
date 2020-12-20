@@ -1,2 +1,5 @@
+/*!
+ * \file engineresults.h
+ */
 RESULT_VAL(SUCCESS, EV_SUCCESS)
 RESULT_VAL(ERROR_OOM, EV_ERROR_OOM)
