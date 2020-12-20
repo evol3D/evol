@@ -82,7 +82,7 @@ PenaltyExcessCharacter: 10
 PenaltyReturnTypeOnItsOwnLine: 100
 
 PointerAlignment: Right
-ReflowComments: true
+ReflowComments: false
 SortIncludes: false
 SpaceAfterCStyleCast: false
 SpaceAfterTemplateKeyword: true
