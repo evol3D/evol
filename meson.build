@@ -9,8 +9,6 @@ default_options : [
   build_demo = true
   build_modules = true
 
-  header_install = true
-
   # Project Options
   colored_logging = true
 
@@ -50,9 +48,6 @@ default_options : [
   ]
 
   subdir('src')
-  if header_install
-    subdir('include')
-  endif
 
   evol_c_args = []
 
