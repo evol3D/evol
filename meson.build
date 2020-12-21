@@ -12,27 +12,6 @@ default_options : [
   # Project Options
   colored_logging = true
 
-
-  cc = meson.get_compiler('c')
-  cc_id = cc.get_id()
-
-  if cc_id == 'gcc'
-    add_project_arguments('-DEV_CC_GCC', language: 'c')
-  elif cc_id == 'msvc'
-    add_project_arguments('-DEV_CC_MSVC', language: 'c')
-  else
-    add_project_arguments('-DEV_CC_UNKNOWN', language: 'c')
-  endif
-
-  os = build_machine.system()
-  if os == 'windows'
-    add_project_arguments('-DEV_OS_WINDOWS', language: 'c')
-  elif os == 'linux'
-    add_project_arguments('-DEV_OS_LINUX', language: 'c')
-  else
-    add_project_arguments('-DEV_OS_UNKNOWN', language: 'c')
-  endif
-
   if build_modules
     subdir('modules')
   endif

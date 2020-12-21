@@ -3,6 +3,22 @@
  */
 #pragma once
 
+#if defined(_WIN32)
+#define EV_OS_WINDOWS
+#elif defined(__linux__)
+#define EV_OS_LINUX
+#else
+/* Unknown OS */
+#endif
+
+#if defined(_MSC_VER)
+#define EV_CC_MSVC
+#elif defined(__GNUC__)
+#define EV_CC_GCC
+#else
+/* Unknown Compiler */
+#endif
+
 #if defined(EV_CC_MSVC)
 
 #define EV_EXPORT
