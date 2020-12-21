@@ -5,18 +5,12 @@ default_options : [
   'default_library=static'
   ])
 
-  # Build Options
-  build_demo = true
-  build_modules = true
-
-  # Project Options
-  colored_logging = true
-
-  if build_modules
+  if get_option('build_modules')
     subdir('modules')
   endif
 
   # Subprojects
+  subproject('luajit')
   luajit = dependency('luajit')
   cargs  = dependency('cargs')
 
@@ -35,7 +29,7 @@ default_options : [
     cargs,
   ]
 
-  if colored_logging
+  if get_option('colored_logging')
     evol_c_args += '-DLOG_USE_COLOR'
   endif
 
@@ -53,11 +47,15 @@ default_options : [
     dependencies: evol_deps,
   )
 
+  evolmod_dep = declare_dependency(
+    include_directories: evol_incdir,
+  )
 
   if meson.version().version_compare('>= 0.54.0')
     meson.override_dependency('evol', evollib_dep)
+    meson.override_dependency('evolmod', evolmod_dep)
   endif
 
-  if build_demo
+  if get_option('build_demo')
     subdir('demo')
   endif

@@ -16,7 +16,7 @@ scriptname = script.split('/')[-1]
 
 configure_file(
   input: script,
-  command: [meson.project_source_root() + '/subprojects/luajit/src/luajit', meson.project_source_root() + '/buildscripts/bin2c.lua', script],
+  command: [meson.source_root() + '/subprojects/luajit/src/luajit', meson.project_source_root() + '/buildscripts/bin2c.lua', script],
   output: scriptname + '.h',
   capture: true
 )
