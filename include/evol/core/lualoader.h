@@ -57,6 +57,9 @@ ev_lua_getint(const char *globalName, long *result);
 EvLuaLoaderResult
 ev_lua_getdouble(const char *globalName, double *result);
 
+EvLuaLoaderResult
+ev_lua_getlen(const char *globalName, uint32_t *result);
+
 void
 ev_lua_callfn(const char *fn_name, const char *sig, ...);
 

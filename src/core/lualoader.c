@@ -138,6 +138,21 @@ ev_lua_getdouble(const char *globalName, double *result)
 }
 
 EvLuaLoaderResult
+ev_lua_getlen(const char *globalName, uint32_t *result)
+{
+  EvLuaLoaderResult res;
+  lua_getglobal(L, globalName);
+  if(lua_isnil(L, -1)) {
+    res = EV_LUALOADER_GLOBAL_ERROR_NOTFOUND;
+  } else {
+    *result = lua_objlen(L, -1);
+    res = EV_LUALOADER_SUCCESS;
+  }
+
+  return res;
+}
+
+EvLuaLoaderResult
 ev_lua_runstring(const char *luaString)
 {
   int result = luaL_dostring(L, luaString);
