@@ -16,22 +16,10 @@
 #define LIB_EXTENSION ".so"
 #endif
 
-void
-sdsveccopy(sds *dst, const sds *src)
-{
-  *dst = sdsnew(*src);
-}
-
-void
-sdsvecdestr(sds *elem)
-{
-  sdsfree(*elem);
-}
-
 EvModuleManagerResult
 ev_modulemanager_detect(const char *module_dir)
 {
-  vec_t modules = vec_init(sds, (elem_copy)sdsveccopy, (elem_destr)sdsvecdestr);
+  sdsvec_t modules = sdsvec_init();
 
   find_contains_r(module_dir, LIB_EXTENSION, &modules);
 
