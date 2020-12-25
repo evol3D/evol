@@ -69,6 +69,21 @@ EvEngineResult
 evol_init(evolengine_t *engine);
 
 /*!
+ * \brief Runs the start function  in startmods
+ * \details
+ * For each module in the config's startmods, the EV_START function is called
+ * in a separate thread.
+ *
+ * \param engine Pointer to the `evolengine_t` object
+ *
+ * \returns
+ * - On success, returns `EV_ENGINE_SUCCESS`
+ * - More TBD
+ */
+EvEngineResult
+evol_start(evolengine_t *engine);
+
+/*!
  * \brief Parse commandline arguments into engine config
  *
  * \details Options for the arguments can be found at <evol/meta/cliargs.txt>

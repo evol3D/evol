@@ -12,6 +12,10 @@
 #include <evol/core/lualoader.h>
 #include <evol/core/modulemanager.h>
 
+#include <evol/evolmod.h>
+
+#include <evolpthreads.h>
+
 #include <evol/meta/configvars.h>
 #include <time.h>
 
@@ -21,17 +25,20 @@ typedef struct evconfig {
   uint32_t    version_major;
   const char *configfile;
   char        module_directory[EV_ENGINE_MODDIR_MAXLEN + 1];
+  sdsvec_t    startmods;
 } evconfig_t;
 
 #define EVCONFIG_DEFAULT                                                       \
   (evconfig_t)                                                                 \
   {                                                                            \
     .name = "Hello, World", .version_minor = 1, .version_major = 0,            \
-    .configfile = NULL, .module_directory = "./modules",                       \
+    .configfile = NULL, .module_directory = "./modules", .startmods = NULL,    \
   }
 
 struct evolengine {
   evconfig_t config;
+  vec_t      startmods_handles;
+  vec_t      startmods_threadhandles;
 };
 
 evolengine_t *
@@ -40,6 +47,9 @@ evol_create()
   evolengine_t *evengine = calloc(sizeof(evolengine_t), 1);
   if (evengine) {
     evengine->config = EVCONFIG_DEFAULT;
+    evengine->config.startmods = sdsvec_init();
+    evengine->startmods_handles = vec_init(evolmodule_t, 0, 0);
+    evengine->startmods_threadhandles = vec_init(pthread_t, 0, 0);
   }
   return evengine;
 }
@@ -54,6 +64,19 @@ evol_destroy(evolengine_t *evengine)
   if (evengine->config.configfile) {
     free((void *)evengine->config.configfile);
   }
+
+  if (evengine->config.startmods) {
+    vec_fini(evengine->config.startmods);
+  }
+
+  if (evengine->startmods_handles) {
+    vec_fini(evengine->startmods_handles);
+  }
+
+  if (evengine->startmods_threadhandles) {
+    vec_fini(evengine->startmods_threadhandles);
+  }
+
   free(evengine);
   ev_log_trace("Free'd memory used by the instance");
 }
@@ -83,6 +106,11 @@ evol_config_loadlua(evolengine_t *evengine)
             module_directory,
             EV_ENGINE_MODDIR_MAXLEN);
     ev_log_info("Module directory: %s", module_directory);
+  }
+
+  EvLuaLoaderResult startmods_res = ev_lua_getvar(CONFIGVAR_STARTMODS, evengine->config.startmods);
+  if(startmods_res != EV_LUALOADER_SUCCESS) {
+    // TODO do something
   }
 
   return EV_ENGINE_SUCCESS;
@@ -120,6 +148,15 @@ evol_deinit(evolengine_t *evengine)
 {
   if (!evengine)
     return;
+
+  size_t startmods_len = vec_len(evengine->startmods_handles);
+  if(startmods_len > 0) {
+    for(size_t i = 0; i < startmods_len; ++i) {
+      evol_unloadmodule(((evolmodule_t*)evengine->startmods_handles)[i]);
+      pthread_join(((pthread_t*)evengine->startmods_threadhandles)[i], NULL);
+    }
+  }
+
   if (ev_lua_isactive()) {
     ev_lua_deinit();
   }
@@ -181,4 +218,32 @@ inline void *
 evol_getmodfunc(evolmodule_t module, const char *func_name)
 {
   return ev_module_getfn(module, func_name);
+}
+
+EvEngineResult
+evol_start(evolengine_t *engine)
+{
+  if(vec_len(engine->config.startmods) == 0)
+    return EV_ENGINE_SUCCESS;
+
+  sdsvec_t startmods = engine->config.startmods;
+  for(size_t i = 0; i < vec_len(startmods); ++i) {
+    sds mod = ((sds*)startmods)[i];
+    evolmodule_t handle = evol_loadmodule(mod);
+
+    if(!handle) {
+      continue;
+    }
+
+    vec_push(&(engine->startmods_handles), &handle);
+    void(*start_fn)() = (void(*)())evol_getmodfunc(handle, EV_STRINGIZE(EV_START_FN_NAME));
+
+    if(!start_fn) {
+      continue;
+    }
+
+    pthread_t mod_thr;
+    pthread_create(&mod_thr, NULL, (void*(*)(void*))start_fn, NULL);
+    vec_push(&(engine->startmods_threadhandles), &mod_thr);
+  }
 }
