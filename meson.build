@@ -5,10 +5,6 @@ default_options : [
   'default_library=static'
   ])
 
-  if get_option('build_modules')
-    subdir('modules')
-  endif
-
   # Subprojects
   subproject('luajit')
   luajit = dependency('luajit')

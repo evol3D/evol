@@ -1,4 +1,3 @@
 option('build_demo'     , type: 'boolean', value: true)
-option('build_modules'  , type: 'boolean', value: true)
 
 option('colored_logging', type: 'boolean', value: true)
