@@ -116,3 +116,19 @@ vec_fini(vec_t v);
  */
 int32_t
 vec_push(vec_t *v, void *val);
+
+/*!
+ * \brief A function that returns the length of a vector
+ *
+ * \param v The vector object
+ */
+size_t
+vec_len(vec_t v);
+
+/*!
+ * \brief A function that returns the capacity of a vector
+ *
+ * \param v The vector object
+ */
+size_t
+vec_capacity(vec_t v);

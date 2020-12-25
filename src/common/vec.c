@@ -58,7 +58,7 @@ vec_iter_next(vec_t v, void **iter)
 {
   struct vec_meta *metadata =
     (struct vec_meta *)((char *)v - sizeof(struct vec_meta));
-  *(char *)iter += metadata->elemsize;
+  *iter = ((char*)*iter) + metadata->elemsize;
 }
 
 void
@@ -106,4 +106,20 @@ vec_push(vec_t *v, void *val)
   }
   metadata->length++;
   return 0;
+}
+
+size_t
+vec_len(vec_t v)
+{
+  struct vec_meta *metadata =
+    (struct vec_meta *)((char *)v - sizeof(struct vec_meta));
+  return metadata->length;
+}
+
+size_t
+vec_capacity(vec_t v)
+{
+  struct vec_meta *metadata =
+    (struct vec_meta *)((char *)v - sizeof(struct vec_meta));
+  return metadata->capacity;
 }
