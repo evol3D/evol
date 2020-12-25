@@ -3,5 +3,6 @@
  */
 #pragma once
 
-#define CONFIGVAR_NAME "name"
-#define CONFIGVAR_MODDIR "module_directory"
+static const char *CONFIGVAR_NAME  = "name";
+static const char *CONFIGVAR_MODDIR = "module_directory";
+static const char *CONFIGVAR_STARTMODS = "startmods";
