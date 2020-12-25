@@ -138,11 +138,30 @@ ev_lua_getdouble(const char *globalName, double *result)
 }
 
 EvLuaLoaderResult
+ev_lua_getsdsvec(const char *globalName, sdsvec_t *result)
+{
+  uint32_t vecsize = 0;
+  EvLuaLoaderResult getlen_res = ev_lua_getlen(globalName, &vecsize);
+  if(getlen_res != EV_LUALOADER_SUCCESS || vecsize == 0) {
+    return getlen_res;
+  }
+
+  lua_getglobal(L, globalName);
+  for(uint32_t i = 1; i <= vecsize; ++i) {
+    lua_pushnumber(L, i); // Push index
+    lua_gettable(L, -2); // Replaces the index at the top of the stack with the result
+    const char *val = lua_tostring(L, -1); // This should be checked but there is currently no need for that.
+    vec_push(result, &val);
+    lua_pop(L, 1); // Pop result
+  }
+}
+
+EvLuaLoaderResult
 ev_lua_getlen(const char *globalName, uint32_t *result)
 {
   EvLuaLoaderResult res;
   lua_getglobal(L, globalName);
-  if(lua_isnil(L, -1)) {
+  if(!lua_istable(L, -1)) {
     res = EV_LUALOADER_GLOBAL_ERROR_NOTFOUND;
   } else {
     *result = lua_objlen(L, -1);
@@ -193,7 +212,7 @@ ev_lua_callfn(const char *fn_name, const char *sig, ...)
       lua_pushstring(L, va_arg(vl, char *));
       break;
     case 'b':
-      lua_pushboolean(L, va_arg(vl, bool));
+      lua_pushboolean(L, va_arg(vl, int));
       break;
     case '>':
       sig++;

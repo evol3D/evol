@@ -60,6 +60,9 @@ ev_lua_getdouble(const char *globalName, double *result);
 EvLuaLoaderResult
 ev_lua_getlen(const char *globalName, uint32_t *result);
 
+EvLuaLoaderResult
+ev_lua_getsdsvec(const char *globalName, sdsvec_t *result);
+
 void
 ev_lua_callfn(const char *fn_name, const char *sig, ...);
 
@@ -67,10 +70,12 @@ void
 ev_lua_fnstack_pop();
 
 #define ev_lua_getvar(varname, var)                                            \
-  _Generic((var), double                                                       \
-           : ev_lua_getdouble, int32_t                                         \
-           : ev_lua_getint, default                                            \
-           : ev_lua_getstring)(varname, &var)
+  _Generic((var),                                                              \
+      double  : ev_lua_getdouble,                                              \
+      int32_t : ev_lua_getint,                                                 \
+      sdsvec_t: ev_lua_getsdsvec,                                              \
+      default : ev_lua_getstring)                                              \
+                                                                (varname, &var)
 
 #define ev_lua_getvar_s(varname, var)                                          \
   if (ev_lua_getvar(varname, var) != EV_LUALOADER_SUCCESS) {                   \
