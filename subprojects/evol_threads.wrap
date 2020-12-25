@@ -1,0 +1,7 @@
+[wrap-git]
+url = https://github.com/evol3D/evol-threads.git
+revision = master
+depth = 1
+
+[provides]
+dependency_names = evol_threads

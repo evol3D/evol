@@ -9,6 +9,7 @@ default_options : [
   subproject('luajit')
   luajit = dependency('luajit')
   cargs  = dependency('cargs')
+  evol_threads = dependency('evol_threads')
 
   evol_src = []
 
@@ -23,6 +24,7 @@ default_options : [
   evol_deps = [
     luajit,
     cargs,
+    evol_threads,
   ]
 
   if get_option('colored_logging')
