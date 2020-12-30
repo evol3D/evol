@@ -5,55 +5,60 @@ default_options : [
   'default_library=static'
   ])
 
-  # Subprojects
-  subproject('luajit')
-  luajit = dependency('luajit')
-  cargs  = dependency('cargs')
-  evol_threads = dependency('evol_threads')
+cc = meson.get_compiler('c')
 
-  evol_src = []
+# Subprojects
+subproject('luajit')
+luajit = dependency('luajit')
+cargs  = dependency('cargs')
+evol_threads = dependency('evol_threads')
+dl = cc.find_library('dl', required: false)
 
-  evol_incdir = [
-    'include',
-  ]
 
-  subdir('src')
+evol_src = []
 
-  evol_c_args = []
+evol_incdir = [
+  'include',
+]
 
-  evol_deps = [
-    luajit,
-    cargs,
-    evol_threads,
-  ]
+subdir('src')
 
-  if get_option('colored_logging')
-    evol_c_args += '-DLOG_USE_COLOR'
-  endif
+evol_c_args = []
 
-  evol_lib = library('evol',
-  evol_src,
+evol_deps = [
+  luajit,
+  cargs,
+  evol_threads,
+  dl,
+]
+
+if get_option('colored_logging')
+  evol_c_args += '-DLOG_USE_COLOR'
+endif
+
+evol_lib = library('evol',
+evol_src,
+include_directories: evol_incdir,
+dependencies: evol_deps,
+c_pch: 'pch/evpch.h',
+c_args: evol_c_args,
+install : true)
+
+evollib_dep = declare_dependency(
+  link_with: evol_lib,
   include_directories: evol_incdir,
   dependencies: evol_deps,
-  c_pch: 'pch/evpch.h',
-  c_args: evol_c_args,
-  install : true)
+)
 
-  evollib_dep = declare_dependency(
-    link_with: evol_lib,
-    include_directories: evol_incdir,
-    dependencies: evol_deps,
-  )
+evolmod_dep = declare_dependency(
+  include_directories: evol_incdir,
+)
 
-  evolmod_dep = declare_dependency(
-    include_directories: evol_incdir,
-  )
+if meson.version().version_compare('>= 0.54.0')
+  meson.override_dependency('evol', evollib_dep)
+  meson.override_dependency('evolmod', evolmod_dep)
+endif
 
-  if meson.version().version_compare('>= 0.54.0')
-    meson.override_dependency('evol', evollib_dep)
-    meson.override_dependency('evolmod', evolmod_dep)
-  endif
-
-  if get_option('build_demo')
-    subdir('demo')
-  endif
+if get_option('build_demo')
+  subdir('demo')
+endif
