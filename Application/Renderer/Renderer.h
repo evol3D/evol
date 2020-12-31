@@ -5,17 +5,21 @@
 #include "RendererBackend.h"
 #include "Asset/material.h"
 
+typedef enum RendererBuffersTypes {
+	INDEX_BUFFER,
+	VERTEX_BUFFER,
+	NORMAL_BUFFER,
+	UV_BUFFER,
+	MATERIAL_BUFFER,
+}RendererBuffersTypes;
+
 extern struct ev_Renderer {
   int (*init)();
   int (*deinit)();
 
-  unsigned int (*registerUVBuffer)(real* uvs, unsigned long long size);
-  unsigned int (*registerNormalBuffer)(real* normals, unsigned long long size);
-  unsigned int (*registerVertexBuffer)(real* vertices, unsigned long long size);
-  unsigned int (*registerIndexBuffer)(unsigned int *indices, unsigned long long size);
+  unsigned int (*registerBuffer)(RendererBuffersTypes bufferType, void* data, unsigned long long size);
 
   void (*registertexture)(Texture* texture);
-  void (*registerMaterialBuffer)(Material *materials, unsigned long long size);
   void (*registerImageslBuffer)(uint32_t imageIndex, EvImage* newImageBuffer, VkImageView* imageView);
 
   int (*startFrame)(ev_RenderCamera *camera);

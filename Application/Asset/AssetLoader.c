@@ -34,7 +34,9 @@ struct ev_AssetLoader_Data
 	unsigned int dummy;
 } AssetLoaderData;
 
-static int ev_assetloader_init() {
+static int ev_assetloader_init() 
+{
+	MaterialSystem.init();
 	return 0;
 }
 
@@ -78,6 +80,7 @@ static void ev_assetloader_load_gltf_node(cgltf_node curr_node, Entity parent, c
 
 	if (curr_node.mesh) {
 		ev_log_trace("Creating MeshComponent for entity: %s", curr_node.name);
+		ev_log_trace("Creating MeshComponent for entity: %s", curr_node.name);
 		unsigned int mesh_idx = curr_node.mesh - data->meshes;
 		ev_log_trace("Entity's mesh maps to MeshEntity #%d", mesh_idx);
 		Entity_InheritComponents(curr, mesh_entities[mesh_idx]);
@@ -101,11 +104,11 @@ static void ev_assetloader_load_gltf_node(cgltf_node curr_node, Entity parent, c
 				.mass = 1,
 				.type = rbType,
 				.collisionShape =
-				Physics.createBox(2, 1, 1),
-				/* Physics.generateConvexHull( */
-				/*     meshComponent->primitives->vertexCount, */
-				/*     meshComponent->primitives->positionBuffer */
-				/* ), */
+				//Physics.createBox(2, 1, 1),
+				 Physics.generateConvexHull( 
+				     meshComponent->primitives->vertexCount, 
+			     meshComponent->primitives->positionBuffer 
+				), 
 				.restitution = 1,
 				});
 		}
@@ -136,13 +139,10 @@ static int ev_assetloader_load_gltf(const char* path)
 		assert(result == cgltf_result_success);
 	}
 
+	uint32_t* material_idx = malloc(data->materials_count * sizeof(uint32_t));
 	{
-		MaterialSystem.init();
-
 		for (size_t idx = 0; idx < data->materials_count; idx++)
-			MaterialSystem.registerGltfMaterial(&data->materials[idx]);
-
-		Renderer.registerMaterialBuffer(MaterialSystem.getMaterials().data, data->materials_count * sizeof(Material));
+			material_idx[idx] = MaterialSystem.registerGltfMaterial(&data->materials[idx]);
 	}
 
 	Entity* mesh_entities = malloc(sizeof(Entity) * data->meshes_count);
@@ -155,7 +155,7 @@ static int ev_assetloader_load_gltf(const char* path)
 		meshComp->primitives_count = data->meshes[mesh_idx].primitives_count;
 		meshComp->primitives = (MeshPrimitive*)calloc(meshComp->primitives_count , sizeof(MeshPrimitive));
 		ev_log_debug("Malloc'ed %u bytes", meshComp->primitives_count * sizeof(MeshPrimitive));
-
+		
 		for (int primitive_idx = 0; primitive_idx < meshComp->primitives_count; primitive_idx++) 
 		{
 			cgltf_primitive curr_primitive = data->meshes[mesh_idx].primitives[primitive_idx];
@@ -215,6 +215,9 @@ static int ev_assetloader_load_gltf(const char* path)
 						break;
 				}
 			}
+
+			if (curr_primitive.material)
+				meshComp->primitives[primitive_idx].materialIdx = curr_primitive.material - data->materials;
 		}
 	}
 
@@ -234,11 +237,13 @@ static int ev_assetloader_load_gltf(const char* path)
 			PrimitiveRenderData primRendData;
 			primRendData.indexCount = meshPrim.indexCount;
 
-			primRendData.indexBufferId  = Renderer.registerIndexBuffer(meshPrim.indexBuffer, meshPrim.indexCount * sizeof(*meshPrim.indexBuffer));
-			primRendData.vertexBufferId = Renderer.registerVertexBuffer((real*)meshPrim.positionBuffer, meshPrim.vertexCount * sizeof(*meshPrim.positionBuffer));
-			primRendData.normalBufferId = (meshPrim.normalBuffer == NULL) ? ~0u : Renderer.registerNormalBuffer((real*)meshPrim.normalBuffer, meshPrim.vertexCount * sizeof(*meshPrim.normalBuffer));
-			primRendData.uvBufferId     = (meshPrim.uvBuffer     == NULL) ? ~0u : Renderer.registerUVBuffer((real*)meshPrim.uvBuffer, meshPrim.vertexCount * sizeof(*meshPrim.uvBuffer));
+			primRendData.indexBufferId  = Renderer.registerBuffer(INDEX_BUFFER,meshPrim.indexBuffer, meshPrim.indexCount * sizeof(*meshPrim.indexBuffer));
+			primRendData.vertexBufferId = Renderer.registerBuffer(VERTEX_BUFFER,(real*)meshPrim.positionBuffer, meshPrim.vertexCount * sizeof(*meshPrim.positionBuffer));
+			primRendData.normalBufferId = (meshPrim.normalBuffer == NULL) ? ~0u : Renderer.registerBuffer(NORMAL_BUFFER,(real*)meshPrim.normalBuffer, meshPrim.vertexCount * sizeof(*meshPrim.normalBuffer));
+			primRendData.uvBufferId     = (meshPrim.uvBuffer     == NULL) ? ~0u : Renderer.registerBuffer(UV_BUFFER,(real*)meshPrim.uvBuffer, meshPrim.vertexCount * sizeof(*meshPrim.uvBuffer));
 			
+			primRendData.materialId = material_idx[meshPrim.materialIdx];
+
 			vec_push(&rendComp->meshRenderData.primitives, primRendData);
 		}
 		rendComp->meshRenderData.pipelineType = EV_GRAPHICS_PIPELINE_PBR;

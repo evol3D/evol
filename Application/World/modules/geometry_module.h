@@ -11,6 +11,8 @@ typedef struct
   ev_Vector3 *normalBuffer;
   ev_Vector2 *uvBuffer;
 
+  unsigned int materialIdx;
+
   unsigned int *indexBuffer;
 
   unsigned int indexCount;

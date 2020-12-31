@@ -12,7 +12,7 @@ typedef struct
 {
   Entity parent;
   EntityVec children;
-} NodeComponent EV_ALIGN(16);
+} EV_ALIGN(16) NodeComponent ;
 
 typedef struct
 {

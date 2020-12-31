@@ -119,13 +119,13 @@ static int start(int argc, char **argv) {
     AssetLoader.init();
     ev_log_debug("Initialized AssetLoader");
   }
-
+  
   {
     ev_log_debug("Initializing Game");
     Game.init();
     ev_log_debug("Initialized Game");
   }
-
+  
   ev_log_debug("Starting the game loop");
   return window_poll_loop();
 }

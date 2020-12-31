@@ -23,6 +23,15 @@ struct material
 	vec3 emissiveFactor;
 };
 
+layout (push_constant) uniform PushConstant
+{
+  int vertexBufferIndex;
+  int uvBufferIndex;
+  int materialIndex;
+
+  mat4 model;
+};
+
 layout(set = 2, binding = 0) buffer materials
 {
     material m[];
@@ -37,5 +46,5 @@ layout(set = 5, binding = 0) buffer uvBuffer {
 void main()
 {
 	vec2 a = vec2(0,0);
-    outputColor = vec4(texture(texSampler[m[0].albedoTexture],inuv).xyz,1);
+    outputColor = vec4(texture(texSampler[m[materialIndex].albedoTexture],inuv).xyz,1);
 }

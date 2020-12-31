@@ -2,10 +2,7 @@
 
 #include "Renderer/Renderer.h"
 
-vec_str_t      images;
-sampler_vec_t  samplers;
-texture_vec_t  textures;
-material_vec_t materials;
+
 
 uint32_t material_system_init();
 uint32_t material_system_deinit();
@@ -29,6 +26,12 @@ struct ev_MaterialSystem MaterialSystem =
   .getSamplers  = material_system_get_samplers,
   .getImages    = material_system_get_images,
 };
+struct ev_MaterialSystem_Data {
+	vec_str_t      images;
+	sampler_vec_t  samplers;
+	texture_vec_t  textures;
+	material_vec_t materials;
+} MaterialSystemData;
 
 uint32_t material_system_register_image(const char* imageuri);
 uint32_t material_system_register_sampler(int mag, int min);
@@ -53,17 +56,17 @@ uint32_t material_system_register_GLTF_texture(cgltf_texture* t);
 
 uint32_t material_system_init()
 {
-	vec_init(&images);
-	vec_init(&samplers);
-	vec_init(&textures);
-	vec_init(&materials);
+	vec_init(&MaterialSystemData.images);
+	vec_init(&MaterialSystemData.samplers);
+	vec_init(&MaterialSystemData.textures);
+	vec_init(&MaterialSystemData.materials);
 }
 uint32_t material_system_deinit()
 {
-	vec_deinit(&images);
-	vec_deinit(&samplers);
-	vec_deinit(&textures);
-	vec_deinit(&materials);
+	vec_deinit(&MaterialSystemData.images);
+	vec_deinit(&MaterialSystemData.samplers);
+	vec_deinit(&MaterialSystemData.textures);
+	vec_deinit(&MaterialSystemData.materials);
 }
 
 uint32_t material_system_register_GLTF_material(cgltf_material* m_gltf) 
@@ -109,8 +112,14 @@ uint32_t material_system_register_GLTF_texture(cgltf_texture* t)
 		else
 			samplerIdx = material_system_register_sampler(sampler->mag_filter, sampler->min_filter);
 	}
-
+	//printf("\n%s\n", image->uri);
 	uint32_t imageIdx = material_system_register_image(image->uri);
+	
+	int idx; char* val;
+	vec_foreach(&MaterialSystemData.images, val, idx) {
+	
+		printf("\n%s\n",val);
+	}
 
 	return material_system_register_texture(samplerIdx, imageIdx);
 }
@@ -118,7 +127,7 @@ uint32_t material_system_register_GLTF_texture(cgltf_texture* t)
 uint32_t material_system_register_texture(uint32_t samplerIdx, uint32_t imageIdx) 
 {
 	int idx; Texture* val;
-	vec_foreach_ptr(&textures, val, idx) 
+	vec_foreach_ptr(&MaterialSystemData.textures, val, idx)
 	{
 		if (val->imageIndex == imageIdx && val->samplerIndex == samplerIdx)
 			return idx;
@@ -129,7 +138,7 @@ uint32_t material_system_register_texture(uint32_t samplerIdx, uint32_t imageIdx
 uint32_t material_system_register_image(const char *imageuri)
 {
 	int idx; char *val;
-	vec_foreach(&images, val, idx)
+	vec_foreach(&MaterialSystemData.images, val, idx)
 	{
 		if (!strcmp(imageuri, val))
 			return idx;
@@ -140,7 +149,7 @@ uint32_t material_system_register_image(const char *imageuri)
 uint32_t material_system_register_sampler(int mag, int min)
 {
 	int idx; Sampler *val;
-	vec_foreach_ptr(&samplers, val, idx)
+	vec_foreach_ptr(&MaterialSystemData.samplers, val, idx)
 	{
 		if (val->mag == mag && val->min == min)
 			return idx;
@@ -151,7 +160,7 @@ uint32_t material_system_register_sampler(int mag, int min)
 uint32_t material_system_register_material(Material *newMaterial)
 {
 	int idx; Material* val;
-	vec_foreach_ptr(&materials, val, idx)
+	vec_foreach_ptr(&MaterialSystemData.materials, val, idx)
 	{
 		if (val->albdoFactor == newMaterial->albdoFactor && val->albedoTexture == newMaterial->albedoTexture &&
 			val->emissiveFactor == newMaterial->emissiveFactor && val->emissiveTexture == newMaterial->emissiveTexture &&
@@ -165,13 +174,13 @@ uint32_t material_system_register_material(Material *newMaterial)
 }
 
 uint32_t create_texture(uint32_t samplerIdx, uint32_t imageIdx) {
-	uint32_t idx = textures.length;
+	uint32_t idx = MaterialSystemData.textures.length;
 
 	Texture t = {
 		.samplerIndex = samplerIdx,
 		.imageIndex = imageIdx
 	};
-	vec_push(&textures, t);
+	vec_push(&MaterialSystemData.textures, t);
 
 	Renderer.registertexture(&t);
 
@@ -179,42 +188,43 @@ uint32_t create_texture(uint32_t samplerIdx, uint32_t imageIdx) {
 }
 uint32_t create_image(const char* imageuri)
 {
-	uint32_t idx = images.length;
+	uint32_t idx = MaterialSystemData.images.length;
 
-	vec_push(&images, imageuri);
+	char* img = strdup(imageuri);
+	vec_push(&MaterialSystemData.images, img);
 
 	return idx;
 }
 uint32_t create_sampler(int mag, int min)
 {
-	uint32_t idx = samplers.length;
+	uint32_t idx = MaterialSystemData.samplers.length;
 
 	Sampler s = {
 		.mag = mag,
 		.min = min
 	};
-	vec_push(&samplers, s);
+	vec_push(&MaterialSystemData.samplers, s);
 		
 	return idx;
 }
 uint32_t create_material(Material* newMaterial)
 {
-	uint32_t idx = materials.length;
+	uint32_t idx = MaterialSystemData.materials.length;
 
-	vec_push(&materials, *newMaterial);
+	vec_push(&MaterialSystemData.materials, *newMaterial);
 
 	return idx;
 }
 
 material_vec_t material_system_get_materials() {
-	return materials;
+	return MaterialSystemData.materials;
 }
 texture_vec_t material_system_get_textures() {
-	return textures;
+	return MaterialSystemData.textures;
 }
 sampler_vec_t material_system_get_samplers() {
-	return samplers;
+	return MaterialSystemData.samplers;
 }
 vec_str_t material_system_get_images() {
-	return images;
+	return MaterialSystemData.images;
 }

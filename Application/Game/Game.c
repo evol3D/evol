@@ -158,15 +158,21 @@ void sandbox()
   /* AssetLoader.loadGLTF("Triangle.gltf"); */
   /* AssetLoader.loadGLTF("Cube.gltf"); */
   /* AssetLoader.loadGLTF("InterpolationTest.gltf"); */
-  AssetLoader.loadGLTF("DamagedHelmet.gltf");
-  /* AssetLoader.loadGLTF("Duck.gltf"); */
+  //AssetLoader.loadGLTF("DamagedHelmet.gltf");
+  //AssetLoader.loadGLTF("DamagedHelmet.gltf");
+  //AssetLoader.loadGLTF("CesiumMilkTruck.gltf");
+  //AssetLoader.loadGLTF("CesiumMilkTruck.gltf");
+   //AssetLoader.loadGLTF("Duck.gltf"); 
   /* AssetLoader.loadGLTF("RiggedFigure.gltf"); */
-  /* AssetLoader.loadGLTF("CesiumMan.gltf"); */
+  AssetLoader.loadGLTF("untitled.gltf");
   /* AssetLoader.loadGLTF("WaterBottle.gltf"); */
   /* AssetLoader.loadGLTF("SciFiHelmet.gltf"); */
   /* AssetLoader.loadGLTF("Duck.gltf"); */
   ev_log_trace("Loaded GLTF file");
 
+  Renderer.registerBuffer(MATERIAL_BUFFER, MaterialSystem.getMaterials().data, MaterialSystem.getMaterials().length * sizeof(Material));
+
+  MaterialSystem.getMaterials().length;
 
   World.lockSceneAccess();
   ImportModule(TransformModule);
@@ -179,11 +185,11 @@ void sandbox()
         .viewType = EV_CAMERA_PERSPECTIVE_VIEW,
         .hfov = 90,
         .aspectRatio = 1,
-        .nearPlane = 0,
+        .nearPlane = 0.01,
         .farPlane = 100,
         });
     TransformComponent * transformComp = Entity_GetComponent_mut(camera, TransformComponent);
-    ev_Vector3 cameraPosition = {0, -5, 5};
+    ev_Vector3 cameraPosition = {0, 0, 8};
     glm_mat4_identity(transformComp->worldTransform);
     glm_translate(transformComp->worldTransform, (real*)&cameraPosition);
 

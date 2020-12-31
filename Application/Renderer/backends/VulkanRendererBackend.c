@@ -60,7 +60,7 @@ void ev_rendererbackend_transitionimagelayout(VkImage* image, VkFormat format, V
 
 void ev_rendererbackend_copybuffertoimage(VkBuffer* buffer, VkImage* image, uint32_t width, uint32_t height);
 
-void ev_rendererbackend_create_image_view(unsigned int imageCount, VkFormat imageFormat, VkImage* images, VkImageView** views);
+void ev_rendererbackend_create_image_view(VkFormat imageFormat, VkImage* images, VkImageView* view);
 
 struct ev_RendererBackend RendererBackend = 
 {
@@ -461,6 +461,7 @@ void ev_rendererbackend_createrenderpass()
     .dependencyCount = 0,
     .pDependencies = NULL,
   };
+
 
   VK_ASSERT(vkCreateRenderPass(Vulkan.getDevice(), &renderPassCreateInfo, NULL, &DATA(renderPass)));
 }
@@ -895,10 +896,12 @@ static void ev_rendererbackend_copybuffer(unsigned long long size, MemoryBuffer 
 
   vkBeginCommandBuffer(tempCommandBuffer, &tempCommandBufferBeginInfo);
 
-  VkBufferCopy copyRegion;
-  copyRegion.srcOffset = 0;
-  copyRegion.dstOffset = 0;
-  copyRegion.size = size;
+  VkBufferCopy copyRegion = {
+    .srcOffset = 0,
+    .dstOffset = 0,
+    .size = size,
+  };
+  
   vkCmdCopyBuffer(tempCommandBuffer, src->buffer, dst->buffer, 1, &copyRegion);
 
   vkEndCommandBuffer(tempCommandBuffer);
@@ -1181,7 +1184,7 @@ static int ev_rendererbackend_loadbasedescriptorsetlayouts()
       {
         {
           .binding = 0,
-          .descriptorCount = 1, //TODO look into changing this
+          .descriptorCount = 10, //TODO look into changing this
           .descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
           .stageFlags = VK_SHADER_STAGE_ALL_GRAPHICS,
         }
@@ -1202,7 +1205,7 @@ static int ev_rendererbackend_loadbasedescriptorsetlayouts()
       {
         {
           .binding = 0,
-          .descriptorCount = 4, //TODO look into changing this
+          .descriptorCount = 10, //TODO look into changing this
           .descriptorType = EV_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
           .stageFlags = VK_SHADER_STAGE_ALL_GRAPHICS,
         }
@@ -1331,7 +1334,7 @@ static int ev_rendererbackend_pushdescriptorstoset(DescriptorSet descriptorSet, 
           .descriptorType = (VkDescriptorType)descriptors[i].type,
           .dstSet = descriptorSet,
           .dstBinding = 0,
-          .dstArrayElement = 0,
+          .dstArrayElement = i,
           .pBufferInfo = &bufferInfos[i],
         };
         break;
@@ -1446,7 +1449,7 @@ void ev_rendererbackend_copybuffertoimage(VkBuffer* buffer, VkImage* image, uint
     vkFreeCommandBuffers(Vulkan.getDevice(), Vulkan.getCommandPool(TRANSFER), 1, &commandBuffer);
 }
 
-void ev_rendererbackend_create_image_view(VkFormat imageFormat, VkImage* images, VkImageView** views)
+void ev_rendererbackend_create_image_view(VkFormat imageFormat, VkImage* images, VkImageView* view)
 {
-    Vulkan.createImageView(imageFormat, images, views);
+    Vulkan.createImageView(imageFormat, images, view);
 }

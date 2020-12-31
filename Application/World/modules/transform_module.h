@@ -6,9 +6,9 @@
 
 typedef struct
 {
-  ev_Matrix4 localTransform EV_ALIGN(16);
-  ev_Matrix4 worldTransform EV_ALIGN(16);
-} TransformComponent EV_ALIGN(16);
+  ev_Matrix4 EV_ALIGN(16) localTransform ;
+  ev_Matrix4 EV_ALIGN(16) worldTransform ;
+} EV_ALIGN(16) TransformComponent ;
 
 typedef struct
 {
