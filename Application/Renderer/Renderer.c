@@ -125,7 +125,7 @@ static unsigned int ev_renderer_registerbuffer(RendererBuffersTypes bufferType, 
     {
     case INDEX_BUFFER:
         buffer = &RendererData.indexBuffers;
-        memType = EV_USAGEFLAGS_RESOURCE_BUFFER;
+        memType = EV_BUFFER_USAGE_INDEX_BUFFER_BIT;
         break;
     case VERTEX_BUFFER:
         buffer = &RendererData.vertexBuffers;

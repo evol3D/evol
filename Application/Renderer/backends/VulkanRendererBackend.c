@@ -1184,7 +1184,7 @@ static int ev_rendererbackend_loadbasedescriptorsetlayouts()
       {
         {
           .binding = 0,
-          .descriptorCount = 10, //TODO look into changing this
+          .descriptorCount = 1, //TODO look into changing this
           .descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
           .stageFlags = VK_SHADER_STAGE_ALL_GRAPHICS,
         }
@@ -1205,7 +1205,7 @@ static int ev_rendererbackend_loadbasedescriptorsetlayouts()
       {
         {
           .binding = 0,
-          .descriptorCount = 10, //TODO look into changing this
+          .descriptorCount = 1, //TODO this must be equal to the total number of textures in the game
           .descriptorType = EV_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
           .stageFlags = VK_SHADER_STAGE_ALL_GRAPHICS,
         }
