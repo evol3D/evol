@@ -21,6 +21,7 @@
 static int ev_assetloader_init();
 static int ev_assetloader_deinit();
 static int ev_assetloader_load_gltf(const char* path);
+static unsigned int ev_assetloader_get_vertex_count(cgltf_primitive* curr_primitive);
 
 struct ev_AssetLoader AssetLoader = 
 {
@@ -139,11 +140,16 @@ static int ev_assetloader_load_gltf(const char* path)
 		assert(result == cgltf_result_success);
 	}
 
-	uint32_t* material_idx = malloc(data->materials_count * sizeof(uint32_t));
+	uint32_t* material_idx;
+	if (data->materials_count) 
 	{
-		for (size_t idx = 0; idx < data->materials_count; idx++)
-			material_idx[idx] = MaterialSystem.registerGltfMaterial(&data->materials[idx]);
+		material_idx = malloc(data->materials_count * sizeof(uint32_t));
+		{
+			for (size_t idx = 0; idx < data->materials_count; idx++)
+				material_idx[idx] = MaterialSystem.registerGltfMaterial(&data->materials[idx]);
+		}
 	}
+
 
 	Entity* mesh_entities = malloc(sizeof(Entity) * data->meshes_count);
 	for (unsigned int mesh_idx = 0; mesh_idx < data->meshes_count; ++mesh_idx) 
@@ -275,4 +281,5 @@ static unsigned int ev_assetloader_get_vertex_count(cgltf_primitive *curr_primit
 			return curr_primitive->attributes[attribute_idx].data->count;
 		}
 	}
+	return 0;
 }

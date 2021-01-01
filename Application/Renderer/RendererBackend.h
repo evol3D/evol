@@ -114,7 +114,7 @@ extern struct ev_RendererBackend {
     
     void (*copyBufferToImage)(VkBuffer* buffer, VkImage* image, uint32_t width, uint32_t height);
 
-    void (*createImageView)(VkFormat imageFormat, VkImage* images, VkImageView** views);
+    void (*createImageView)(VkFormat imageFormat, VkImage* image, VkImageView* view);
 } RendererBackend;
 
 

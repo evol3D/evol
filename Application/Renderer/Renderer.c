@@ -212,15 +212,15 @@ static void ev_renderer_registerimagebuffer(uint32_t imageIndex, EvImage* newIma
 
         RendererBackend.allocateImageInPool(RendererData.TexturePool, width, height, EV_IMAGE_USAGE_RESOURCE_BUFFER, newImageBuffer);
 
-        RendererBackend.transitionImageLayout(newImageBuffer->image, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
-        RendererBackend.copyBufferToImage(imageStagingBuffer.buffer, newImageBuffer->image, width, height);
-        RendererBackend.transitionImageLayout(newImageBuffer->image, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+        RendererBackend.transitionImageLayout(&newImageBuffer->image, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+        RendererBackend.copyBufferToImage(&imageStagingBuffer.buffer, &newImageBuffer->image, width, height);
+        RendererBackend.transitionImageLayout(&newImageBuffer->image, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
         RendererBackend.freeMemoryBuffer(&imageStagingBuffer);
         free(pixels);
     }
 
-    RendererBackend.createImageView(VK_FORMAT_R8G8B8A8_SRGB, newImageBuffer->image, imageView);
+    RendererBackend.createImageView(VK_FORMAT_R8G8B8A8_SRGB, &newImageBuffer->image, imageView);
 }
 
 static int ev_renderer_startframe(ev_RenderCamera *camera)
@@ -297,16 +297,6 @@ static int ev_renderer_startframe(ev_RenderCamera *camera)
   return 0;
 }
 
-void register_discriptorset(DescriptorSet *resourceDescriptorSet)
-{
-    RendererBackend.allocateDescriptorSet(EV_DESCRIPTOR_SET_LAYOUT_BUFFER_ARR, resourceDescriptorSet);
-    Descriptor* resourceDescriptors = malloc(sizeof(Descriptor) * RendererData.vertexBuffers.length);
-    for (int i = 0; i < RendererData.vertexBuffers.length; ++i)
-        resourceDescriptors[i] = (Descriptor){ EV_DESCRIPTOR_TYPE_STORAGE_BUFFER, &RendererData.vertexBuffers.data[i] };
-    RendererBackend.pushDescriptorsToSet(resourceDescriptorSet, resourceDescriptors, RendererData.vertexBuffers.length);
-    free(resourceDescriptors);
-}
-
 static int ev_renderer_endframe() {
     // TODO Error reporting
     RendererBackend.endFrame();
@@ -346,4 +336,5 @@ static void ev_renderer_draw(MeshRenderData meshRenderData, ev_Matrix4 transform
 stbi_uc* loadImage(char* image, int* width, int* height, int* channel) {
     stbi_uc* pixels = stbi_load(image, width, height, channel, STBI_rgb_alpha);
     assert(pixels);
+    return pixels;
 }

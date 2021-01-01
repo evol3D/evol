@@ -26,7 +26,7 @@ static void ev_vulkan_retrieveswapchainimages(VkSwapchainKHR swapchain, unsigned
 static void ev_vulkan_destroyswapchain(VkSwapchainKHR swapchain);
 
 static void ev_vulkan_createimageviews(unsigned int imageCount, VkFormat imageFormat, VkImage *images, VkImageView **views);
-static void ev_vulkan_createimageview(VkFormat imageFormat, VkImage* images, VkImageView* views);
+static void ev_vulkan_createimageview(VkFormat imageFormat, VkImage* image, VkImageView* view);
 static void ev_vulkan_createframebuffer(VkImageView* attachments, unsigned int attachmentCount, VkRenderPass renderPass, VkFramebuffer *framebuffer);
 
 static void ev_vulkan_create_image(VkImageCreateInfo *imageCreateInfo, VmaAllocationCreateInfo *allocationCreateInfo, EvImage *image);
@@ -411,11 +411,12 @@ static void ev_vulkan_createimageviews(unsigned int imageCount, VkFormat imageFo
     
   }
 }
-static void ev_vulkan_createimageview(VkFormat imageFormat, VkImage* images, VkImageView* views) {
+
+static void ev_vulkan_createimageview(VkFormat imageFormat, VkImage* image, VkImageView* view) {
     VkImageViewCreateInfo imageViewCreateInfo =
     {
         .sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
-        .image = images,
+        .image = *image,
         .viewType = VK_IMAGE_VIEW_TYPE_2D,
         .format = imageFormat,
         .components = {0, 0, 0, 0},
@@ -428,7 +429,7 @@ static void ev_vulkan_createimageview(VkFormat imageFormat, VkImage* images, VkI
             .layerCount = 1,
          },
     };
-    VK_ASSERT(vkCreateImageView(VulkanData.logicalDevice, &imageViewCreateInfo, NULL, views));
+    VK_ASSERT(vkCreateImageView(VulkanData.logicalDevice, &imageViewCreateInfo, NULL, view));
 }
 
 static void ev_vulkan_createframebuffer(VkImageView* attachments, unsigned int attachmentCount, VkRenderPass renderPass, VkFramebuffer *framebuffer)

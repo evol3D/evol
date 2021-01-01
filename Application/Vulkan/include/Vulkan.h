@@ -49,7 +49,7 @@ extern struct ev_Vulkan {
     void (*memoryDump)();
 
     void (*createImageViews)(unsigned int imageCount, VkFormat imageFormat, VkImage *images, VkImageView **views);
-    void (*createImageView)(VkFormat imageFormat, VkImage* images, VkImageView* views);
+    void (*createImageView)(VkFormat imageFormat, VkImage* image, VkImageView* view);
 
     void (*createFramebuffer)(VkImageView* attachments, unsigned int attachmentCount, VkRenderPass renderPass, VkFramebuffer *framebuffer);
 
