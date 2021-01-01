@@ -157,9 +157,9 @@ void sphereOnUpdate(unsigned int entt)
 
 void cameraOnUpdate(unsigned int entt)
 {
-  TransformComponent *transComp = Entity_GetComponent_mut(entt, TransformComponent);
-  vec3 speed = {0.01, 0, 0};
-  glm_translate(transComp->worldTransform, speed);
+  /* TransformComponent *transComp = Entity_GetComponent_mut(entt, TransformComponent); */
+  /* vec3 speed = {0.01, 0, 0}; */
+  /* glm_translate(transComp->worldTransform, speed); */
 }
 
 void sandbox()
@@ -187,11 +187,11 @@ void sandbox()
         .viewType = EV_CAMERA_PERSPECTIVE_VIEW,
         .hfov = 90,
         .aspectRatio = 1,
-        .nearPlane = 0,
+        .nearPlane = 0.01,
         .farPlane = 100,
         });
     TransformComponent * transformComp = Entity_GetComponent_mut(camera, TransformComponent);
-    ev_Vector3 cameraPosition = {0, -5, 5};
+    ev_Vector3 cameraPosition = {0, 0, 15};
     glm_mat4_identity(transformComp->worldTransform);
     glm_translate(transformComp->worldTransform, (real*)&cameraPosition);
   }

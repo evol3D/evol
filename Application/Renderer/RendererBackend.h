@@ -73,7 +73,7 @@ extern struct ev_RendererBackend {
 
     int (*allocateDescriptorSet)(DescriptorSetLayoutType setLayoutType, DescriptorSet *descriptorSet);
 
-    int (*pushDescriptorsToSet)(DescriptorSet descriptorSet, Descriptor *descriptors, unsigned int descriptorsCount);
+    int (*pushDescriptorsToSet)(DescriptorSet descriptorSet, Descriptor *descriptors, unsigned int descriptorsCount, unsigned int binding);
 
 
     ShaderModule (*loadShader)(const char *);

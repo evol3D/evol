@@ -185,28 +185,28 @@ static int ev_assetloader_load_gltf(const char *path)
             }
             break;
 
-          /* // Normal buffer */
-          /* case cgltf_attribute_type_normal: */
-          /*   { */
-          /*     unsigned int vertex_count = curr_primitive.attributes[attribute_idx].data->count; */
-          /*     meshComp->primitives[primitive_idx].vertexCount = vertex_count; */
-          /*     meshComp->primitives[primitive_idx].normalBuffer = malloc(vertex_count * sizeof(ev_Vector3)); */
-          /*     for(unsigned int vertex_idx = 0; vertex_idx < vertex_count; ++vertex_idx) */
-          /*     { */
-          /*       cgltf_accessor_read_float(curr_primitive.attributes[attribute_idx].data, vertex_idx, */ 
-          /*       (cgltf_float*)&meshComp->primitives[primitive_idx].normalBuffer[vertex_idx], 3); */
-          /*     } */
+          // Normal buffer
+          case cgltf_attribute_type_normal:
+            {
+              unsigned int vertex_count = curr_primitive.attributes[attribute_idx].data->count;
+              meshComp->primitives[primitive_idx].vertexCount = vertex_count;
+              meshComp->primitives[primitive_idx].normalBuffer = malloc(vertex_count * sizeof(ev_Vector3));
+              for(unsigned int vertex_idx = 0; vertex_idx < vertex_count; ++vertex_idx)
+              {
+                cgltf_accessor_read_float(curr_primitive.attributes[attribute_idx].data, vertex_idx, 
+                (cgltf_float*)&meshComp->primitives[primitive_idx].normalBuffer[vertex_idx], 3);
+              }
 
-          /*     /1* ev_log_info("Normals loaded for mesh #%d, primitive #%d", mesh_idx, primitive_idx); *1/ */
-          /*     /1* for(unsigned int vertex_idx = 0; vertex_idx < vertex_count; ++vertex_idx) *1/ */
-          /*     /1*   printf("\t\tVertex #%d: ( %f, %f, %f)\n", vertex_idx, *1/ */ 
-          /*     /1*       meshComp->primitives[primitive_idx].positionBuffer[vertex_idx].x, *1/ */
-          /*     /1*       meshComp->primitives[primitive_idx].positionBuffer[vertex_idx].y, *1/ */
-          /*     /1*       meshComp->primitives[primitive_idx].positionBuffer[vertex_idx].z *1/ */
-          /*     /1*       ); *1/ */
-          /*     /1* ev_log_info("End of Normals"); *1/ */
-          /*   } */
-          /*   break; */
+              ev_log_info("Normals loaded for mesh #%d, primitive #%d", mesh_idx, primitive_idx);
+              for(unsigned int vertex_idx = 0; vertex_idx < vertex_count; ++vertex_idx)
+                printf("\t\tVertex #%d: ( %f, %f, %f)\n", vertex_idx, 
+                    meshComp->primitives[primitive_idx].normalBuffer[vertex_idx].x,
+                    meshComp->primitives[primitive_idx].normalBuffer[vertex_idx].y,
+                    meshComp->primitives[primitive_idx].normalBuffer[vertex_idx].z
+                    );
+              ev_log_info("End of Normals");
+            }
+            break;
 
           default:
             break;
@@ -232,6 +232,8 @@ static int ev_assetloader_load_gltf(const char *path)
       primRendData.indexCount = meshPrim.indexCount;
       primRendData.indexBufferId = Renderer.registerIndexBuffer(meshPrim.indexBuffer, meshPrim.indexCount * sizeof(*meshPrim.indexBuffer));
       primRendData.vertexBufferId = Renderer.registerVertexBuffer((real*)meshPrim.positionBuffer, meshPrim.vertexCount * sizeof(*meshPrim.positionBuffer));
+      primRendData.normalBufferId = Renderer.registerNormalBuffer((real*)meshPrim.normalBuffer, meshPrim.vertexCount * sizeof(*meshPrim.normalBuffer));
+      printf("Normal buffer id for this primitive: %d\n", primRendData.normalBufferId);
       vec_push(&rendComp->meshRenderData.primitives, primRendData);
     }
     rendComp->meshRenderData.pipelineType = EV_GRAPHICS_PIPELINE_PBR;

@@ -34,6 +34,7 @@ typedef enum
 typedef struct {
   unsigned int indexBufferId;
   unsigned int vertexBufferId;
+  unsigned int normalBufferId;
 
   unsigned int indexCount;
 } PrimitiveRenderData;

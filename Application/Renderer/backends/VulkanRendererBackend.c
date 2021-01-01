@@ -26,7 +26,7 @@ static int ev_rendererbackend_bindindexbuffer(MemoryBuffer *indexBuffer);
 
 static int ev_rendererbackend_binddescriptorsets(DescriptorSet *descriptorSets, unsigned int count);
 static int ev_rendererbackend_allocatedescriptorset(DescriptorSetLayoutType setLayoutType, DescriptorSet *descriptorSet);
-static int ev_rendererbackend_pushdescriptorstoset(DescriptorSet descriptorSet, Descriptor *descriptors, unsigned int descriptorsCount);
+static int ev_rendererbackend_pushdescriptorstoset(DescriptorSet descriptorSet, Descriptor *descriptors, unsigned int descriptorsCount, unsigned int binding);
 
 
 static void ev_rendererbackend_createresourcememorypool(unsigned long long blockSize, unsigned int minBlockCount, unsigned int maxBlockCount, MemoryPool *pool);
@@ -261,12 +261,12 @@ static int ev_rendererbackend_init()
   {
     {
       .type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, // TODO: Measure performance difference of using VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER vs VK_DESCRIPTOR_TYPE_STORAGE_BUFFER
-      .descriptorCount = 10, //TODO CHANGE THIS COUNT
+      .descriptorCount = 100, //TODO CHANGE THIS COUNT
     },
   };
 
   VkDescriptorPoolCreateInfo descriptorPoolCreateInfo = {VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO};
-  descriptorPoolCreateInfo.maxSets = 10;
+  descriptorPoolCreateInfo.maxSets = 100;
   descriptorPoolCreateInfo.poolSizeCount = ARRAYSIZE(poolSizes);
   descriptorPoolCreateInfo.pPoolSizes = poolSizes;
 
@@ -989,14 +989,20 @@ static int ev_rendererbackend_loadbasedescriptorsetlayouts()
         .descriptorCount = 10 , //TODO look into changing this
         .descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
         .stageFlags = VK_SHADER_STAGE_ALL_GRAPHICS,
+      },
+      {
+        .binding = 1,
+        .descriptorCount = 10 , //TODO look into changing this
+        .descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+        .stageFlags = VK_SHADER_STAGE_ALL_GRAPHICS,
       }
     };
 
-    VkDescriptorBindingFlagsEXT bindingFlags = VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT; // | VK_DESCRIPTOR_BINDING_VARIABLE_DESCRIPTOR_COUNT_BIT;
+    VkDescriptorBindingFlagsEXT bindingFlags[] = {VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT, VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT}; // | VK_DESCRIPTOR_BINDING_VARIABLE_DESCRIPTOR_COUNT_BIT;
     VkDescriptorSetLayoutBindingFlagsCreateInfoEXT descriptorSetLayoutBindingFlagsCreateInfo = {
       .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_BINDING_FLAGS_CREATE_INFO_EXT,
       .bindingCount = ARRAYSIZE(bindings),
-      .pBindingFlags = &bindingFlags,
+      .pBindingFlags = bindingFlags,
     };
 
     VkDescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo = 
@@ -1056,12 +1062,12 @@ static int ev_rendererbackend_allocatedescriptorset(DescriptorSetLayoutType setL
   setAllocateInfo.descriptorSetCount = 1;
   setAllocateInfo.pSetLayouts = &BASE_DESCRIPTOR_SET_LAYOUTS[setLayoutType];
 
-  /* ev_log_debug("Error Code: %d", vkAllocateDescriptorSets(Vulkan.getDevice(), &setAllocateInfo, descriptorSet)); */
-  VK_ASSERT(vkAllocateDescriptorSets(Vulkan.getDevice(), &setAllocateInfo, descriptorSet));
+  ev_log_debug("Error Code: %d", vkAllocateDescriptorSets(Vulkan.getDevice(), &setAllocateInfo, descriptorSet));
+  /* VK_ASSERT(vkAllocateDescriptorSets(Vulkan.getDevice(), &setAllocateInfo, descriptorSet)); */
   return 0;
 }
 
-static int ev_rendererbackend_pushdescriptorstoset(DescriptorSet descriptorSet, Descriptor *descriptors, unsigned int descriptorsCount)
+static int ev_rendererbackend_pushdescriptorstoset(DescriptorSet descriptorSet, Descriptor *descriptors, unsigned int descriptorsCount, unsigned int binding)
 {
   VkWriteDescriptorSet *setWrites = malloc(descriptorsCount * sizeof(VkWriteDescriptorSet));
   VkDescriptorBufferInfo *bufferInfos = malloc(descriptorsCount * sizeof(VkDescriptorBufferInfo));
@@ -1084,7 +1090,7 @@ static int ev_rendererbackend_pushdescriptorstoset(DescriptorSet descriptorSet, 
           .descriptorCount = 1,
           .descriptorType = (VkDescriptorType)descriptors[i].type,
           .dstSet = descriptorSet,
-          .dstBinding = 0,
+          .dstBinding = binding,
           .dstArrayElement = i,
           .pBufferInfo = &bufferInfos[i],
         };
