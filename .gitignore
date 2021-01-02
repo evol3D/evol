@@ -24,3 +24,5 @@ subprojects/*
 !docs/**
 
 **/*.clangd
+
+**/*.ccls-cache
