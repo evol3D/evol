@@ -1,0 +1,11 @@
+name: "Meson Build & Run"
+
+cmd: meson compile && ./evol
+cwd: "{PROJECT_PATH}/build"
+
+targets:
+  build:
+    cmd: "meson compile -C build"
+  run:
+    cmd: ./evol
+    cwd: "{PROJECT_PATH}/build"
