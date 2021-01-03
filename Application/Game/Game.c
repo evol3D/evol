@@ -177,7 +177,6 @@ void sandbox()
   /* AssetLoader.loadGLTF("Duck.gltf"); */
   ev_log_trace("Loaded GLTF file");
 
-
   World.lockSceneAccess();
 
   {

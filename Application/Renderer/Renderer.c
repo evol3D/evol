@@ -17,6 +17,7 @@ static void ev_renderer_draw(MeshRenderData meshRenderData, ev_Matrix4 transform
 static unsigned int ev_renderer_registerindexbuffer(unsigned int *indices, unsigned long long size);
 static unsigned int ev_renderer_registervertexbuffer(real *vertices, unsigned long long size);
 static unsigned int ev_renderer_registernormalbuffer(real *normals, unsigned long long size);
+static unsigned int ev_renderer_registermaterial(void* pixels, uint32_t width, uint32_t height);
 
 struct ev_Renderer Renderer = {
   .init   = ev_renderer_init,
@@ -30,16 +31,18 @@ struct ev_Renderer Renderer = {
   .registerIndexBuffer = ev_renderer_registerindexbuffer,
   .registerVertexBuffer = ev_renderer_registervertexbuffer,
   .registerNormalBuffer = ev_renderer_registernormalbuffer,
+  .registerMaterial = ev_renderer_registermaterial,
 };
-
-typedef vec_t(MemoryBuffer) MemoryBufferVec;
 
 struct ev_Renderer_Data {
   MemoryPool resourcePool;
+  MemoryPool imagePool;
 
   MemoryBufferVec indexBuffers;
   MemoryBufferVec vertexBuffers;
   MemoryBufferVec normalBuffers;
+
+  MemoryImageVec textureBuffers;
 
   UBO cameraUBO;
 
@@ -53,6 +56,7 @@ static int ev_renderer_init()
   vec_init(&RendererData.indexBuffers);
   vec_init(&RendererData.vertexBuffers);
   vec_init(&RendererData.normalBuffers);
+  vec_init(&RendererData.textureBuffers);
 
   ev_log_trace("Loading BaseShaders");
   RendererBackend.loadBaseShaders();
@@ -66,6 +70,10 @@ static int ev_renderer_init()
 
   ev_log_trace("Allocating ResourceMemoryPool");
   RendererBackend.createResourceMemoryPool(128ull * 1024 * 1024, 1, 4, &RendererData.resourcePool);
+  ev_log_debug("Allocated ResourceMemoryPool");
+
+  ev_log_trace("Allocating ResourceMemoryPool");
+  RendererBackend.createResourceMemoryPool(128ull * 1024 * 1024, 1, 4, &RendererData.imagePool);
   ev_log_debug("Allocated ResourceMemoryPool");
 
   // Create a persistent UBO for the main camera
@@ -82,7 +90,7 @@ static int ev_renderer_deinit()
   RendererBackend.freeUBO(&RendererData.cameraUBO);
 
   // Free all buffers used for index-buffer storage
-  MemoryBuffer *buffer; unsigned int idx;
+  MemoryBuffer *buffer; MemoryImage *texture; unsigned int idx;
   vec_foreach_ptr(&RendererData.indexBuffers, buffer, idx)
   {
     RendererBackend.freeMemoryBuffer(buffer);
@@ -103,8 +111,16 @@ static int ev_renderer_deinit()
   }
   vec_deinit(&RendererData.normalBuffers);
 
+  // Free all buffers used for images storage
+  vec_foreach_ptr(&RendererData.textureBuffers, texture, idx)
+  {
+    RendererBackend.freeImage(texture);
+  }
+  vec_deinit(&RendererData.textureBuffers);
+
   // After freeing all the buffers in this pool, free the pool itself
   RendererBackend.freeMemoryPool(RendererData.resourcePool);
+  RendererBackend.freeMemoryPool(RendererData.imagePool);
 
   RendererBackend.memoryDump();
   return 0;
@@ -119,7 +135,7 @@ static unsigned int ev_renderer_registerindexbuffer(unsigned int *indices, unsig
 
   MemoryBuffer indexStagingBuffer;
   RendererBackend.allocateStagingBuffer(size, &indexStagingBuffer);
-  RendererBackend.updateStagingBuffer(&indexStagingBuffer, size, indices); 
+  RendererBackend.updateStagingBuffer(&indexStagingBuffer, size, indices);
   RendererBackend.copyBuffer(size, &indexStagingBuffer, &newIndexBuffer);
 
   //TODO We should have a system that controls staging buffers
@@ -139,7 +155,7 @@ static unsigned int ev_renderer_registervertexbuffer(real *vertices, unsigned lo
 
   MemoryBuffer vertexStagingBuffer;
   RendererBackend.allocateStagingBuffer(size, &vertexStagingBuffer);
-  RendererBackend.updateStagingBuffer(&vertexStagingBuffer, size, vertices); 
+  RendererBackend.updateStagingBuffer(&vertexStagingBuffer, size, vertices);
   RendererBackend.copyBuffer(size, &vertexStagingBuffer, &newVertexBuffer);
 
   //TODO We should have a system that controls staging buffers
@@ -159,13 +175,37 @@ static unsigned int ev_renderer_registernormalbuffer(real *normals, unsigned lon
 
   MemoryBuffer normalStagingBuffer;
   RendererBackend.allocateStagingBuffer(size, &normalStagingBuffer);
-  RendererBackend.updateStagingBuffer(&normalStagingBuffer, size, normals); 
+  RendererBackend.updateStagingBuffer(&normalStagingBuffer, size, normals);
   RendererBackend.copyBuffer(size, &normalStagingBuffer, &newNormalBuffer);
 
   //TODO We should have a system that controls staging buffers
   RendererBackend.freeMemoryBuffer(&normalStagingBuffer);
 
   vec_push(&RendererData.normalBuffers, newNormalBuffer);
+
+  return idx;
+}
+
+static unsigned int ev_renderer_registermaterial(void* pixels, uint32_t width, uint32_t height)
+{
+  unsigned int idx = RendererData.textureBuffers.length;
+
+  uint32_t size = width * height * 4;
+
+  MemoryImage newimage;
+  RendererBackend.allocateImageInPool(RendererData.imagePool,width, height , EV_USAGEFLAGS_RESOURCE_IMAGE, &newimage);
+
+  MemoryBuffer imageStagingBuffer;
+  RendererBackend.allocateStagingBuffer(size, &imageStagingBuffer);
+  RendererBackend.updateStagingBuffer(&imageStagingBuffer, size, pixels);
+
+  RendererBackend.trasitionImageLayout(newimage, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+  RendererBackend.copyBufferToImage(imageStagingBuffer.buffer, newimage.image, width, height);
+  RendererBackend.trasitionImageLayout(newimage, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+
+  RendererBackend.freeMemoryBuffer(&imageStagingBuffer);
+
+  vec_push(&RendererData.textureBuffers, newimage);
 
   return idx;
 }
@@ -240,4 +280,3 @@ static int ev_renderer_endframe()
   RendererBackend.endFrame();
   return 0;
 }
-

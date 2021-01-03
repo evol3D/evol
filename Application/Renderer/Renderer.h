@@ -11,6 +11,7 @@ extern struct ev_Renderer {
   unsigned int (*registerIndexBuffer)(unsigned int *indices, unsigned long long size);
   unsigned int (*registerVertexBuffer)(real *vertices, unsigned long long size);
   unsigned int (*registerNormalBuffer)(real *normals, unsigned long long size);
+  unsigned int (*registerMaterial)(void* pixels, uint32_t width, uint32_t height);
 
   int (*startFrame)(ev_RenderCamera *camera);
   int (*endFrame)();
@@ -18,4 +19,4 @@ extern struct ev_Renderer {
   void (*draw)(MeshRenderData meshRenderData, ev_Matrix4 transformMatrix);
 } Renderer;
 
-#endif //EVOL_RENDERER_H 
+#endif //EVOL_RENDERER_H

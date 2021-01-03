@@ -42,7 +42,9 @@ extern struct ev_Vulkan {
 
     void (*allocateMemoryPool)(VmaPoolCreateInfo *poolCreateInfo, VmaPool* pool);
     void (*freeMemoryPool)(VmaPool pool);
+
     void (*allocateBufferInPool)(VkBufferCreateInfo *bufferCreateInfo, VmaPool pool, EvBuffer *buffer);
+    void (*allocateImageInPool)(VkImageCreateInfo *imageCreateInfo, VmaPool pool, EvImage *image);
 
     void (*memoryDump)();
 
@@ -62,4 +64,4 @@ extern struct ev_Vulkan {
 
 } Vulkan;
 
-#endif //EVOL_VULKAN_H 
+#endif //EVOL_VULKAN_H

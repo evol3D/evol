@@ -38,6 +38,7 @@ static void ev_vulkan_allocatememorypool(VmaPoolCreateInfo *poolCreateInfo, VmaP
 static void ev_vulkan_freememorypool(VmaPool pool);
 
 static void ev_vulkan_allocatebufferinpool(VkBufferCreateInfo *bufferCreateInfo, VmaPool pool, EvBuffer *buffer);
+static void ev_vulkan_allocateimageinpool(VkImageCreateInfo *imageCreateInfo, VmaPool pool, EvImage *image);
 
 static void ev_vulkan_allocateprimarycommandbuffer(QueueType queueType, VkCommandBuffer *cmdBuffer);
 
@@ -69,6 +70,7 @@ struct ev_Vulkan Vulkan = {
   .freeMemoryPool               = ev_vulkan_freememorypool,
 
   .allocateBufferInPool         = ev_vulkan_allocatebufferinpool,
+  .allocateImageInPool          = ev_vulkan_allocateimageinpool,
 
   .createImageViews             = ev_vulkan_createimageviews,
   .createFramebuffer            =  ev_vulkan_createframebuffer,
@@ -238,7 +240,7 @@ static void ev_vulkan_create_logical_device()
     .descriptorBindingPartiallyBound = VK_TRUE,
   };
 
-  VkDeviceCreateInfo deviceCreateInfo = 
+  VkDeviceCreateInfo deviceCreateInfo =
   {
     .sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
     .pNext = &physicalDeviceDescriptorIndexingFeatures,
@@ -258,7 +260,7 @@ static void ev_vulkan_createsurface(VkSurfaceKHR *surface)
   VK_ASSERT(Window.createVulkanSurface(VulkanData.instance, surface));
 
   // Check that the surface is supported by the Graphics QueueFamily present
-  
+
   VkBool32 surfaceSupported = VK_FALSE;
   vkGetPhysicalDeviceSurfaceSupportKHR(VulkanData.physicalDevice, VulkanQueueManager.getFamilyIndex(GRAPHICS), *surface, &surfaceSupported);
 
@@ -288,7 +290,7 @@ static void ev_vulkan_createswapchain(unsigned int* imageCount, VkSurfaceKHR* su
         : (surfaceCapabilities.supportedCompositeAlpha & VK_COMPOSITE_ALPHA_POST_MULTIPLIED_BIT_KHR)
           ? VK_COMPOSITE_ALPHA_POST_MULTIPLIED_BIT_KHR
           : VK_COMPOSITE_ALPHA_INHERIT_BIT_KHR;
-          
+
   *imageCount = MAX(*imageCount, surfaceCapabilities.minImageCount);
 
   if(surfaceCapabilities.maxImageCount) // If there is an upper limit
@@ -441,6 +443,15 @@ static void ev_vulkan_allocatebufferinpool(VkBufferCreateInfo *bufferCreateInfo,
   };
 
   ev_vulkan_create_buffer(bufferCreateInfo, &allocationCreateInfo, buffer);
+}
+
+static void ev_vulkan_allocateimageinpool(VkImageCreateInfo *imageCreateInfo, VmaPool pool, EvImage *image)
+{
+  VmaAllocationCreateInfo allocationCreateInfo = {
+    .pool = pool,
+  };
+
+  ev_vulkan_create_image(imageCreateInfo, &allocationCreateInfo, image);
 }
 
 inline VmaAllocator ev_vulkan_getallocator()

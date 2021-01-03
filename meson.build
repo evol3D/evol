@@ -38,6 +38,7 @@ dl_dep = cc.find_library('dl', required: false)
 cgltf_dep = dependency('cgltf')
 cglm_dep  = dependency('cglm')
 vec_dep   = dependency('vec')
+stbimage_dep = dependency('stbimage')
 
 subdir('Application/Window')
 subdir('Application/Vulkan')
@@ -87,6 +88,7 @@ evol_exe = executable( 'evol', srcfiles,
     cglm_dep,
     vec_dep,
     vma_dep,
+    stbimage_dep,
   ],
 )
 

@@ -4,9 +4,8 @@
 #include "World/World.h"
 #include "physics_types.h"
 #include <Physics/Physics.h>
-
 #include <World/WorldModules.h>
-
+#include "stb_image.h"
 #include <ev_log/ev_log.h>
 
 #include <assert.h>
@@ -128,6 +127,20 @@ static int ev_assetloader_load_gltf(const char *path)
   cgltf_load_buffers(&options, data, path);
   assert(result == cgltf_result_success);
 
+  for(int material_Idx = 0;material_Idx < data->materials_count; material_Idx++)
+  {
+    if(data->materials[material_Idx].pbr_metallic_roughness.base_color_texture.texture)
+      {
+        int texWidth, texHeight, texChannels;
+
+        stbi_uc* pixels = stbi_load(data->materials[material_Idx].pbr_metallic_roughness.base_color_texture.texture->image->uri, &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
+        assert(pixels);
+
+        Renderer.registerMaterial(pixels, texWidth, texHeight);
+      }
+
+  }
+
   Entity *mesh_entities = malloc(sizeof(Entity) * data->meshes_count);
   for(unsigned int mesh_idx = 0; mesh_idx < data->meshes_count; ++mesh_idx)
   {
@@ -170,13 +183,13 @@ static int ev_assetloader_load_gltf(const char *path)
               meshComp->primitives[primitive_idx].positionBuffer = malloc(vertex_count * sizeof(ev_Vector3));
               for(unsigned int vertex_idx = 0; vertex_idx < vertex_count; ++vertex_idx)
               {
-                cgltf_accessor_read_float(curr_primitive.attributes[attribute_idx].data, vertex_idx, 
+                cgltf_accessor_read_float(curr_primitive.attributes[attribute_idx].data, vertex_idx,
                 (cgltf_float*)&meshComp->primitives[primitive_idx].positionBuffer[vertex_idx], 3);
               }
 
               /* ev_log_info("Positions loaded for mesh #%d, primitive #%d", mesh_idx, primitive_idx); */
               /* for(unsigned int vertex_idx = 0; vertex_idx < vertex_count; ++vertex_idx) */
-              /*   printf("\t\tVertex #%d: ( %f, %f, %f)\n", vertex_idx, */ 
+              /*   printf("\t\tVertex #%d: ( %f, %f, %f)\n", vertex_idx, */
               /*       meshComp->primitives[primitive_idx].positionBuffer[vertex_idx].x, */
               /*       meshComp->primitives[primitive_idx].positionBuffer[vertex_idx].y, */
               /*       meshComp->primitives[primitive_idx].positionBuffer[vertex_idx].z */
@@ -193,13 +206,13 @@ static int ev_assetloader_load_gltf(const char *path)
               meshComp->primitives[primitive_idx].normalBuffer = malloc(vertex_count * sizeof(ev_Vector3));
               for(unsigned int vertex_idx = 0; vertex_idx < vertex_count; ++vertex_idx)
               {
-                cgltf_accessor_read_float(curr_primitive.attributes[attribute_idx].data, vertex_idx, 
+                cgltf_accessor_read_float(curr_primitive.attributes[attribute_idx].data, vertex_idx,
                 (cgltf_float*)&meshComp->primitives[primitive_idx].normalBuffer[vertex_idx], 3);
               }
 
               ev_log_info("Normals loaded for mesh #%d, primitive #%d", mesh_idx, primitive_idx);
               for(unsigned int vertex_idx = 0; vertex_idx < vertex_count; ++vertex_idx)
-                printf("\t\tVertex #%d: ( %f, %f, %f)\n", vertex_idx, 
+                printf("\t\tVertex #%d: ( %f, %f, %f)\n", vertex_idx,
                     meshComp->primitives[primitive_idx].normalBuffer[vertex_idx].x,
                     meshComp->primitives[primitive_idx].normalBuffer[vertex_idx].y,
                     meshComp->primitives[primitive_idx].normalBuffer[vertex_idx].z
@@ -249,7 +262,6 @@ static int ev_assetloader_load_gltf(const char *path)
     ev_assetloader_load_gltf_node(curr_node, 0, data, mesh_entities);
   }
   World.unlockSceneAccess();
-
 
   cgltf_free(data);
 
