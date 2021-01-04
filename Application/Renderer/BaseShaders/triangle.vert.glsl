@@ -24,8 +24,8 @@ layout(set = 1, binding = 1) buffer NormalBuffer {
 
 layout(location=0) out vec4 color;
 
-vec3 lightDir = vec3(1, 0, 1);
-float ambientLight = 0.1;
+vec3 lightDir = vec3(1, 1, 1);
+float ambientLight = 0.2;
 
 void main()
 {

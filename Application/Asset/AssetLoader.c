@@ -2,7 +2,9 @@
 #include "AssetLoader.h"
 #include "Renderer/Renderer.h"
 #include "World/World.h"
+#include "World/modules/transform_module.h"
 #include "physics_types.h"
+#include "types.h"
 #include <Physics/Physics.h>
 
 #include <World/WorldModules.h>
@@ -39,6 +41,8 @@ static int ev_assetloader_deinit()
 {
   return 0;
 }
+
+#include <Game/Game.h>
 
 static void ev_assetloader_load_gltf_node(cgltf_node curr_node, Entity parent, cgltf_data *data, Entity *mesh_entities)
 {
@@ -88,17 +92,44 @@ static void ev_assetloader_load_gltf_node(cgltf_node curr_node, Entity parent, c
       RigidBodyType rbType = EV_RIGIDBODY_DYNAMIC;
       for(int i = 0; i < curr_node.extensions_count; ++i)
       {
-        if(!strcmp(curr_node.extensions[i].name, "EV_physics_rigidbody_kinematic"))
-            rbType = EV_RIGIDBODY_KINEMATIC;
+        if(!strcmp(curr_node.extensions[i].name, "EV_Physics_Rigidbody")) {
+          rbType = EV_RIGIDBODY_KINEMATIC;
+        }
+        if(!strcmp(curr_node.extensions[i].name, "EV_Game_Player")) {
+          Game.setPlayer(curr);
+        }
+        if(!strcmp(curr_node.extensions[i].name, "EV_Game_Map")) {
+          rbType = EV_RIGIDBODY_STATIC;
+        }
       }
       const MeshComponent *meshComponent = Entity_GetComponent(curr, MeshComponent);
-      if(rbType != EV_RIGIDBODY_KINEMATIC)
-      {
+      if(rbType == EV_RIGIDBODY_STATIC) {
+        for(int i = 0; i < meshComponent->primitives_count; i++) {
+          RigidBody rb = {
+            .entt_id = curr,
+            .type = EV_RIGIDBODY_STATIC,
+            .mass = 0,
+            .restitution = 1.0,
+            .collisionShape =
+              Physics.createStaticFromTriangleIndexVertex(
+                meshComponent->primitives[i].indexCount/3,
+                meshComponent->primitives[i].indexBuffer,
+                3 * sizeof(unsigned int),
+                meshComponent->primitives[i].vertexCount,
+                (real*)meshComponent->primitives[i].positionBuffer,
+                sizeof(ev_Vector3)
+              ),
+          };
+          Physics.addRigidBody(&rb);
+        }
+      }
+      else if(rbType == EV_RIGIDBODY_DYNAMIC) {
         Entity_SetComponent(curr, RigidBodyComponent, {
-            .mass = 1,
+            .mass = 1000,
             .type = rbType,
             .collisionShape =
-            Physics.createBox(2, 1, 1),
+            Physics.createBox(1, 0.5, 2),
+            /* Physics.createSphere(1), */
             /* Physics.generateConvexHull( */
             /*     meshComponent->primitives->vertexCount, */
             /*     meshComponent->primitives->positionBuffer */
@@ -125,6 +156,9 @@ static int ev_assetloader_load_gltf(const char *path)
   cgltf_options options = {0};
   cgltf_data *data = NULL;
   cgltf_result result = cgltf_parse_file(&options, path, &data);
+  if(result != cgltf_result_success) {
+    printf("CGLTF Load Error: %d\n", result);
+  }
   cgltf_load_buffers(&options, data, path);
   assert(result == cgltf_result_success);
 
@@ -170,13 +204,13 @@ static int ev_assetloader_load_gltf(const char *path)
               meshComp->primitives[primitive_idx].positionBuffer = malloc(vertex_count * sizeof(ev_Vector3));
               for(unsigned int vertex_idx = 0; vertex_idx < vertex_count; ++vertex_idx)
               {
-                cgltf_accessor_read_float(curr_primitive.attributes[attribute_idx].data, vertex_idx, 
+                cgltf_accessor_read_float(curr_primitive.attributes[attribute_idx].data, vertex_idx,
                 (cgltf_float*)&meshComp->primitives[primitive_idx].positionBuffer[vertex_idx], 3);
               }
 
               /* ev_log_info("Positions loaded for mesh #%d, primitive #%d", mesh_idx, primitive_idx); */
               /* for(unsigned int vertex_idx = 0; vertex_idx < vertex_count; ++vertex_idx) */
-              /*   printf("\t\tVertex #%d: ( %f, %f, %f)\n", vertex_idx, */ 
+              /*   printf("\t\tVertex #%d: ( %f, %f, %f)\n", vertex_idx, */
               /*       meshComp->primitives[primitive_idx].positionBuffer[vertex_idx].x, */
               /*       meshComp->primitives[primitive_idx].positionBuffer[vertex_idx].y, */
               /*       meshComp->primitives[primitive_idx].positionBuffer[vertex_idx].z */
@@ -193,18 +227,18 @@ static int ev_assetloader_load_gltf(const char *path)
               meshComp->primitives[primitive_idx].normalBuffer = malloc(vertex_count * sizeof(ev_Vector3));
               for(unsigned int vertex_idx = 0; vertex_idx < vertex_count; ++vertex_idx)
               {
-                cgltf_accessor_read_float(curr_primitive.attributes[attribute_idx].data, vertex_idx, 
+                cgltf_accessor_read_float(curr_primitive.attributes[attribute_idx].data, vertex_idx,
                 (cgltf_float*)&meshComp->primitives[primitive_idx].normalBuffer[vertex_idx], 3);
               }
 
-              ev_log_info("Normals loaded for mesh #%d, primitive #%d", mesh_idx, primitive_idx);
-              for(unsigned int vertex_idx = 0; vertex_idx < vertex_count; ++vertex_idx)
-                printf("\t\tVertex #%d: ( %f, %f, %f)\n", vertex_idx, 
-                    meshComp->primitives[primitive_idx].normalBuffer[vertex_idx].x,
-                    meshComp->primitives[primitive_idx].normalBuffer[vertex_idx].y,
-                    meshComp->primitives[primitive_idx].normalBuffer[vertex_idx].z
-                    );
-              ev_log_info("End of Normals");
+              /* ev_log_info("Normals loaded for mesh #%d, primitive #%d", mesh_idx, primitive_idx); */
+              /* for(unsigned int vertex_idx = 0; vertex_idx < vertex_count; ++vertex_idx) */
+              /*   printf("\t\tVertex #%d: ( %f, %f, %f)\n", vertex_idx, */
+              /*       meshComp->primitives[primitive_idx].normalBuffer[vertex_idx].x, */
+              /*       meshComp->primitives[primitive_idx].normalBuffer[vertex_idx].y, */
+              /*       meshComp->primitives[primitive_idx].normalBuffer[vertex_idx].z */
+              /*       ); */
+              /* ev_log_info("End of Normals"); */
             }
             break;
 
@@ -233,7 +267,7 @@ static int ev_assetloader_load_gltf(const char *path)
       primRendData.indexBufferId = Renderer.registerIndexBuffer(meshPrim.indexBuffer, meshPrim.indexCount * sizeof(*meshPrim.indexBuffer));
       primRendData.vertexBufferId = Renderer.registerVertexBuffer((real*)meshPrim.positionBuffer, meshPrim.vertexCount * sizeof(*meshPrim.positionBuffer));
       primRendData.normalBufferId = Renderer.registerNormalBuffer((real*)meshPrim.normalBuffer, meshPrim.vertexCount * sizeof(*meshPrim.normalBuffer));
-      printf("Normal buffer id for this primitive: %d\n", primRendData.normalBufferId);
+      /* printf("Normal buffer id for this primitive: %d\n", primRendData.normalBufferId); */
       vec_push(&rendComp->meshRenderData.primitives, primRendData);
     }
     rendComp->meshRenderData.pipelineType = EV_GRAPHICS_PIPELINE_PBR;

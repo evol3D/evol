@@ -261,7 +261,7 @@ static int ev_rendererbackend_init()
   {
     {
       .type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, // TODO: Measure performance difference of using VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER vs VK_DESCRIPTOR_TYPE_STORAGE_BUFFER
-      .descriptorCount = 100, //TODO CHANGE THIS COUNT
+      .descriptorCount = 1000, //TODO CHANGE THIS COUNT
     },
   };
 
@@ -986,13 +986,13 @@ static int ev_rendererbackend_loadbasedescriptorsetlayouts()
     { 
       {
         .binding = 0,
-        .descriptorCount = 10 , //TODO look into changing this
+        .descriptorCount = 400 , //TODO look into changing this
         .descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
         .stageFlags = VK_SHADER_STAGE_ALL_GRAPHICS,
       },
       {
         .binding = 1,
-        .descriptorCount = 10 , //TODO look into changing this
+        .descriptorCount = 400 , //TODO look into changing this
         .descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
         .stageFlags = VK_SHADER_STAGE_ALL_GRAPHICS,
       }
@@ -1062,8 +1062,8 @@ static int ev_rendererbackend_allocatedescriptorset(DescriptorSetLayoutType setL
   setAllocateInfo.descriptorSetCount = 1;
   setAllocateInfo.pSetLayouts = &BASE_DESCRIPTOR_SET_LAYOUTS[setLayoutType];
 
-  ev_log_debug("Error Code: %d", vkAllocateDescriptorSets(Vulkan.getDevice(), &setAllocateInfo, descriptorSet));
-  /* VK_ASSERT(vkAllocateDescriptorSets(Vulkan.getDevice(), &setAllocateInfo, descriptorSet)); */
+  /* ev_log_debug("Error Code: %d", vkAllocateDescriptorSets(Vulkan.getDevice(), &setAllocateInfo, descriptorSet)); */
+  VK_ASSERT(vkAllocateDescriptorSets(Vulkan.getDevice(), &setAllocateInfo, descriptorSet));
   return 0;
 }
 

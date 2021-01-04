@@ -76,7 +76,7 @@ static int start(int argc, char **argv) {
   { // Window Initialization
     Window.init();
     Window.setTitle("evol3D");
-    Window.setSize(800, 600);
+    Window.setSize(1600, 1200);
     Window.createWindow();
   }
 

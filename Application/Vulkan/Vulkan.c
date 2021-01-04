@@ -8,6 +8,7 @@
 
 #include "stdio.h"
 #include "stdlib.h"
+#include <vulkan/vulkan_core.h>
 
 static int ev_vulkan_init();
 static int ev_vulkan_deinit();
