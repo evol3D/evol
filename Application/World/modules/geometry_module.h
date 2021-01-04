@@ -9,6 +9,7 @@ typedef struct
 {
   ev_Vector3 *positionBuffer;
   ev_Vector3 *normalBuffer;
+  ev_Vector2 *uvBuffer;
 
   unsigned int *indexBuffer;
 

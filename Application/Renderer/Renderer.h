@@ -4,13 +4,19 @@
 #include "renderer_types.h"
 #include "RendererBackend.h"
 
+typedef enum
+{
+  INDEXBUFFER,
+  VERTEXBUFFER,
+  NORMALBUFFER,
+  UVBUFFER,
+} RendererRegisterTypes;
+
 extern struct ev_Renderer {
   int (*init)();
   int (*deinit)();
 
-  unsigned int (*registerIndexBuffer)(unsigned int *indices, unsigned long long size);
-  unsigned int (*registerVertexBuffer)(real *vertices, unsigned long long size);
-  unsigned int (*registerNormalBuffer)(real *normals, unsigned long long size);
+  unsigned int (*registerBuffer)(RendererRegisterTypes type, void* data, unsigned long long size);
   unsigned int (*registerMaterial)(void* pixels, uint32_t width, uint32_t height);
 
   int (*startFrame)(ev_RenderCamera *camera);

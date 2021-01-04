@@ -90,7 +90,7 @@ static void ev_assetloader_load_gltf_node(cgltf_node curr_node, Entity parent, c
         if(!strcmp(curr_node.extensions[i].name, "EV_physics_rigidbody_kinematic"))
             rbType = EV_RIGIDBODY_KINEMATIC;
       }
-      const MeshComponent *meshComponent = Entity_GetComponent(curr, MeshComponent);
+      //const MeshComponent *meshComponent = Entity_GetComponent(curr, MeshComponent);
       if(rbType != EV_RIGIDBODY_KINEMATIC)
       {
         Entity_SetComponent(curr, RigidBodyComponent, {
@@ -138,7 +138,6 @@ static int ev_assetloader_load_gltf(const char *path)
 
         Renderer.registerMaterial(pixels, texWidth, texHeight);
       }
-
   }
 
   Entity *mesh_entities = malloc(sizeof(Entity) * data->meshes_count);
@@ -164,12 +163,6 @@ static int ev_assetloader_load_gltf(const char *path)
       {
         meshComp->primitives[primitive_idx].indexBuffer[idx] = cgltf_accessor_read_index(curr_primitive.indices, idx);
       }
-
-      /* ev_log_info("Indices loaded for mesh #%d, primitive #%d", mesh_idx, primitive_idx); */
-      /* for(unsigned int idx = 0; idx < indices_count; ++idx) */
-      /*   printf("%u, ", meshComp->primitives[primitive_idx].indexBuffer[idx]); */
-      /* printf("\n"); */
-      /* ev_log_info("End of Indices"); */
 
       for(unsigned int attribute_idx = 0; attribute_idx < curr_primitive.attributes_count; attribute_idx++)
       {
@@ -212,6 +205,19 @@ static int ev_assetloader_load_gltf(const char *path)
             }
             break;
 
+            // UV buffer
+            case cgltf_attribute_type_texcoord:
+              {
+                unsigned int vertex_count = curr_primitive.attributes[attribute_idx].data->count;
+                meshComp->primitives[primitive_idx].vertexCount = vertex_count;
+                meshComp->primitives[primitive_idx].uvBuffer = malloc(vertex_count * sizeof(ev_Vector2));
+                for(unsigned int vertex_idx = 0; vertex_idx < vertex_count; ++vertex_idx)
+                {
+                  cgltf_accessor_read_float(curr_primitive.attributes[attribute_idx].data, vertex_idx,
+                  (cgltf_float*)&meshComp->primitives[primitive_idx].uvBuffer[vertex_idx], 2);
+                }
+              }
+            break;
           default:
             break;
         }
@@ -233,11 +239,11 @@ static int ev_assetloader_load_gltf(const char *path)
     {
       MeshPrimitive meshPrim = meshComp->primitives[primitive_idx];
       PrimitiveRenderData primRendData;
-      primRendData.indexCount = meshPrim.indexCount;
-      primRendData.indexBufferId = Renderer.registerIndexBuffer(meshPrim.indexBuffer, meshPrim.indexCount * sizeof(*meshPrim.indexBuffer));
-      primRendData.vertexBufferId = Renderer.registerVertexBuffer((real*)meshPrim.positionBuffer, meshPrim.vertexCount * sizeof(*meshPrim.positionBuffer));
-      primRendData.normalBufferId = Renderer.registerNormalBuffer((real*)meshPrim.normalBuffer, meshPrim.vertexCount * sizeof(*meshPrim.normalBuffer));
-      printf("Normal buffer id for this primitive: %d\n", primRendData.normalBufferId);
+      primRendData.indexCount     = meshPrim.indexCount;
+      primRendData.indexBufferId  = Renderer.registerBuffer(INDEXBUFFER,  meshPrim.indexBuffer, meshPrim.indexCount * sizeof(*meshPrim.indexBuffer));
+      primRendData.vertexBufferId = Renderer.registerBuffer(VERTEXBUFFER, meshPrim.positionBuffer, meshPrim.vertexCount * sizeof(*meshPrim.positionBuffer));
+      primRendData.normalBufferId = Renderer.registerBuffer(NORMALBUFFER, meshPrim.normalBuffer, meshPrim.vertexCount * sizeof(*meshPrim.normalBuffer));
+      primRendData.uvBufferId     = Renderer.registerBuffer(UVBUFFER,     meshPrim.uvBuffer, meshPrim.vertexCount * sizeof(*meshPrim.uvBuffer));
       vec_push(&rendComp->meshRenderData.primitives, primRendData);
     }
     rendComp->meshRenderData.pipelineType = EV_GRAPHICS_PIPELINE_PBR;
