@@ -127,6 +127,7 @@ static int ev_assetloader_load_gltf(const char *path)
   cgltf_load_buffers(&options, data, path);
   assert(result == cgltf_result_success);
 
+  int32_t* materials = malloc(data->materials_count * sizeof(int32_t));
   for(int material_Idx = 0;material_Idx < data->materials_count; material_Idx++)
   {
     if(data->materials[material_Idx].pbr_metallic_roughness.base_color_texture.texture)
@@ -136,7 +137,11 @@ static int ev_assetloader_load_gltf(const char *path)
         stbi_uc* pixels = stbi_load(data->materials[material_Idx].pbr_metallic_roughness.base_color_texture.texture->image->uri, &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
         assert(pixels);
 
-        Renderer.registerMaterial(pixels, texWidth, texHeight);
+        materials[material_Idx] = Renderer.registerMaterial(pixels, texWidth, texHeight);
+      }
+      else
+      {
+        materials[material_Idx] = -1;
       }
   }
 
@@ -221,6 +226,9 @@ static int ev_assetloader_load_gltf(const char *path)
           default:
             break;
         }
+
+        if (curr_primitive.material)
+				    meshComp->primitives[primitive_idx].materialId = curr_primitive.material - data->materials;
       }
     }
   }
@@ -244,6 +252,7 @@ static int ev_assetloader_load_gltf(const char *path)
       primRendData.vertexBufferId = Renderer.registerBuffer(VERTEXBUFFER, meshPrim.positionBuffer, meshPrim.vertexCount * sizeof(*meshPrim.positionBuffer));
       primRendData.normalBufferId = Renderer.registerBuffer(NORMALBUFFER, meshPrim.normalBuffer, meshPrim.vertexCount * sizeof(*meshPrim.normalBuffer));
       primRendData.uvBufferId     = Renderer.registerBuffer(UVBUFFER,     meshPrim.uvBuffer, meshPrim.vertexCount * sizeof(*meshPrim.uvBuffer));
+      primRendData.materialId     = materials[meshPrim.materialId];
       vec_push(&rendComp->meshRenderData.primitives, primRendData);
     }
     rendComp->meshRenderData.pipelineType = EV_GRAPHICS_PIPELINE_PBR;

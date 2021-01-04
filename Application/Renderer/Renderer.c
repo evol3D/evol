@@ -50,6 +50,7 @@ static int ev_renderer_init()
   ev_log_trace("Initializing RendererBackend");
   RendererBackend.init();
   ev_log_debug("Initialized RendererBackend");
+
   vec_init(&RendererData.indexBuffers);
   vec_init(&RendererData.vertexBuffers);
   vec_init(&RendererData.normalBuffers);
@@ -134,7 +135,7 @@ static int ev_renderer_deinit()
 static unsigned int ev_renderer_registerbuffer(RendererRegisterTypes type, void* data, unsigned long long size)
 {
   MemoryBufferVec* buffer;
-  int32_t usageflags;
+  uint32_t usageflags;
 
   switch (type)
   {
@@ -251,12 +252,14 @@ static int ev_renderer_startframe(ev_RenderCamera *camera)
   Descriptor *vertexDescriptors = malloc(sizeof(Descriptor) * RendererData.vertexBuffers.length);
   Descriptor *normalDescriptors = malloc(sizeof(Descriptor) * RendererData.normalBuffers.length);
   Descriptor *uvDescriptors     = malloc(sizeof(Descriptor) * RendererData.uvBuffers.length);
+
   for(int i = 0; i < RendererData.vertexBuffers.length; ++i)
     vertexDescriptors[i] = (Descriptor){EV_DESCRIPTOR_TYPE_STORAGE_BUFFER, &RendererData.vertexBuffers.data[i]};
   for(int i = 0; i < RendererData.normalBuffers.length; ++i)
     normalDescriptors[i] = (Descriptor){EV_DESCRIPTOR_TYPE_STORAGE_BUFFER, &RendererData.normalBuffers.data[i]};
   for(int i = 0; i < RendererData.uvBuffers.length; ++i)
     uvDescriptors[i]     = (Descriptor){EV_DESCRIPTOR_TYPE_STORAGE_BUFFER, &RendererData.uvBuffers.data[i]};
+
   RendererBackend.pushDescriptorsToSet(resourceDescriptorSet, vertexDescriptors, RendererData.vertexBuffers.length, 0);
   RendererBackend.pushDescriptorsToSet(resourceDescriptorSet, normalDescriptors, RendererData.normalBuffers.length, 1);
   RendererBackend.pushDescriptorsToSet(resourceDescriptorSet, uvDescriptors,     RendererData.uvBuffers.length,     2);
@@ -271,14 +274,6 @@ static int ev_renderer_startframe(ev_RenderCamera *camera)
     textureDescriptors[i] = (Descriptor){EV_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, &RendererData.textureBuffers.data[i]};
   RendererBackend.pushDescriptorsToSet(textureDescriptorSet, textureDescriptors, RendererData.textureBuffers.length, 0);
   free(textureDescriptors);
-
-  // DescriptorSet uvDescriptorSet;
-  // RendererBackend.allocateDescriptorSet(EV_DESCRIPTOR_SET_LAYOUT_BUFFER_UV, &uvDescriptorSet);
-  // Descriptor *uvDescriptors = malloc(sizeof(Descriptor) * RendererData.uvBuffers.length);
-  // for(int i = 0; i < RendererData.uvBuffers.length; ++i)
-  //   uvDescriptors[i] = (Descriptor){EV_DESCRIPTOR_TYPE_STORAGE_BUFFER, &RendererData.uvBuffers.data[i]};
-  // RendererBackend.pushDescriptorsToSet(uvDescriptorSet, uvDescriptors, RendererData.uvBuffers.length, 0);
-  // free(uvDescriptors);
 
   DescriptorSet descriptorSets[] = {
     cameraDescriptorSet,
@@ -305,13 +300,17 @@ static void ev_renderer_draw(MeshRenderData meshRenderData, ev_Matrix4 transform
       unsigned int vertexBufferIndex;
       unsigned int normalBufferIndex;
       unsigned int uvBufferIndex;
+
+      int materialIndex;
+
       ev_Matrix4 modelMatrix;
     } params;
 
     params.vertexBufferIndex = currentPrimitive->vertexBufferId;
     params.normalBufferIndex = currentPrimitive->normalBufferId;
     params.uvBufferIndex = currentPrimitive->uvBufferId;
-
+    params.materialIndex = currentPrimitive->materialId;
+    
     glm_mat4_dup(transformMatrix, params.modelMatrix);
 
     RendererBackend.pushConstant(&params, sizeof(params));

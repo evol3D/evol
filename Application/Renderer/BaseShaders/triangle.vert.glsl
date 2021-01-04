@@ -7,6 +7,8 @@ layout (push_constant) uniform PushConstant
   int normalBufferIndex;
   int uvBufferIndex;
 
+  int materialIndex;
+
   mat4 model;
 } RenderData;
 
@@ -27,21 +29,13 @@ layout(set = 1, binding = 2) buffer UVBuffer {
   layout(align = 16) vec4 uvs[];
 } UVBuffers[];
 
-//layout(location=0) out vec4 color;
 layout(location=0) out vec2 uv;
-
-vec3 lightDir = vec3(1, 0, 1);
-float ambientLight = 0.1;
+layout(location=1) out vec3 normal;
 
 void main()
 {
   gl_Position = Camera.projection * Camera.view * RenderData.model * vec4(VertexBuffers[nonuniformEXT(RenderData.vertexBufferIndex)].vertices[gl_VertexIndex], 1);
 
-  //vec3 normalizedLight = normalize(lightDir);
-  //vec3 normal = NormalBuffers[nonuniformEXT(RenderData.normalBufferIndex)].normals[gl_VertexIndex];
-  //vec3 rotatedNormal = vec3(RenderData.model * vec4(normal, 0));
-  //float lightIntensity = dot(normalizedLight, normalize(rotatedNormal)) + ambientLight;
-
-  //color = vec4(1, 1, 1, 1) * lightIntensity;
   uv = UVBuffers[nonuniformEXT(RenderData.uvBufferIndex)].uvs[gl_VertexIndex].xy;
+  normal = NormalBuffers[nonuniformEXT(RenderData.normalBufferIndex)].normals[gl_VertexIndex];
 }

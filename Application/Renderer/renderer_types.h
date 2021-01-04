@@ -39,6 +39,8 @@ typedef struct {
   unsigned int normalBufferId;
   unsigned int uvBufferId;
 
+  unsigned int materialId;
+
   unsigned int indexCount;
 } PrimitiveRenderData;
 

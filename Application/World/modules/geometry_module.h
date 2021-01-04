@@ -13,6 +13,8 @@ typedef struct
 
   unsigned int *indexBuffer;
 
+  unsigned int materialId;
+
   unsigned int indexCount;
   unsigned int vertexCount;
 } MeshPrimitive;
