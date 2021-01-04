@@ -209,15 +209,6 @@ static int ev_assetloader_load_gltf(const char *path)
                 cgltf_accessor_read_float(curr_primitive.attributes[attribute_idx].data, vertex_idx,
                 (cgltf_float*)&meshComp->primitives[primitive_idx].normalBuffer[vertex_idx], 3);
               }
-
-              ev_log_info("Normals loaded for mesh #%d, primitive #%d", mesh_idx, primitive_idx);
-              for(unsigned int vertex_idx = 0; vertex_idx < vertex_count; ++vertex_idx)
-                printf("\t\tVertex #%d: ( %f, %f, %f)\n", vertex_idx,
-                    meshComp->primitives[primitive_idx].normalBuffer[vertex_idx].x,
-                    meshComp->primitives[primitive_idx].normalBuffer[vertex_idx].y,
-                    meshComp->primitives[primitive_idx].normalBuffer[vertex_idx].z
-                    );
-              ev_log_info("End of Normals");
             }
             break;
 

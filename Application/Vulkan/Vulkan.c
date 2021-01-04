@@ -26,6 +26,8 @@ static void ev_vulkan_retrieveswapchainimages(VkSwapchainKHR swapchain, unsigned
 static void ev_vulkan_destroyswapchain(VkSwapchainKHR swapchain);
 
 static void ev_vulkan_createimageviews(unsigned int imageCount, VkFormat imageFormat, VkImage *images, VkImageView **views);
+static void ev_vulkan_createimageview(VkFormat imageFormat, VkImage* image, VkImageView* view);
+
 static void ev_vulkan_createframebuffer(VkImageView* attachments, unsigned int attachmentCount, VkRenderPass renderPass, VkFramebuffer *framebuffer);
 
 static void ev_vulkan_create_image(VkImageCreateInfo *imageCreateInfo, VmaAllocationCreateInfo *allocationCreateInfo, EvImage *image);
@@ -72,6 +74,7 @@ struct ev_Vulkan Vulkan = {
   .allocateBufferInPool         = ev_vulkan_allocatebufferinpool,
   .allocateImageInPool          = ev_vulkan_allocateimageinpool,
 
+  .createImageView              = ev_vulkan_createimageview,
   .createImageViews             = ev_vulkan_createimageviews,
   .createFramebuffer            =  ev_vulkan_createframebuffer,
 
@@ -407,6 +410,26 @@ static void ev_vulkan_createimageviews(unsigned int imageCount, VkFormat imageFo
 
     vkCreateImageView(VulkanData.logicalDevice, &imageViewCreateInfo, NULL, *views + i);
   }
+}
+
+static void ev_vulkan_createimageview(VkFormat imageFormat, VkImage* image, VkImageView* view) {
+    VkImageViewCreateInfo imageViewCreateInfo =
+    {
+        .sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
+        .image = *image,
+        .viewType = VK_IMAGE_VIEW_TYPE_2D,
+        .format = imageFormat,
+        .components = {0, 0, 0, 0},
+        .subresourceRange =
+         {
+            .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
+            .baseMipLevel = 0,
+            .levelCount = 1,
+            .baseArrayLayer = 0,
+            .layerCount = 1,
+         },
+    };
+    VK_ASSERT(vkCreateImageView(VulkanData.logicalDevice, &imageViewCreateInfo, NULL, view));
 }
 
 static void ev_vulkan_createframebuffer(VkImageView* attachments, unsigned int attachmentCount, VkRenderPass renderPass, VkFramebuffer *framebuffer)

@@ -90,7 +90,7 @@ static int ev_renderer_deinit()
   RendererBackend.freeUBO(&RendererData.cameraUBO);
 
   // Free all buffers used for index-buffer storage
-  MemoryBuffer *buffer; MemoryImage *texture; unsigned int idx;
+  MemoryBuffer *buffer; EvTexture *texture; unsigned int idx;
   vec_foreach_ptr(&RendererData.indexBuffers, buffer, idx)
   {
     RendererBackend.freeMemoryBuffer(buffer);
@@ -114,7 +114,7 @@ static int ev_renderer_deinit()
   // Free all buffers used for images storage
   vec_foreach_ptr(&RendererData.textureBuffers, texture, idx)
   {
-    RendererBackend.freeImage(texture);
+    RendererBackend.freeImage(&texture->image);
   }
   vec_deinit(&RendererData.textureBuffers);
 
@@ -193,7 +193,7 @@ static unsigned int ev_renderer_registermaterial(void* pixels, uint32_t width, u
   uint32_t size = width * height * 4;
 
   MemoryImage newimage;
-  RendererBackend.allocateImageInPool(RendererData.imagePool,width, height , EV_USAGEFLAGS_RESOURCE_IMAGE, &newimage);
+  RendererBackend.allocateImageInPool(RendererData.imagePool, width, height , EV_USAGEFLAGS_RESOURCE_IMAGE, &newimage);
 
   MemoryBuffer imageStagingBuffer;
   RendererBackend.allocateStagingBuffer(size, &imageStagingBuffer);
@@ -205,7 +205,39 @@ static unsigned int ev_renderer_registermaterial(void* pixels, uint32_t width, u
 
   RendererBackend.freeMemoryBuffer(&imageStagingBuffer);
 
-  vec_push(&RendererData.textureBuffers, newimage);
+  VkImageView imageView;
+  RendererBackend.createImageView(VK_FORMAT_R8G8B8A8_SRGB, &newimage.image, &imageView);
+
+  VkSampler sampler;
+  VkSamplerCreateInfo samplerInfo =
+  {
+      .sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO,
+      .magFilter = VK_FILTER_LINEAR,
+      .minFilter = VK_FILTER_LINEAR,
+      .addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT,
+      .addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT,
+      .addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT,
+      .anisotropyEnable = VK_TRUE,
+      .maxAnisotropy = 16.0f,
+      .borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK,
+      .unnormalizedCoordinates = VK_FALSE,
+      .compareEnable = VK_FALSE,
+      .compareOp = VK_COMPARE_OP_ALWAYS,
+      .mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR,
+      .mipLodBias = 0.0f,
+      .minLod = 0.0f,
+      .maxLod = 0.0f,
+  };
+  vkCreateSampler(Vulkan.getDevice(), &samplerInfo, NULL, &sampler);
+
+  EvTexture evtexture =
+  {
+      .image = newimage,
+      .imageView = imageView,
+      .sampler = sampler
+  };
+
+  vec_push(&RendererData.textureBuffers, evtexture);
 
   return idx;
 }
@@ -239,9 +271,18 @@ static int ev_renderer_startframe(ev_RenderCamera *camera)
   free(vertexDescriptors);
   free(normalDescriptors);
 
+  DescriptorSet textureDescriptorSet;
+  RendererBackend.allocateDescriptorSet(EV_DESCRIPTOR_SET_LAYOUT_BUFFER_MAT, &textureDescriptorSet);
+  Descriptor *textureDescriptors = malloc(sizeof(Descriptor) * RendererData.textureBuffers.length);
+  for(int i = 0; i < RendererData.textureBuffers.length; ++i)
+    textureDescriptors[i] = (Descriptor){EV_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, &RendererData.textureBuffers.data[i]};
+  RendererBackend.pushDescriptorsToSet(textureDescriptorSet, textureDescriptors, RendererData.textureBuffers.length, 0);
+  free(textureDescriptors);
+
   DescriptorSet descriptorSets[] = {
     cameraDescriptorSet,
     resourceDescriptorSet,
+    textureDescriptorSet
   };
 
   RendererBackend.bindPipeline(EV_GRAPHICS_PIPELINE_BASE);
