@@ -1,0 +1,106 @@
+{
+    "extensionsUsed": [
+      "EV_Game_Map"
+    ],
+    "asset" : {
+        "generator" : "Khronos glTF Blender I/O v1.1.46",
+        "version" : "2.0"
+    },
+    "scene" : 0,
+    "scenes" : [
+        {
+            "name" : "Scene",
+            "nodes" : [
+                0
+            ]
+        }
+    ],
+    "nodes" : [
+        {
+            "extensions": {
+              "EV_Game_Map": {}
+            },
+            "mesh" : 0,
+            "name" : "Cube"
+        }
+    ],
+    "meshes" : [
+        {
+            "name" : "Cube.001",
+            "primitives" : [
+                {
+                    "attributes" : {
+                        "POSITION" : 0,
+                        "NORMAL" : 1,
+                        "TEXCOORD_0" : 2
+                    },
+                    "indices" : 3
+                }
+            ]
+        }
+    ],
+    "accessors" : [
+        {
+            "bufferView" : 0,
+            "componentType" : 5126,
+            "count" : 98304,
+            "max" : [
+                168.42970275878906,
+                5.364703178405762,
+                167.9012451171875
+            ],
+            "min" : [
+                -168.4296875,
+                -0.8395062685012817,
+                -167.9012451171875
+            ],
+            "type" : "VEC3"
+        },
+        {
+            "bufferView" : 1,
+            "componentType" : 5126,
+            "count" : 98304,
+            "type" : "VEC3"
+        },
+        {
+            "bufferView" : 2,
+            "componentType" : 5126,
+            "count" : 98304,
+            "type" : "VEC2"
+        },
+        {
+            "bufferView" : 3,
+            "componentType" : 5125,
+            "count" : 147456,
+            "type" : "SCALAR"
+        }
+    ],
+    "bufferViews" : [
+        {
+            "buffer" : 0,
+            "byteLength" : 1179648,
+            "byteOffset" : 0
+        },
+        {
+            "buffer" : 0,
+            "byteLength" : 1179648,
+            "byteOffset" : 1179648
+        },
+        {
+            "buffer" : 0,
+            "byteLength" : 786432,
+            "byteOffset" : 2359296
+        },
+        {
+            "buffer" : 0,
+            "byteLength" : 589824,
+            "byteOffset" : 3145728
+        }
+    ],
+    "buffers" : [
+        {
+            "byteLength" : 3735552,
+            "uri" : "map.bin"
+        }
+    ]
+}
