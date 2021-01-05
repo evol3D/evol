@@ -25,6 +25,9 @@ static void ev_physics_setfriction(RigidBodyHandle handle, real frict);
 static void ev_physics_setdamping(RigidBodyHandle handle, real linearDamping, real angularDamping);
 static void ev_physics_addhingeconstraint(RigidBodyHandle parentHandle, RigidBodyHandle childHandle, ev_Vector3 *anchor, ev_Vector3 *parentAxis, ev_Vector3 *childAxis);
 static void ev_physics_setrotation(RigidBodyHandle handle, ev_Vector4 *rotationQuat);
+static PhysicsVehicle ev_physics_createraycastvehicle(RigidBodyHandle handle);
+static void ev_physics_applyengineforce(PhysicsVehicle physVehicle, real force);
+static void ev_physics_setvehiclesteering(PhysicsVehicle physVehicle, real steeringVal);
 
 struct ev_Physics_Data {
   PhysicsState *state;
@@ -58,6 +61,9 @@ static int ev_physics_init()
   Physics.setDamping                          = ev_physics_setdamping;
   Physics.addHingeConstraint                  = ev_physics_addhingeconstraint;
   Physics.setRotation                         = ev_physics_setrotation;
+  Physics.createRaycastVehicle                = ev_physics_createraycastvehicle;
+  Physics.applyEngineForce                    = ev_physics_applyengineforce;
+  Physics.setVehicleSteering                  = ev_physics_setvehiclesteering;
 
 
   PhysicsData.state = new BulletState();
@@ -174,4 +180,19 @@ static CollisionShape ev_physics_createcylinderx(real width, real radiusX, real 
 static void ev_physics_setrotation(RigidBodyHandle handle, ev_Vector4 *rotationQuat)
 {
   PhysicsData.state->setRotation(handle, rotationQuat);
+}
+
+static PhysicsVehicle ev_physics_createraycastvehicle(RigidBodyHandle handle)
+{
+  return PhysicsData.state->createRaycastVehicle(handle);
+}
+
+static void ev_physics_applyengineforce(PhysicsVehicle physVehicle, real force)
+{
+  PhysicsData.state->applyEngineForce(physVehicle, force);
+}
+
+static void ev_physics_setvehiclesteering(PhysicsVehicle physVehicle, real steeringVal)
+{
+  PhysicsData.state->setVehicleSteering(physVehicle, steeringVal);
 }

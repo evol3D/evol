@@ -109,7 +109,7 @@ static void ev_assetloader_load_gltf_node(cgltf_node curr_node, Entity parent, c
             .entt_id = curr,
             .type = EV_RIGIDBODY_STATIC,
             .mass = 0,
-            .restitution = 1.0,
+            .restitution = 0.0,
             .collisionShape =
               Physics.createStaticFromTriangleIndexVertex(
                 meshComponent->primitives[i].indexCount/3,

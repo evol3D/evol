@@ -1,5 +1,8 @@
 #include "BulletCollision/CollisionDispatch/btCollisionObject.h"
 #include "BulletCollision/CollisionShapes/btCapsuleShape.h"
+#include "BulletCollision/CollisionShapes/btCompoundShape.h"
+#include "BulletDynamics/Vehicle/btRaycastVehicle.h"
+#include "BulletDynamics/Vehicle/btVehicleRaycaster.h"
 #include "physics_types.h"
 #include "stdio.h"
 #include "BulletState.h"
@@ -130,16 +133,23 @@ RigidBodyHandle BulletState::addRigidBody(RigidBody *rb)
   bool isDynamic = rb->mass;
 
   btVector3 localInertia(0,0,0);
+  btCompoundShape *compound = new btCompoundShape(); 
 
   if(isDynamic) {
     reinterpret_cast<btCollisionShape*>(rb->collisionShape)->calculateLocalInertia(rb->mass, localInertia);
+
+    btTransform localTransform;
+    localTransform.setIdentity();
+    localTransform.setOrigin(btVector3(0, -3, 0));
+    compound->addChildShape(localTransform, (btCollisionShape *)rb->collisionShape);
   }
 
   EvMotionState *motionState = new EvMotionState();
 
   motionState->entt_id = (unsigned int)rb->entt_id;
 
-  btRigidBody::btRigidBodyConstructionInfo rbInfo(rb->mass, motionState, (btCollisionShape*)rb->collisionShape, localInertia);
+  btRigidBody::btRigidBodyConstructionInfo rbInfo(rb->mass, motionState, (isDynamic)?compound:(btCollisionShape*)rb->collisionShape, localInertia);
+  /* btRigidBody::btRigidBodyConstructionInfo rbInfo(rb->mass, motionState, (btCollisionShape*)rb->collisionShape, localInertia); */
   rbInfo.m_restitution = rb->restitution;
 
   btRigidBody* body = new btRigidBody(rbInfo);
@@ -278,21 +288,10 @@ void BulletState::addHingeConstraint(RigidBodyHandle parentHandle, RigidBodyHand
       parentAxisVec3, childAxisVec3
   );
 
-  /* parentBody->setAngularFactor(btVector3(0, 1, 0)); */
-  /* childBody->setAngularFactor(btVector3(0, 1, 0)); */
-
   world->addConstraint(pHinge2, true);
 
   pHinge2->setDamping( 2, 4.0 );
-  /* pHinge2->setDamping( 1, 4.0 ); */
-  /* pHinge2->setDamping( 3, 4.0 ); */
   pHinge2->setStiffness( 2, 40.0);
-
-  /* pHinge2->setStiffness( 3, 400.0, true); */
-  /* pHinge2->setStiffness( 1, 400.0, true); */
-
-  pHinge2->setParam( BT_CONSTRAINT_CFM, 0.05f, 2 );
-  /* pHinge2->setParam( BT_CONSTRAINT_ERP, 0.55f, 2 ); */
 }
 
 void BulletState::setRotation(RigidBodyHandle handle, ev_Vector4 *rotationQuat)
@@ -308,4 +307,74 @@ void BulletState::setRotation(RigidBodyHandle handle, ev_Vector4 *rotationQuat)
         )
       );
   body->setWorldTransform(bodyTransform);
+}
+
+PhysicsVehicle BulletState::createRaycastVehicle(RigidBodyHandle handle)
+{
+  btRigidBody *chassisRb  = reinterpret_cast<btRigidBody *>(handle);
+
+  btVehicleRaycaster *vehicleRaycaster = new btDefaultVehicleRaycaster(world);
+  btRaycastVehicle::btVehicleTuning tuning;
+
+  btRaycastVehicle *vehicle = new btRaycastVehicle(tuning, chassisRb, vehicleRaycaster);
+  world->addVehicle(vehicle);
+
+  btVector3 halfExtents(1.5, btScalar(0.5), 2);
+
+  btVector3 raycastDirection(0, -1, 0);
+  btVector3 wheelAxle(1, 0, 0);
+
+  btScalar suspensionRestLength(0.5);
+
+  btScalar wheelWidth(0.2);
+
+  btScalar wheelRadius(0.2);
+
+  //The height where the wheels are connected to the chassis
+  btScalar connectionHeight(0.1);
+
+  //All the wheel configuration assumes the vehicle is centered at the origin and a right handed coordinate system is used
+  btVector3 wheelConnectionPoint(halfExtents.x() - wheelWidth, connectionHeight, halfExtents.z() - wheelRadius);
+
+  //Adds the front wheels
+  vehicle->addWheel(wheelConnectionPoint, raycastDirection, wheelAxle, suspensionRestLength, wheelRadius, tuning, true);
+  vehicle->addWheel(wheelConnectionPoint * btVector3(-1, 1, 1), raycastDirection, wheelAxle, suspensionRestLength, wheelRadius, tuning, true);
+
+  //Adds the rear wheels
+  vehicle->addWheel(wheelConnectionPoint* btVector3(1, 1, -1), raycastDirection, wheelAxle, suspensionRestLength, wheelRadius, tuning, false);
+  vehicle->addWheel(wheelConnectionPoint * btVector3(-1, 1, -1), raycastDirection, wheelAxle, suspensionRestLength, wheelRadius, tuning, false);
+
+  //Configures each wheel of our vehicle, setting its friction, damping compression, etc.
+  //For more details on what each parameter does, refer to the docs
+  for (int i = 0; i < vehicle->getNumWheels(); i++)
+  {
+    btWheelInfo& wheel = vehicle->getWheelInfo(i);
+    wheel.m_suspensionStiffness = 50;
+    wheel.m_wheelsDampingCompression = btScalar(0.3) * 2 * btSqrt(wheel.m_suspensionStiffness);//btScalar(0.8);
+    wheel.m_wheelsDampingRelaxation = btScalar(0.7) * 2 * btSqrt(wheel.m_suspensionStiffness);//1;
+    //Larger friction slips will result in better handling
+    wheel.m_frictionSlip = btScalar(1.2);
+    wheel.m_rollInfluence = 1;
+  }
+
+  return vehicle;
+}
+
+void BulletState::applyEngineForce(PhysicsVehicle physVehicle, real force)
+{
+  btRaycastVehicle *vehicle = reinterpret_cast<btRaycastVehicle*>(physVehicle);
+  /* if(force > 0) { */
+  vehicle->applyEngineForce(force, 2);
+  vehicle->applyEngineForce(force, 3);
+  /* } else { */
+  /*   vehicle->applyEngineForce(-force, 2); */
+  /*   vehicle->applyEngineForce(-force, 3); */
+  /* } */
+}
+
+void BulletState::setVehicleSteering(PhysicsVehicle physVehicle, real steeringVal)
+{
+  btRaycastVehicle *vehicle = reinterpret_cast<btRaycastVehicle*>(physVehicle);
+  vehicle->setSteeringValue(-steeringVal, 2);
+  vehicle->setSteeringValue(-steeringVal, 3);
 }

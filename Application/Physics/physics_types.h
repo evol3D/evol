@@ -11,6 +11,7 @@ extern "C" {
 #include "engine_config.h"
 
 typedef void* CollisionShape;
+typedef void* PhysicsVehicle;
 typedef void* RigidBodyHandle;
 
 typedef enum
@@ -20,7 +21,7 @@ typedef enum
   EV_RIGIDBODY_STATIC,
 } RigidBodyType;
 
-typedef struct 
+typedef struct
 {
   unsigned int entt_id;
 

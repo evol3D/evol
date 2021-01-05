@@ -48,5 +48,7 @@ class BulletState: public PhysicsState
     void addHingeConstraint(RigidBodyHandle parentHandle, RigidBodyHandle childHandle, ev_Vector3 *anchor, ev_Vector3 *parentAxis, ev_Vector3 *childAxis);
     CollisionShape createCylinderX(real width, real radiusX, real radiusY);
     void setRotation(RigidBodyHandle handle, ev_Vector4 *rotationQuat);
-
+    PhysicsVehicle createRaycastVehicle(RigidBodyHandle handle);
+    void applyEngineForce(PhysicsVehicle physVehicle, real force);
+    void setVehicleSteering(PhysicsVehicle physVehicle, real steeringVal);
 };

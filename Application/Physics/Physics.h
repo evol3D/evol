@@ -33,6 +33,9 @@ extern struct _ev_Physics {
   void (*setDamping)(RigidBodyHandle, real linearDamping, real angularDamping);
   void (*addHingeConstraint)(RigidBodyHandle parentHandle, RigidBodyHandle childHandle, ev_Vector3 *anchor, ev_Vector3 *parentAxis, ev_Vector3 *childAxis);
   void (*setRotation)(RigidBodyHandle handle, ev_Vector4 *rotationQuat);
+  PhysicsVehicle (*createRaycastVehicle)(RigidBodyHandle handle);
+  void (*applyEngineForce)(PhysicsVehicle physVehicle, real force);
+  void (*setVehicleSteering)(PhysicsVehicle physVehicle, real steeringVal);
 } Physics;
 
 

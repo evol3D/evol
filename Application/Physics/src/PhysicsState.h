@@ -28,4 +28,7 @@ class PhysicsState {
     virtual void setDamping(RigidBodyHandle handle, real linearDamping, real angularDamping) = 0;
     virtual void addHingeConstraint(RigidBodyHandle parentHandle, RigidBodyHandle childHandle, ev_Vector3 *anchor, ev_Vector3 *parentAxis, ev_Vector3 *childAxis) = 0;
     virtual void setRotation(RigidBodyHandle handle, ev_Vector4 *rotationQuat) = 0;
+    virtual PhysicsVehicle createRaycastVehicle(RigidBodyHandle handle) = 0;
+    virtual void applyEngineForce(PhysicsVehicle physVehicle, real force) = 0;
+    virtual void setVehicleSteering(PhysicsVehicle physVehicle, real steeringVal) = 0;
 };
