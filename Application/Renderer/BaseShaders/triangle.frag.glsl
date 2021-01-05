@@ -24,7 +24,12 @@ float ambientLight = 0.1;
 
 void main()
 {
-    vec4 color = vec4(texture(texSampler[RenderData.materialIndex],uv).xyz,1);
+    vec4 color;
+    if(RenderData.materialIndex != -1) {
+      color = vec4(texture(texSampler[RenderData.materialIndex],uv).xyz,1);
+    } else {
+      color = vec4(1, 1, 1, 1);
+    }
 
     vec3 normalizedLight = normalize(lightDir);
     vec3 rotatedNormal = vec3(RenderData.model * vec4(normal, 0));
