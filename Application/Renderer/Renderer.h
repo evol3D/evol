@@ -7,9 +7,7 @@
 typedef enum
 {
   INDEXBUFFER,
-  VERTEXBUFFER,
-  NORMALBUFFER,
-  UVBUFFER,
+  RESOURCEBUFFER
 } RendererRegisterTypes;
 
 extern struct ev_Renderer {

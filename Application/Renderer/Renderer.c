@@ -1,16 +1,16 @@
 #include "Renderer.h"
-#include "EventSystem.h"
-#include "vec.h"
+
 #include <ev_log/ev_log.h>
-#include <stdio.h>
+#include "EventSystem.h"
 #include <cglm/cglm.h>
+#include <stdio.h>
+#include "vec.h"
 
 static int ev_renderer_init();
 static int ev_renderer_deinit();
 
 static int ev_renderer_startframe(ev_RenderCamera *camera);
 static int ev_renderer_endframe();
-
 
 static void ev_renderer_draw(MeshRenderData meshRenderData, ev_Matrix4 transformMatrix);
 
@@ -35,10 +35,7 @@ struct ev_Renderer_Data {
   MemoryPool imagePool;
 
   MemoryBufferVec indexBuffers;
-  MemoryBufferVec vertexBuffers;
-  MemoryBufferVec normalBuffers;
-  MemoryBufferVec uvBuffers;
-
+  MemoryBufferVec resourceBuffers;
   MemoryImageVec textureBuffers;
 
   UBO cameraUBO;
@@ -52,17 +49,17 @@ static int ev_renderer_init()
   ev_log_debug("Initialized RendererBackend");
 
   vec_init(&RendererData.indexBuffers);
-  vec_init(&RendererData.vertexBuffers);
-  vec_init(&RendererData.normalBuffers);
+  vec_init(&RendererData.resourceBuffers);
   vec_init(&RendererData.textureBuffers);
-  vec_init(&RendererData.uvBuffers);
 
   ev_log_trace("Loading BaseShaders");
   RendererBackend.loadBaseShaders();
   ev_log_debug("Loaded BaseShaders");
+
   ev_log_trace("Loading BaseDescriptorSetLayouts");
   RendererBackend.loadBaseDescriptorSetLayouts();
   ev_log_debug("Loaded BaseDescriptorSetLayouts");
+
   ev_log_trace("Loading BasePipelines");
   RendererBackend.loadBasePipelines();
   ev_log_debug("Loaded BasePipelines");
@@ -96,26 +93,12 @@ static int ev_renderer_deinit()
   }
   vec_deinit(&RendererData.indexBuffers);
 
-  // Free all buffers used for vertex-buffer storage
-  vec_foreach_ptr(&RendererData.vertexBuffers, buffer, idx)
+  // Free all buffers used for resource-buffer storage
+  vec_foreach_ptr(&RendererData.resourceBuffers, buffer, idx)
   {
     RendererBackend.freeMemoryBuffer(buffer);
   }
-  vec_deinit(&RendererData.vertexBuffers);
-
-  // Free all buffers used for normal-buffer storage
-  vec_foreach_ptr(&RendererData.normalBuffers, buffer, idx)
-  {
-    RendererBackend.freeMemoryBuffer(buffer);
-  }
-  vec_deinit(&RendererData.normalBuffers);
-
-  // Free all buffers used for uv-buffer storage
-  vec_foreach_ptr(&RendererData.uvBuffers, buffer, idx)
-  {
-    RendererBackend.freeMemoryBuffer(buffer);
-  }
-  vec_deinit(&RendererData.uvBuffers);
+  vec_deinit(&RendererData.resourceBuffers);
 
   // Free all buffers used for images storage
   vec_foreach_ptr(&RendererData.textureBuffers, texture, idx)
@@ -146,18 +129,8 @@ static unsigned int ev_renderer_registerbuffer(RendererRegisterTypes type, void*
     usageflags = EV_BUFFER_USAGE_INDEX_BUFFER_BIT;
     break;
 
-    case VERTEXBUFFER:
-    buffer = &RendererData.vertexBuffers;
-    usageflags = EV_USAGEFLAGS_RESOURCE_BUFFER;
-    break;
-
-    case NORMALBUFFER:
-    buffer = &RendererData.normalBuffers;
-    usageflags = EV_USAGEFLAGS_RESOURCE_BUFFER;
-    break;
-
-    case UVBUFFER:
-    buffer = &RendererData.uvBuffers;
+    case RESOURCEBUFFER:
+    buffer = &RendererData.resourceBuffers;
     usageflags = EV_USAGEFLAGS_RESOURCE_BUFFER;
     break;
   }
@@ -251,23 +224,11 @@ static int ev_renderer_startframe(ev_RenderCamera *camera)
   // Create a descriptor set that contains all the resources needed by the shader
   DescriptorSet resourceDescriptorSet;
   RendererBackend.allocateDescriptorSet(EV_DESCRIPTOR_SET_LAYOUT_BUFFER_ARR, &resourceDescriptorSet);
-  Descriptor *vertexDescriptors = malloc(sizeof(Descriptor) * RendererData.vertexBuffers.length);
-  Descriptor *normalDescriptors = malloc(sizeof(Descriptor) * RendererData.normalBuffers.length);
-  Descriptor *uvDescriptors     = malloc(sizeof(Descriptor) * RendererData.uvBuffers.length);
-
-  for(int i = 0; i < RendererData.vertexBuffers.length; ++i)
-    vertexDescriptors[i] = (Descriptor){EV_DESCRIPTOR_TYPE_STORAGE_BUFFER, &RendererData.vertexBuffers.data[i]};
-  for(int i = 0; i < RendererData.normalBuffers.length; ++i)
-    normalDescriptors[i] = (Descriptor){EV_DESCRIPTOR_TYPE_STORAGE_BUFFER, &RendererData.normalBuffers.data[i]};
-  for(int i = 0; i < RendererData.uvBuffers.length; ++i)
-    uvDescriptors[i]     = (Descriptor){EV_DESCRIPTOR_TYPE_STORAGE_BUFFER, &RendererData.uvBuffers.data[i]};
-
-  RendererBackend.pushDescriptorsToSet(resourceDescriptorSet, vertexDescriptors, RendererData.vertexBuffers.length, 0);
-  RendererBackend.pushDescriptorsToSet(resourceDescriptorSet, normalDescriptors, RendererData.normalBuffers.length, 1);
-  RendererBackend.pushDescriptorsToSet(resourceDescriptorSet, uvDescriptors,     RendererData.uvBuffers.length,     2);
-  free(vertexDescriptors);
-  free(normalDescriptors);
-  free(uvDescriptors);
+  Descriptor *resourceDescriptors = malloc(sizeof(Descriptor) * RendererData.resourceBuffers.length);
+  for(int i = 0; i < RendererData.resourceBuffers.length; ++i)
+    resourceDescriptors[i] = (Descriptor){EV_DESCRIPTOR_TYPE_STORAGE_BUFFER, &RendererData.resourceBuffers.data[i]};
+  RendererBackend.pushDescriptorsToSet(resourceDescriptorSet, resourceDescriptors, RendererData.resourceBuffers.length, 0);
+  free(resourceDescriptors);
 
   DescriptorSet textureDescriptorSet;
   RendererBackend.allocateDescriptorSet(EV_DESCRIPTOR_SET_LAYOUT_BUFFER_MAT, &textureDescriptorSet);

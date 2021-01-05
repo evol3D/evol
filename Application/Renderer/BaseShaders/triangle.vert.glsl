@@ -17,25 +17,17 @@ layout(set = 0, binding = 0) uniform CameraParam {
   mat4 view;
 } Camera;
 
-layout(set = 1, binding = 0) buffer VertexBuffer {
-  layout(align = 16) vec3 vertices[];
-} VertexBuffers[];
-
-layout(set = 1, binding = 1) buffer NormalBuffer {
-  layout(align = 16) vec3 normals[];
-} NormalBuffers[];
-
-layout(set = 1, binding = 2) buffer UVBuffer {
-  layout(align = 16) vec4 uvs[];
-} UVBuffers[];
+layout(set = 1, binding = 0) buffer ResourceBuffer {
+  layout(align = 16) vec4 resources[];
+} ResourceBuffers[];
 
 layout(location=0) out vec2 uv;
 layout(location=1) out vec3 normal;
 
 void main()
 {
-  gl_Position = Camera.projection * Camera.view * RenderData.model * vec4(VertexBuffers[nonuniformEXT(RenderData.vertexBufferIndex)].vertices[gl_VertexIndex], 1);
+  gl_Position = Camera.projection * Camera.view * RenderData.model * vec4(ResourceBuffers[nonuniformEXT(RenderData.vertexBufferIndex)].resources[gl_VertexIndex].xyz, 1);
 
-  uv = UVBuffers[nonuniformEXT(RenderData.uvBufferIndex)].uvs[gl_VertexIndex].xy;
-  normal = NormalBuffers[nonuniformEXT(RenderData.normalBufferIndex)].normals[gl_VertexIndex];
+  normal = ResourceBuffers[nonuniformEXT(RenderData.normalBufferIndex)].resources[gl_VertexIndex].xyz;
+  uv     = ResourceBuffers[nonuniformEXT(RenderData.uvBufferIndex)].resources[gl_VertexIndex].xy;
 }

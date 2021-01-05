@@ -249,9 +249,9 @@ static int ev_assetloader_load_gltf(const char *path)
       PrimitiveRenderData primRendData;
       primRendData.indexCount     = meshPrim.indexCount;
       primRendData.indexBufferId  = Renderer.registerBuffer(INDEXBUFFER,  meshPrim.indexBuffer, meshPrim.indexCount * sizeof(*meshPrim.indexBuffer));
-      primRendData.vertexBufferId = Renderer.registerBuffer(VERTEXBUFFER, meshPrim.positionBuffer, meshPrim.vertexCount * sizeof(*meshPrim.positionBuffer));
-      primRendData.normalBufferId = Renderer.registerBuffer(NORMALBUFFER, meshPrim.normalBuffer, meshPrim.vertexCount * sizeof(*meshPrim.normalBuffer));
-      primRendData.uvBufferId     = Renderer.registerBuffer(UVBUFFER,     meshPrim.uvBuffer, meshPrim.vertexCount * sizeof(*meshPrim.uvBuffer));
+      primRendData.vertexBufferId = Renderer.registerBuffer(RESOURCEBUFFER, meshPrim.positionBuffer, meshPrim.vertexCount * sizeof(*meshPrim.positionBuffer));
+      primRendData.normalBufferId = Renderer.registerBuffer(RESOURCEBUFFER, meshPrim.normalBuffer, meshPrim.vertexCount * sizeof(*meshPrim.normalBuffer));
+      primRendData.uvBufferId     = Renderer.registerBuffer(RESOURCEBUFFER,     meshPrim.uvBuffer, meshPrim.vertexCount * sizeof(*meshPrim.uvBuffer));
       primRendData.materialId     = materials[meshPrim.materialId];
       vec_push(&rendComp->meshRenderData.primitives, primRendData);
     }

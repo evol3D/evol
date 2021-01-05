@@ -1186,18 +1186,6 @@ static int ev_rendererbackend_loadbasedescriptorsetlayouts()
         .descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
         .stageFlags = VK_SHADER_STAGE_ALL_GRAPHICS,
       },
-      {
-        .binding = 1,
-        .descriptorCount = 200 , //TODO look into changing this
-        .descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
-        .stageFlags = VK_SHADER_STAGE_ALL_GRAPHICS,
-      },
-      {
-        .binding = 2,
-        .descriptorCount = 200 , //TODO look into changing this
-        .descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
-        .stageFlags = VK_SHADER_STAGE_ALL_GRAPHICS,
-      },
     };
 
     VkDescriptorBindingFlagsEXT bindingFlags[] = {VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT, VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT}; // | VK_DESCRIPTOR_BINDING_VARIABLE_DESCRIPTOR_COUNT_BIT;
@@ -1267,6 +1255,7 @@ static int ev_rendererbackend_loadbasedescriptorsetlayouts()
 
     VK_ASSERT(vkCreateDescriptorSetLayout(Vulkan.getDevice(), &descriptorSetLayoutCreateInfo, NULL, &BASE_DESCRIPTOR_SET_LAYOUTS[EV_DESCRIPTOR_SET_LAYOUT_BUFFER_MAT]));
   }
+
   return 0;
 }
 
