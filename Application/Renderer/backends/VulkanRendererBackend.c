@@ -59,6 +59,8 @@ static void ev_rendererbackend_transitionimagelayout(MemoryImage image, VkFormat
 static void ev_rendererbackend_copybuffertoimage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height);
 
 static void ev_rendererbackend_createimageview(VkFormat imageFormat, VkImage* image, VkImageView* view);
+static void ev_rendererbackend_freeimageview(VkImageView* view);
+static void ev_rendererbackend_freesampler(VkSampler* sampler);
 
 struct ev_RendererBackend RendererBackend =
 {
@@ -116,8 +118,9 @@ struct ev_RendererBackend RendererBackend =
   .copyBufferToImage = ev_rendererbackend_copybuffertoimage,
 
   .createImageView = ev_rendererbackend_createimageview,
+  .freeImageView = ev_rendererbackend_freeimageview,
+  .freeSampler = ev_rendererbackend_freesampler,
 };
-
 
 struct ev_RendererBackendData
 {
@@ -1394,4 +1397,14 @@ static void ev_rendererbackend_freememorypool(MemoryPool pool)
 static void ev_rendererbackend_createimageview(VkFormat imageFormat, VkImage* image, VkImageView* view)
 {
   Vulkan.createImageView(imageFormat, image, view);
+}
+
+static void ev_rendererbackend_freeimageview(VkImageView* view)
+{
+  vkDestroyImageView(Vulkan.getDevice(), *view, NULL);
+}
+
+static void ev_rendererbackend_freesampler(VkSampler* sampler)
+{
+  vkDestroySampler(Vulkan.getDevice(), *sampler, NULL);
 }

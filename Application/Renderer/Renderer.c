@@ -120,6 +120,8 @@ static int ev_renderer_deinit()
   // Free all buffers used for images storage
   vec_foreach_ptr(&RendererData.textureBuffers, texture, idx)
   {
+    RendererBackend.freeSampler(&texture->sampler);
+    RendererBackend.freeImageView(&texture->imageView);
     RendererBackend.freeImage(&texture->image);
   }
   vec_deinit(&RendererData.textureBuffers);
@@ -310,7 +312,7 @@ static void ev_renderer_draw(MeshRenderData meshRenderData, ev_Matrix4 transform
     params.normalBufferIndex = currentPrimitive->normalBufferId;
     params.uvBufferIndex = currentPrimitive->uvBufferId;
     params.materialIndex = currentPrimitive->materialId;
-    
+
     glm_mat4_dup(transformMatrix, params.modelMatrix);
 
     RendererBackend.pushConstant(&params, sizeof(params));
