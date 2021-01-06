@@ -46,6 +46,7 @@ layout(location = 0) out vec4 outputColor;
 
 const float PI = 3.14159265359;
 vec3 lightDir = vec3(1, 0, 1);
+float lightIntensity = 2;
 float ambientLight = 0.2;
 
 vec3 materialcolor()
@@ -124,20 +125,26 @@ vec3 BRDF(vec3 L, vec3 V, vec3 N, float metallic, float roughness)
   return color;
 }
 
-
-
 void main()
 {
   vec3 N = normalize(nor);
   vec3 V = normalize(camPos - pos);
 
-  float roughness = m[RenderData.materialIndex].roughnessFactor;
-  float metallic  = m[RenderData.materialIndex].metalicFactor;
+  vec3 color;
+  float roughness = 0;
+  float metallic = 0;
 
-  // Add striped pattern to roughness based on vertex position
-  //#ifdef ROUGHNESS_PATTERN
-  //roughness = max(roughness, step(fract(pos.y * 2.02), 0.5));
-  //#endif
+  if(RenderData.materialIndex == -1)
+  {
+    color = vec3(1,1,1);
+  }
+  else
+  {
+    color = materialcolor();
+
+    roughness = m[RenderData.materialIndex].roughnessFactor;
+    metallic  = m[RenderData.materialIndex].metalicFactor;
+  }
 
   // Specular contribution
   vec3 Lo = vec3(0);
@@ -147,10 +154,8 @@ void main()
     Lo += BRDF(L, V, N, metallic, roughness);
   };
 
-  float lightIntensity = 20;
-
   // Combine with ambient
-  vec3 color = materialcolor() * ambientLight;
+  color *= ambientLight;
   color += Lo * lightIntensity;
 
   // Gamma correct
