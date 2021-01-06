@@ -1,11 +1,14 @@
 #version 450
-
 #extension GL_EXT_nonuniform_qualifier : require
 
 layout (push_constant) uniform PushConstant
 {
   int vertexBufferIndex;
   int normalBufferIndex;
+  int uvBufferIndex;
+
+  int materialIndex;
+
   mat4 model;
 } RenderData;
 
@@ -14,26 +17,17 @@ layout(set = 0, binding = 0) uniform CameraParam {
   mat4 view;
 } Camera;
 
-layout(set = 1, binding = 0) buffer VertexBuffer {
-  layout(align = 16) vec3 vertices[];
-} VertexBuffers[];
+layout(set = 1, binding = 0) buffer ResourceBuffer {
+  layout(align = 16) vec4 resources[];
+} ResourceBuffers[];
 
-layout(set = 1, binding = 1) buffer NormalBuffer {
-  layout(align = 16) vec3 normals[];
-} NormalBuffers[];
-
-layout(location=0) out vec4 color;
-
-vec3 lightDir = vec3(1, 1, 1);
-float ambientLight = 0.2;
+layout(location=0) out vec2 uv;
+layout(location=1) out vec3 normal;
 
 void main()
 {
-  gl_Position = Camera.projection * Camera.view * RenderData.model * vec4(VertexBuffers[nonuniformEXT(RenderData.vertexBufferIndex)].vertices[gl_VertexIndex], 1);
+  gl_Position = Camera.projection * Camera.view * RenderData.model * vec4(ResourceBuffers[nonuniformEXT(RenderData.vertexBufferIndex)].resources[gl_VertexIndex].xyz, 1);
 
-  vec3 normalizedLight = normalize(lightDir);
-  vec3 normal = NormalBuffers[nonuniformEXT(RenderData.normalBufferIndex)].normals[gl_VertexIndex];
-  vec3 rotatedNormal = vec3(RenderData.model * vec4(normal, 0));
-  float lightIntensity = dot(normalizedLight, normalize(rotatedNormal)) + ambientLight;
-  color = vec4(1, 1, 1, 1) * lightIntensity;
+  normal = ResourceBuffers[nonuniformEXT(RenderData.normalBufferIndex)].resources[gl_VertexIndex].xyz;
+  uv     = ResourceBuffers[nonuniformEXT(RenderData.uvBufferIndex)].resources[gl_VertexIndex].xy;
 }

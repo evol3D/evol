@@ -1,0 +1,10 @@
+[wrap-git]
+directory = stb
+url = https://github.com/nothings/stb
+revision = master
+depth = 1
+
+patch_directory = stb
+
+[provide]
+dependency_names = stbimage

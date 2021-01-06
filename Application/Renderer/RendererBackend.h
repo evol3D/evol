@@ -18,6 +18,17 @@
   typedef VmaPool               MemoryPool;
   typedef unsigned int          MemoryType;
 
+  typedef struct EvTexture
+  {
+      EvImage image;
+      VkImageView imageView;
+      VkSampler sampler;
+  } EvTexture;
+
+  typedef vec_t(MemoryBuffer) MemoryBufferVec;
+  typedef vec_t(EvTexture) MemoryImageVec;
+
+# define EV_USAGEFLAGS_RESOURCE_IMAGE           VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT
 # define EV_USAGEFLAGS_RESOURCE_BUFFER          VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT
 # define EV_BUFFER_USAGE_INDEX_BUFFER_BIT       VK_BUFFER_USAGE_INDEX_BUFFER_BIT   | VK_BUFFER_USAGE_TRANSFER_DST_BIT
 
@@ -36,6 +47,8 @@
   } DescriptorType;
 
 #endif
+
+
 
 typedef struct Descriptor
 {
@@ -80,9 +93,14 @@ extern struct ev_RendererBackend {
     void (*unloadShader)(ShaderModule);
 
     void (*createResourceMemoryPool)(unsigned long long blockSize, unsigned int minBlockCount, unsigned int maxBlockCount, MemoryPool *pool);
+    void (*createImageMemoryPool)(unsigned long long blockSize, unsigned int minBlockCount, unsigned int maxBlockCount, MemoryPool *pool);
+
     void (*freeMemoryPool)(MemoryPool pool);
     void (*allocateBufferInPool)(MemoryPool pool, unsigned long long bufferSize, unsigned long long usageFlags, MemoryBuffer *buffer);
+    void (*allocateImageInPool)(MemoryPool pool, uint32_t width, uint32_t height, unsigned long long usageFlags, MemoryImage *image);
+
     void (*freeMemoryBuffer)(MemoryBuffer *buffer);
+    void (*freeImage)(MemoryImage *image);
 
     void (*allocateStagingBuffer)(unsigned long long bufferSize, MemoryBuffer *buffer);
     void (*updateStagingBuffer)(MemoryBuffer *buffer, unsigned long long bufferSize, const void *data);
@@ -99,7 +117,14 @@ extern struct ev_RendererBackend {
 
     void (*drawIndexed)(unsigned int indexCount);
 
+
+    void (*trasitionImageLayout)(MemoryImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout);
+    void (*copyBufferToImage)(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height);
+
+    void (*createImageView)(VkFormat imageFormat, VkImage* image, VkImageView* view);
+    void (*freeImageView)(VkImageView* view);
+    void (*freeSampler)(VkSampler* sampler);
 } RendererBackend;
 
 
-#endif //EVOL_RENDERERBACKEND_H 
+#endif //EVOL_RENDERERBACKEND_H

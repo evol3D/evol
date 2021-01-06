@@ -8,6 +8,8 @@ typedef enum
 {
   EV_DESCRIPTOR_SET_LAYOUT_CAMERA_PARAM,
   EV_DESCRIPTOR_SET_LAYOUT_BUFFER_ARR,
+  EV_DESCRIPTOR_SET_LAYOUT_BUFFER_MAT,
+  EV_DESCRIPTOR_SET_LAYOUT_BUFFER_UV,
 
   // Add before this line
   DESCRIPTOR_SET_LAYOUT_COUNT
@@ -35,6 +37,9 @@ typedef struct {
   unsigned int indexBufferId;
   unsigned int vertexBufferId;
   unsigned int normalBufferId;
+  unsigned int uvBufferId;
+
+  unsigned int materialId;
 
   unsigned int indexCount;
 } PrimitiveRenderData;

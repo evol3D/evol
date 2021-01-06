@@ -5,6 +5,8 @@
 #include <string.h>
 #include <stdlib.h>
 #include <vulkan/vulkan_core.h>
+#include <stdio.h>
+#include <ev_log/ev_log.h>
 
 static int ev_rendererbackend_init();
 static int ev_rendererbackend_deinit();
@@ -28,12 +30,15 @@ static int ev_rendererbackend_binddescriptorsets(DescriptorSet *descriptorSets, 
 static int ev_rendererbackend_allocatedescriptorset(DescriptorSetLayoutType setLayoutType, DescriptorSet *descriptorSet);
 static int ev_rendererbackend_pushdescriptorstoset(DescriptorSet descriptorSet, Descriptor *descriptors, unsigned int descriptorsCount, unsigned int binding);
 
-
 static void ev_rendererbackend_createresourcememorypool(unsigned long long blockSize, unsigned int minBlockCount, unsigned int maxBlockCount, MemoryPool *pool);
+static void ev_rendererbackend_createimagememorypool(unsigned long long blockSize, unsigned int minBlockCount, unsigned int maxBlockCount, MemoryPool *pool);
+
 static void ev_rendererbackend_freememorypool(MemoryPool pool);
 static void ev_rendererbackend_allocatebufferinpool(MemoryPool pool, unsigned long long bufferSize, unsigned long long usageFlags, MemoryBuffer *buffer);
+static void ev_rendererbackend_allocateimageinpool(MemoryPool pool, uint32_t width, uint32_t height, unsigned long long usageFlags, MemoryImage *image);
 
 static void ev_rendererbackend_freememorybuffer(MemoryBuffer *buffer);
+static void ev_rendererbackend_freeimage(MemoryImage *image);
 
 static void ev_rendererbackend_allocatestagingbuffer(unsigned long long bufferSize, MemoryBuffer *buffer);
 static void ev_rendererbackend_updatestagingbuffer(MemoryBuffer *buffer, unsigned long long bufferSize, const void *data);
@@ -50,7 +55,14 @@ static void ev_rendererbackend_pushconstant(void *data, unsigned int size);
 
 static void ev_rendererbackend_drawindexed(unsigned int indexCount);
 
-struct ev_RendererBackend RendererBackend = 
+static void ev_rendererbackend_transitionimagelayout(MemoryImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout);
+static void ev_rendererbackend_copybuffertoimage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height);
+
+static void ev_rendererbackend_createimageview(VkFormat imageFormat, VkImage* image, VkImageView* view);
+static void ev_rendererbackend_freeimageview(VkImageView* view);
+static void ev_rendererbackend_freesampler(VkSampler* sampler);
+
+struct ev_RendererBackend RendererBackend =
 {
   .init = ev_rendererbackend_init,
   .deinit = ev_rendererbackend_deinit,
@@ -76,12 +88,16 @@ struct ev_RendererBackend RendererBackend =
   .unloadShader = ev_rendererbackend_unloadshader,
 
   .createResourceMemoryPool = ev_rendererbackend_createresourcememorypool,
+  .createImageMemoryPool = ev_rendererbackend_createimagememorypool,
+
   .freeMemoryPool = ev_rendererbackend_freememorypool,
 
   .allocateBufferInPool = ev_rendererbackend_allocatebufferinpool,
+  .allocateImageInPool = ev_rendererbackend_allocateimageinpool,
 
   .freeMemoryBuffer = ev_rendererbackend_freememorybuffer,
-  
+  .freeImage = ev_rendererbackend_freeimage,
+
   .allocateStagingBuffer = ev_rendererbackend_allocatestagingbuffer,
   .updateStagingBuffer = ev_rendererbackend_updatestagingbuffer,
 
@@ -97,8 +113,14 @@ struct ev_RendererBackend RendererBackend =
 
 
   .memoryDump = ev_rendererbackend_memorydump,
-};
 
+  .trasitionImageLayout = ev_rendererbackend_transitionimagelayout,
+  .copyBufferToImage = ev_rendererbackend_copybuffertoimage,
+
+  .createImageView = ev_rendererbackend_createimageview,
+  .freeImageView = ev_rendererbackend_freeimageview,
+  .freeSampler = ev_rendererbackend_freesampler,
+};
 
 struct ev_RendererBackendData
 {
@@ -192,15 +214,15 @@ static int ev_rendererbackend_init()
 
   DATA(swapchainImageCount) = 3;
   Vulkan.createSwapchain(
-    &DATA(swapchainImageCount), 
-    &DATA(surface), 
-    &DATA(surfaceFormat), 
+    &DATA(swapchainImageCount),
+    &DATA(surface),
+    &DATA(surfaceFormat),
     &DATA(swapchain)
   );
 
   Vulkan.retrieveSwapchainImages(
-    DATA(swapchain), 
-    &DATA(swapchainImageCount), 
+    DATA(swapchain),
+    &DATA(swapchainImageCount),
     &DATA(swapchainImages)
   );
 
@@ -236,7 +258,7 @@ static int ev_rendererbackend_init()
   VkCommandPool graphicsPool = Vulkan.getCommandPool(GRAPHICS);
   DATA(swapchainCommandBuffers) = malloc(sizeof(VkCommandBuffer) * DATA(swapchainImageCount));
 
-  VkCommandBufferAllocateInfo commandBuffersAllocateInfo = 
+  VkCommandBufferAllocateInfo commandBuffersAllocateInfo =
   {
     .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
     .commandPool = graphicsPool,
@@ -257,7 +279,7 @@ static int ev_rendererbackend_init()
 
   DATA(transferCommandPool) = Vulkan.getCommandPool(TRANSFER);
 
-  VkDescriptorPoolSize poolSizes[] = 
+  VkDescriptorPoolSize poolSizes[] =
   {
     {
       .type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, // TODO: Measure performance difference of using VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER vs VK_DESCRIPTOR_TYPE_STORAGE_BUFFER
@@ -266,7 +288,7 @@ static int ev_rendererbackend_init()
   };
 
   VkDescriptorPoolCreateInfo descriptorPoolCreateInfo = {VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO};
-  descriptorPoolCreateInfo.maxSets = 100;
+  descriptorPoolCreateInfo.maxSets = 1000;
   descriptorPoolCreateInfo.poolSizeCount = ARRAYSIZE(poolSizes);
   descriptorPoolCreateInfo.pPoolSizes = poolSizes;
 
@@ -276,7 +298,7 @@ static int ev_rendererbackend_init()
     VK_ASSERT(vkCreateDescriptorPool(Vulkan.getDevice(), &descriptorPoolCreateInfo, NULL, &DATA(descriptorPools)[i]));
   }
 
-  VkFenceCreateInfo fenceCreateInfo = 
+  VkFenceCreateInfo fenceCreateInfo =
   {
     .sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO,
     .flags = VK_FENCE_CREATE_SIGNALED_BIT,
@@ -381,7 +403,7 @@ void ev_rendererbackend_createdepthbuffer()
 
 void ev_rendererbackend_createrenderpass()
 {
-  VkAttachmentDescription attachmentDescriptions[] = 
+  VkAttachmentDescription attachmentDescriptions[] =
   {
     {
       .format = DATA(surfaceFormat).format,
@@ -459,14 +481,14 @@ void ev_rendererbackend_startnewframe()
 
   //start recording into the right command buffer
   {
-    VkCommandBufferBeginInfo commandBufferBeginInfo = { 
+    VkCommandBufferBeginInfo commandBufferBeginInfo = {
       .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
       .flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT,
     };
     VK_ASSERT(vkBeginCommandBuffer(CMDBUFFERS[FRAME], &commandBufferBeginInfo));
   }
 
-  VkImageMemoryBarrier imageMemoryBarrier = 
+  VkImageMemoryBarrier imageMemoryBarrier =
   {
     .sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
     .pNext = NULL,
@@ -477,7 +499,7 @@ void ev_rendererbackend_startnewframe()
     .srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,  // TODO
     .dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,  // TODO
     .image = DATA(swapchainImages)[FRAME],
-    .subresourceRange = 
+    .subresourceRange =
     {
       .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
       .levelCount = VK_REMAINING_MIP_LEVELS,
@@ -485,14 +507,14 @@ void ev_rendererbackend_startnewframe()
     }
   };
 
-  vkCmdPipelineBarrier(CMDBUFFERS[FRAME], 
-      VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, 
+  vkCmdPipelineBarrier(CMDBUFFERS[FRAME],
+      VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
       VK_DEPENDENCY_BY_REGION_BIT, 0, NULL, 0, NULL, 1, &imageMemoryBarrier);
 
-  /* ev_vulkan_image_memory_barrier(VulkanData.swapchainImages[VulkanData.currentFrameIndex], */ 
-  /*     VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, */ 
-  /*     0, VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT, */ 
-  /*     VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, */ 
+  /* ev_vulkan_image_memory_barrier(VulkanData.swapchainImages[VulkanData.currentFrameIndex], */
+  /*     VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, */
+  /*     0, VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT, */
+  /*     VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, */
   /*     VK_DEPENDENCY_BY_REGION_BIT); */
 
   unsigned int width, height;
@@ -500,7 +522,7 @@ void ev_rendererbackend_startnewframe()
 
   //strarting render pass
   {
-    VkClearValue clearValues[] = 
+    VkClearValue clearValues[] =
     {
       {
         .color = { {0.13f, 0.22f, 0.37f, 1.f} },
@@ -510,7 +532,7 @@ void ev_rendererbackend_startnewframe()
       }
     };
 
-    VkRenderPassBeginInfo renderPassBeginInfo = 
+    VkRenderPassBeginInfo renderPassBeginInfo =
     {
       .sType =  VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
       .renderPass = DATA(renderPass),
@@ -520,12 +542,12 @@ void ev_rendererbackend_startnewframe()
       .clearValueCount = ARRAYSIZE(clearValues),
       .pClearValues = clearValues,
     };
-    vkCmdBeginRenderPass(CMDBUFFERS[FRAME], &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE); 
+    vkCmdBeginRenderPass(CMDBUFFERS[FRAME], &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
   }
 
   //not sure if this should be set every time
   {
-    VkViewport viewport = 
+    VkViewport viewport =
     {
       .x = 0,
       .y = height,
@@ -549,7 +571,7 @@ void ev_rendererbackend_endframe()
 {
   vkCmdEndRenderPass(CMDBUFFERS[FRAME]);
 
-  VkImageMemoryBarrier imageMemoryBarrier = 
+  VkImageMemoryBarrier imageMemoryBarrier =
   {
     .sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
     .pNext = NULL,
@@ -560,7 +582,7 @@ void ev_rendererbackend_endframe()
     .srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,  // TODO
     .dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,  // TODO
     .image = DATA(swapchainImages)[FRAME],
-    .subresourceRange = 
+    .subresourceRange =
     {
       .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
       .levelCount = VK_REMAINING_MIP_LEVELS,
@@ -598,7 +620,7 @@ void ev_rendererbackend_endframe()
   // TODO: Do we need to reset the command buffer?
   // TODO: Does it overwrite existing memory if not reset? If so, then resetting it
   // will only introduce the overhead of freeing memory just to allocate it again.
-  // 
+  //
   // Code:
   //  vkResetCommandBuffer(VulkanData.swapchainCommandBuffers[VulkanData.currentFrameIndex], VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
   //
@@ -606,9 +628,6 @@ void ev_rendererbackend_endframe()
   RendererBackendData.boundPipeline = -1;
   //assert(!"Not implemented");
 }
-
-#include <stdio.h>
-#include <ev_log/ev_log.h>
 
 ShaderModule ev_rendererbackend_loadshader(const char* shaderPath)
 {
@@ -668,6 +687,31 @@ static void ev_rendererbackend_createresourcememorypool(unsigned long long block
   Vulkan.allocateMemoryPool(&poolCreateInfo, pool);
 }
 
+static void ev_rendererbackend_createimagememorypool(unsigned long long blockSize, unsigned int minBlockCount, unsigned int maxBlockCount, MemoryPool *pool)
+{
+  unsigned int memoryType;
+
+  { // Detecting memorytype index
+    VkImageCreateInfo sampleimageCreateInfo = {VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO};
+    sampleimageCreateInfo.usage = EV_USAGEFLAGS_RESOURCE_IMAGE;
+
+    VmaAllocationCreateInfo allocationCreateInfo = {
+		.usage = VMA_MEMORY_USAGE_GPU_ONLY,
+    };
+
+    vmaFindMemoryTypeIndexForImageInfo(Vulkan.getAllocator(), &sampleimageCreateInfo, &allocationCreateInfo, &memoryType);
+  }
+
+  VmaPoolCreateInfo poolCreateInfo = {
+	  .memoryTypeIndex   = memoryType,
+	  .blockSize         = blockSize,
+	  .minBlockCount     = minBlockCount,
+	  .maxBlockCount     = maxBlockCount,
+  };
+
+  Vulkan.allocateMemoryPool(&poolCreateInfo, pool);
+}
+
 static void ev_rendererbackend_allocatebufferinpool(MemoryPool pool, unsigned long long bufferSize, unsigned long long usageFlags, MemoryBuffer *buffer)
 {
   VkBufferCreateInfo bufferCreateInfo = {VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO};
@@ -675,6 +719,27 @@ static void ev_rendererbackend_allocatebufferinpool(MemoryPool pool, unsigned lo
   bufferCreateInfo.usage = usageFlags;
 
   Vulkan.allocateBufferInPool(&bufferCreateInfo, pool, buffer);
+}
+
+static void ev_rendererbackend_allocateimageinpool(MemoryPool pool, uint32_t width, uint32_t height, unsigned long long usageFlags, MemoryImage *image)
+{
+    VkImageCreateInfo imageCreateInfo = {
+      .sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO,
+        .imageType = VK_IMAGE_TYPE_2D,
+        .extent.width = width,
+        .extent.height = height,
+        .extent.depth = 1,
+        .mipLevels = 1,
+        .arrayLayers = 1,
+        .format = VK_FORMAT_R8G8B8A8_SRGB,
+        .tiling = VK_IMAGE_TILING_OPTIMAL,
+        .initialLayout = VK_IMAGE_LAYOUT_UNDEFINED,
+        .sharingMode = VK_SHARING_MODE_EXCLUSIVE,
+        .usage = usageFlags,
+        .samples = VK_SAMPLE_COUNT_1_BIT,
+      };
+
+  Vulkan.allocateImageInPool(&imageCreateInfo, pool, image);
 }
 
 static void ev_rendererbackend_memorydump()
@@ -743,6 +808,137 @@ static void ev_rendererbackend_freeubo(UBO *ubo)
   ev_rendererbackend_freememorybuffer(&ubo->buffer);
 }
 
+static void ev_rendererbackend_transitionimagelayout(MemoryImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout)
+{
+  VkCommandBuffer tempCommandBuffer;
+  Vulkan.allocatePrimaryCommandBuffer(TRANSFER, &tempCommandBuffer);
+  VkCommandBufferBeginInfo tempCommandBufferBeginInfo = {VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO};
+  tempCommandBufferBeginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+  vkBeginCommandBuffer(tempCommandBuffer, &tempCommandBufferBeginInfo);
+
+
+  VkImageMemoryBarrier barrier = {
+    .sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
+    .oldLayout = oldLayout,
+    .newLayout = newLayout,
+    .srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+    .dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+    .image = image.image,
+
+    .subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
+    .subresourceRange.baseMipLevel = 0,
+    .subresourceRange.levelCount = 1,
+    .subresourceRange.baseArrayLayer = 0,
+    .subresourceRange.layerCount = 1,
+  };
+
+  VkPipelineStageFlags sourceStage = 0;
+  VkPipelineStageFlags destinationStage = 0;
+
+  if (oldLayout == VK_IMAGE_LAYOUT_UNDEFINED && newLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL) {
+      barrier.srcAccessMask = 0;
+      barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+
+      sourceStage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+      destinationStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+  } else if (oldLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL && newLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL) {
+      barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+      barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+
+      sourceStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+      destinationStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+  }
+
+  vkCmdPipelineBarrier(
+      tempCommandBuffer,
+      sourceStage, destinationStage,
+      0,
+      0, NULL,
+      0, NULL,
+      1, &barrier
+  );
+
+
+  vkEndCommandBuffer(tempCommandBuffer);
+
+  VkPipelineStageFlags stageMask = VK_PIPELINE_STAGE_TRANSFER_BIT;
+
+  VkSubmitInfo submitInfo         = {VK_STRUCTURE_TYPE_SUBMIT_INFO};
+  submitInfo.pWaitDstStageMask    = &stageMask;
+  submitInfo.commandBufferCount   = 1;
+  submitInfo.pCommandBuffers      = &tempCommandBuffer;
+  submitInfo.waitSemaphoreCount   = 0;
+  submitInfo.pWaitSemaphores      = NULL;
+  submitInfo.signalSemaphoreCount = 0;
+  submitInfo.pSignalSemaphores    = NULL;
+
+  VkQueue transferQueue = VulkanQueueManager.getQueue(TRANSFER);
+  VK_ASSERT(vkQueueSubmit(transferQueue, 1, &submitInfo, VK_NULL_HANDLE));
+
+  //TODO Change this to take advantage of fences
+  vkQueueWaitIdle(transferQueue);
+
+  vkFreeCommandBuffers(Vulkan.getDevice(), DATA(transferCommandPool), 1, &tempCommandBuffer);
+}
+static void ev_rendererbackend_copybuffertoimage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height)
+{
+  VkCommandBuffer tempCommandBuffer;
+  Vulkan.allocatePrimaryCommandBuffer(TRANSFER, &tempCommandBuffer);
+  VkCommandBufferBeginInfo tempCommandBufferBeginInfo = {VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO};
+  tempCommandBufferBeginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+  vkBeginCommandBuffer(tempCommandBuffer, &tempCommandBufferBeginInfo);
+
+  VkBufferImageCopy region = {
+    .bufferOffset = 0,
+    .bufferRowLength = 0,
+    .bufferImageHeight = 0,
+
+    .imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
+    .imageSubresource.mipLevel = 0,
+    .imageSubresource.baseArrayLayer = 0,
+    .imageSubresource.layerCount = 1,
+  };
+
+  region.imageOffset.x = 0;
+  region.imageOffset.y = 0;
+  region.imageOffset.z = 0;
+
+  region.imageExtent.depth = 1;
+  region.imageExtent.height = height;
+  region.imageExtent.width = width;
+
+  vkCmdCopyBufferToImage(
+      tempCommandBuffer,
+      buffer,
+      image,
+      VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+      1,
+      &region
+  );
+
+
+  vkEndCommandBuffer(tempCommandBuffer);
+
+  VkPipelineStageFlags stageMask = VK_PIPELINE_STAGE_TRANSFER_BIT;
+
+  VkSubmitInfo submitInfo         = {VK_STRUCTURE_TYPE_SUBMIT_INFO};
+  submitInfo.pWaitDstStageMask    = &stageMask;
+  submitInfo.commandBufferCount   = 1;
+  submitInfo.pCommandBuffers      = &tempCommandBuffer;
+  submitInfo.waitSemaphoreCount   = 0;
+  submitInfo.pWaitSemaphores      = NULL;
+  submitInfo.signalSemaphoreCount = 0;
+  submitInfo.pSignalSemaphores    = NULL;
+
+  VkQueue transferQueue = VulkanQueueManager.getQueue(TRANSFER);
+  VK_ASSERT(vkQueueSubmit(transferQueue, 1, &submitInfo, VK_NULL_HANDLE));
+
+  //TODO Change this to take advantage of fences
+  vkQueueWaitIdle(transferQueue);
+
+  vkFreeCommandBuffers(Vulkan.getDevice(), DATA(transferCommandPool), 1, &tempCommandBuffer);
+}
+
 static void ev_rendererbackend_copybuffer(unsigned long long size, MemoryBuffer *src, MemoryBuffer *dst)
 {
   VkCommandBuffer tempCommandBuffer;
@@ -785,7 +981,7 @@ static int ev_rendererbackend_loadbasepipelines()
 {
   //TODO when you implement multiple pipelines take a look at input attributes , this pipeline should be a rigging pipeline
 
-  VkPipelineShaderStageCreateInfo pipelineShaderStages[] = 
+  VkPipelineShaderStageCreateInfo pipelineShaderStages[] =
   {
     {
       .sType  = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
@@ -801,7 +997,7 @@ static int ev_rendererbackend_loadbasepipelines()
     },
   };
 
-  VkPipelineVertexInputStateCreateInfo pipelineVertexInputState = 
+  VkPipelineVertexInputStateCreateInfo pipelineVertexInputState =
   {
     .sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO,
     .vertexBindingDescriptionCount = 0,
@@ -855,7 +1051,7 @@ static int ev_rendererbackend_loadbasepipelines()
   };
 
   VkPipelineColorBlendAttachmentState pipelineColorBlendAttachmentState = {
-    .colorWriteMask = 
+    .colorWriteMask =
       VK_COLOR_COMPONENT_B_BIT |
       VK_COLOR_COMPONENT_G_BIT |
       VK_COLOR_COMPONENT_R_BIT |
@@ -883,12 +1079,13 @@ static int ev_rendererbackend_loadbasepipelines()
   VkPushConstantRange pc = {
     .stageFlags = VK_SHADER_STAGE_ALL_GRAPHICS,
     .offset = 0,
-    .size = 128 
+    .size = 128
   };
 
   VkDescriptorSetLayout setLayouts[] = {
     BASE_DESCRIPTOR_SET_LAYOUTS[EV_DESCRIPTOR_SET_LAYOUT_CAMERA_PARAM],
     BASE_DESCRIPTOR_SET_LAYOUTS[EV_DESCRIPTOR_SET_LAYOUT_BUFFER_ARR],
+    BASE_DESCRIPTOR_SET_LAYOUTS[EV_DESCRIPTOR_SET_LAYOUT_BUFFER_MAT]
   };
 
   VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo = {
@@ -904,8 +1101,8 @@ static int ev_rendererbackend_loadbasepipelines()
 
   // The graphicsPipelinesCreateInfos array should follow the order set by
   // the GraphicsPipelineUsage enum.
-  VkGraphicsPipelineCreateInfo graphicsPipelinesCreateInfo = 
-  { 
+  VkGraphicsPipelineCreateInfo graphicsPipelinesCreateInfo =
+  {
     .sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO,
     .flags = VK_PIPELINE_CREATE_ALLOW_DERIVATIVES_BIT,
     .stageCount = ARRAYSIZE(pipelineShaderStages),
@@ -925,15 +1122,15 @@ static int ev_rendererbackend_loadbasepipelines()
 
   VK_ASSERT(
     vkCreateGraphicsPipelines(
-      Vulkan.getDevice(), NULL, 
-      1, 
-      &graphicsPipelinesCreateInfo, NULL, 
+      Vulkan.getDevice(), NULL,
+      1,
+      &graphicsPipelinesCreateInfo, NULL,
       &BASE_PIPELINES[EV_GRAPHICS_PIPELINE_BASE]));
 
 
   BASE_PIPELINES_LAYOUTS_UPDATE_REF(EV_GRAPHICS_PIPELINE_PBR, EV_GRAPHICS_PIPELINE_BASE);
 
-  VkPipelineShaderStageCreateInfo pipelinePBRShaderStages[] = 
+  VkPipelineShaderStageCreateInfo pipelinePBRShaderStages[] =
   {
     {
       .sType  = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
@@ -959,9 +1156,9 @@ static int ev_rendererbackend_loadbasepipelines()
 
   VK_ASSERT(
     vkCreateGraphicsPipelines(
-      Vulkan.getDevice(), NULL, 
-      1, 
-      &graphicsPipelinesCreateInfo, NULL, 
+      Vulkan.getDevice(), NULL,
+      1,
+      &graphicsPipelinesCreateInfo, NULL,
       &BASE_PIPELINES[EV_GRAPHICS_PIPELINE_PBR]));
 
   return 0;
@@ -980,22 +1177,15 @@ static int ev_rendererbackend_loadbaseshaders()
 
 static int ev_rendererbackend_loadbasedescriptorsetlayouts()
 {
-  //SET 0 FOR TEXTURES
   {
     VkDescriptorSetLayoutBinding bindings[] =
-    { 
+    {
       {
         .binding = 0,
-        .descriptorCount = 400 , //TODO look into changing this
+        .descriptorCount = 700 , //TODO look into changing this
         .descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
         .stageFlags = VK_SHADER_STAGE_ALL_GRAPHICS,
       },
-      {
-        .binding = 1,
-        .descriptorCount = 400 , //TODO look into changing this
-        .descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
-        .stageFlags = VK_SHADER_STAGE_ALL_GRAPHICS,
-      }
     };
 
     VkDescriptorBindingFlagsEXT bindingFlags[] = {VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT, VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT}; // | VK_DESCRIPTOR_BINDING_VARIABLE_DESCRIPTOR_COUNT_BIT;
@@ -1005,7 +1195,7 @@ static int ev_rendererbackend_loadbasedescriptorsetlayouts()
       .pBindingFlags = bindingFlags,
     };
 
-    VkDescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo = 
+    VkDescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo =
     {
       .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
       .pNext = &descriptorSetLayoutBindingFlagsCreateInfo,
@@ -1018,7 +1208,7 @@ static int ev_rendererbackend_loadbasedescriptorsetlayouts()
 
   {
     VkDescriptorSetLayoutBinding bindings[] =
-    { 
+    {
       {
         .binding = 0,
         .descriptorCount = 1, //TODO look into changing this
@@ -1027,7 +1217,7 @@ static int ev_rendererbackend_loadbasedescriptorsetlayouts()
       }
     };
 
-    VkDescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo = 
+    VkDescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo =
     {
       .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
       .bindingCount = ARRAYSIZE(bindings),
@@ -1035,6 +1225,35 @@ static int ev_rendererbackend_loadbasedescriptorsetlayouts()
     };
 
     VK_ASSERT(vkCreateDescriptorSetLayout(Vulkan.getDevice(), &descriptorSetLayoutCreateInfo, NULL, &BASE_DESCRIPTOR_SET_LAYOUTS[EV_DESCRIPTOR_SET_LAYOUT_CAMERA_PARAM]));
+  }
+
+  {
+    VkDescriptorSetLayoutBinding bindings[] =
+    {
+      {
+        .binding = 0,
+        .descriptorCount = 200 , //TODO look into changing this
+        .descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+        .stageFlags = VK_SHADER_STAGE_ALL_GRAPHICS,
+      }
+    };
+
+    VkDescriptorBindingFlagsEXT bindingFlags[] = {VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT, VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT}; // | VK_DESCRIPTOR_BINDING_VARIABLE_DESCRIPTOR_COUNT_BIT;
+    VkDescriptorSetLayoutBindingFlagsCreateInfoEXT descriptorSetLayoutBindingFlagsCreateInfo = {
+      .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_BINDING_FLAGS_CREATE_INFO_EXT,
+      .bindingCount = ARRAYSIZE(bindings),
+      .pBindingFlags = bindingFlags,
+    };
+
+    VkDescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo =
+    {
+      .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
+      .pNext = &descriptorSetLayoutBindingFlagsCreateInfo,
+      .bindingCount = ARRAYSIZE(bindings),
+      .pBindings = bindings
+    };
+
+    VK_ASSERT(vkCreateDescriptorSetLayout(Vulkan.getDevice(), &descriptorSetLayoutCreateInfo, NULL, &BASE_DESCRIPTOR_SET_LAYOUTS[EV_DESCRIPTOR_SET_LAYOUT_BUFFER_MAT]));
   }
 
   return 0;
@@ -1071,6 +1290,7 @@ static int ev_rendererbackend_pushdescriptorstoset(DescriptorSet descriptorSet, 
 {
   VkWriteDescriptorSet *setWrites = malloc(descriptorsCount * sizeof(VkWriteDescriptorSet));
   VkDescriptorBufferInfo *bufferInfos = malloc(descriptorsCount * sizeof(VkDescriptorBufferInfo));
+  VkDescriptorImageInfo *imageInfos = malloc(descriptorsCount * sizeof(VkDescriptorImageInfo));
 
   for(unsigned int i = 0; i < descriptorsCount; ++i)
   {
@@ -1105,6 +1325,21 @@ static int ev_rendererbackend_pushdescriptorstoset(DescriptorSet descriptorSet, 
       case EV_DESCRIPTOR_TYPE_SAMPLER:
       case EV_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER:
       case EV_DESCRIPTOR_TYPE_INPUT_ATTACHMENT:
+          imageInfos[i].imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+          imageInfos[i].imageView = ((EvTexture*)descriptors[i].descriptorData)->imageView;
+          imageInfos[i].sampler = ((EvTexture*)descriptors[i].descriptorData)->sampler;
+
+          setWrites[i] = (VkWriteDescriptorSet)
+          {
+            .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+            .dstSet = descriptorSet,
+            .dstBinding = 0,
+            .dstArrayElement = i,
+            .descriptorType = (VkDescriptorType)descriptors[i].type,
+            .descriptorCount = 1,
+            .pImageInfo = &imageInfos[i]
+          };
+          break;
       default:
         ;
     }
@@ -1112,6 +1347,7 @@ static int ev_rendererbackend_pushdescriptorstoset(DescriptorSet descriptorSet, 
   vkUpdateDescriptorSets(Vulkan.getDevice(), descriptorsCount, setWrites, 0, NULL);
 
   free(bufferInfos);
+  free(imageInfos);
   free(setWrites);
   return 0;
 }
@@ -1124,7 +1360,7 @@ static int ev_rendererbackend_bindindexbuffer(MemoryBuffer *indexBuffer)
 
 static void ev_rendererbackend_pushconstant(void *data, unsigned int size)
 {
-  vkCmdPushConstants(CMDBUFFERS[FRAME], BOUND_PIPELINE_LAYOUT, VK_SHADER_STAGE_ALL_GRAPHICS, 0, size, data); 
+  vkCmdPushConstants(CMDBUFFERS[FRAME], BOUND_PIPELINE_LAYOUT, VK_SHADER_STAGE_ALL_GRAPHICS, 0, size, data);
 }
 
 static void ev_rendererbackend_drawindexed(unsigned int indexCount)
@@ -1137,7 +1373,27 @@ static void ev_rendererbackend_freememorybuffer(MemoryBuffer *buffer)
   vmaDestroyBuffer(Vulkan.getAllocator(), buffer->buffer, buffer->allocation);
 }
 
+static void ev_rendererbackend_freeimage(MemoryImage *image)
+{
+  vmaDestroyImage(Vulkan.getAllocator(), image->image, image->allocation);
+}
+
 static void ev_rendererbackend_freememorypool(MemoryPool pool)
 {
   Vulkan.freeMemoryPool(pool);
+}
+
+static void ev_rendererbackend_createimageview(VkFormat imageFormat, VkImage* image, VkImageView* view)
+{
+  Vulkan.createImageView(imageFormat, image, view);
+}
+
+static void ev_rendererbackend_freeimageview(VkImageView* view)
+{
+  vkDestroyImageView(Vulkan.getDevice(), *view, NULL);
+}
+
+static void ev_rendererbackend_freesampler(VkSampler* sampler)
+{
+  vkDestroySampler(Vulkan.getDevice(), *sampler, NULL);
 }
