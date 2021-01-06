@@ -33,7 +33,7 @@ struct material
 	vec3 emissiveFactor;
 };
 
-layout(set = 3, binding = 0) buffer materials
+layout(set = 2, binding = 1) buffer materials
 {
     material m[];
 };

@@ -18,7 +18,7 @@ static unsigned int ev_renderer_registerbuffer(RendererRegisterTypes type, void*
 static unsigned int ev_renderer_registertexture(void* pixels, uint32_t width, uint32_t height);
 static unsigned int ev_renderer_registermaterial(Material* material);
 
-static MemoryBuffer ev_renderer_uploadmaterial();
+static void ev_renderer_uploadmaterial(MemoryBuffer* materialBuffer);
 
 struct ev_Renderer Renderer = {
   .init   = ev_renderer_init,
@@ -42,6 +42,7 @@ struct ev_Renderer_Data {
   MemoryBufferVec resourceBuffers;
   MemoryImageVec  textureBuffers;
 
+  MemoryBuffer materialBuffer;
   MaterialVec materialsBuffer;
 
   UBO cameraUBO;
@@ -116,9 +117,12 @@ static int ev_renderer_deinit()
   }
   vec_deinit(&RendererData.textureBuffers);
 
+  RendererBackend.freeMemoryBuffer(&RendererData.materialBuffer);
+  vec_deinit(&RendererData.materialsBuffer);
+
   // After freeing all the buffers in this pool, free the pool itself
-  RendererBackend.freeMemoryPool(RendererData.resourcePool);
   RendererBackend.freeMemoryPool(RendererData.imagePool);
+  RendererBackend.freeMemoryPool(RendererData.resourcePool);
 
   RendererBackend.memoryDump();
   return 0;
@@ -223,22 +227,22 @@ static unsigned int ev_renderer_registermaterial(Material* material)
 
   return idx;
 }
+
 // this should be moved into register material when there is a complete separate material system
-static MemoryBuffer ev_renderer_uploadmaterial()
+static void ev_renderer_uploadmaterial(MemoryBuffer* materialBuffer)
 {
+  if(materialBuffer->buffer)
+    return;
 
   uint32_t size = RendererData.materialsBuffer.length * sizeof(Material);
 
-  MemoryBuffer newBuffer;
-  RendererBackend.allocateBufferInPool(RendererData.resourcePool, size, EV_USAGEFLAGS_RESOURCE_BUFFER, &newBuffer);
+  RendererBackend.allocateBufferInPool(RendererData.resourcePool, size, EV_USAGEFLAGS_RESOURCE_BUFFER, materialBuffer);
 
   MemoryBuffer stagingBuffer;
   RendererBackend.allocateStagingBuffer(size, &stagingBuffer);
   RendererBackend.updateStagingBuffer(&stagingBuffer, size, RendererData.materialsBuffer.data);
-  RendererBackend.copyBuffer(size, &stagingBuffer, &newBuffer);
+  RendererBackend.copyBuffer(size, &stagingBuffer, materialBuffer);
   RendererBackend.freeMemoryBuffer(&stagingBuffer);
-
-  return newBuffer;
 }
 
 static int ev_renderer_startframe(ev_RenderCamera *camera)
@@ -265,25 +269,21 @@ static int ev_renderer_startframe(ev_RenderCamera *camera)
   RendererBackend.pushDescriptorsToSet(resourceDescriptorSet, resourceDescriptors, RendererData.resourceBuffers.length, 0);
   free(resourceDescriptors);
 
-  DescriptorSet textureDescriptorSet;
-  RendererBackend.allocateDescriptorSet(EV_DESCRIPTOR_SET_LAYOUT_BUFFER_MAT, &textureDescriptorSet);
+  ev_renderer_uploadmaterial(&RendererData.materialBuffer);
+  DescriptorSet materialDescriptorSet;
+  RendererBackend.allocateDescriptorSet(EV_DESCRIPTOR_SET_LAYOUT_BUFFER_MAT, &materialDescriptorSet);
   Descriptor *textureDescriptors = malloc(sizeof(Descriptor) * RendererData.textureBuffers.length);
   for(int i = 0; i < RendererData.textureBuffers.length; ++i)
     textureDescriptors[i] = (Descriptor){EV_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, &RendererData.textureBuffers.data[i]};
-  RendererBackend.pushDescriptorsToSet(textureDescriptorSet, textureDescriptors, RendererData.textureBuffers.length, 0);
+  Descriptor materialDescriptor = {EV_DESCRIPTOR_TYPE_STORAGE_BUFFER, &RendererData.materialBuffer};
+  RendererBackend.pushDescriptorsToSet(materialDescriptorSet, textureDescriptors, RendererData.textureBuffers.length, 0);
+  RendererBackend.pushDescriptorsToSet(materialDescriptorSet, &materialDescriptor, 1, 1);
   free(textureDescriptors);
 
   //there must be atleast one material in game
-  MemoryBuffer mb = ev_renderer_uploadmaterial();
-  DescriptorSet materialDescriptorSet;
-  RendererBackend.allocateDescriptorSet(EV_DESCRIPTOR_SET_LAYOUT_BUFFER_TT, &materialDescriptorSet);
-  Descriptor materialDescriptor = {EV_DESCRIPTOR_TYPE_STORAGE_BUFFER, &mb};
-  RendererBackend.pushDescriptorsToSet(materialDescriptorSet, &materialDescriptor, 1, 0);
-
   DescriptorSet descriptorSets[] = {
     cameraDescriptorSet,
     resourceDescriptorSet,
-    textureDescriptorSet,
     materialDescriptorSet
   };
 
