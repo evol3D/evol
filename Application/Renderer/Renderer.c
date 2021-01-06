@@ -15,7 +15,10 @@ static int ev_renderer_endframe();
 static void ev_renderer_draw(MeshRenderData meshRenderData, ev_Matrix4 transformMatrix);
 
 static unsigned int ev_renderer_registerbuffer(RendererRegisterTypes type, void* data, unsigned long long size);
-static unsigned int ev_renderer_registermaterial(void* pixels, uint32_t width, uint32_t height);
+static unsigned int ev_renderer_registertexture(void* pixels, uint32_t width, uint32_t height);
+static unsigned int ev_renderer_registermaterial(Material* material);
+
+static MemoryBuffer ev_renderer_uploadmaterial();
 
 struct ev_Renderer Renderer = {
   .init   = ev_renderer_init,
@@ -27,6 +30,7 @@ struct ev_Renderer Renderer = {
   .draw = ev_renderer_draw,
 
   .registerBuffer = ev_renderer_registerbuffer,
+  .registerTexture = ev_renderer_registertexture,
   .registerMaterial = ev_renderer_registermaterial,
 };
 
@@ -36,7 +40,9 @@ struct ev_Renderer_Data {
 
   MemoryBufferVec indexBuffers;
   MemoryBufferVec resourceBuffers;
-  MemoryImageVec textureBuffers;
+  MemoryImageVec  textureBuffers;
+
+  MaterialVec materialsBuffer;
 
   UBO cameraUBO;
 
@@ -51,6 +57,7 @@ static int ev_renderer_init()
   vec_init(&RendererData.indexBuffers);
   vec_init(&RendererData.resourceBuffers);
   vec_init(&RendererData.textureBuffers);
+  vec_init(&RendererData.materialsBuffer);
 
   ev_log_trace("Loading BaseShaders");
   RendererBackend.loadBaseShaders();
@@ -152,7 +159,7 @@ static unsigned int ev_renderer_registerbuffer(RendererRegisterTypes type, void*
   return idx;
 }
 
-static unsigned int ev_renderer_registermaterial(void* pixels, uint32_t width, uint32_t height)
+static unsigned int ev_renderer_registertexture(void* pixels, uint32_t width, uint32_t height)
 {
   unsigned int idx = RendererData.textureBuffers.length;
 
@@ -208,6 +215,32 @@ static unsigned int ev_renderer_registermaterial(void* pixels, uint32_t width, u
   return idx;
 }
 
+static unsigned int ev_renderer_registermaterial(Material* material)
+{
+  unsigned int idx = RendererData.materialsBuffer.length;
+
+  vec_push(&RendererData.materialsBuffer, *material);
+
+  return idx;
+}
+// this should be moved into register material when there is a complete separate material system
+static MemoryBuffer ev_renderer_uploadmaterial()
+{
+
+  uint32_t size = RendererData.materialsBuffer.length * sizeof(Material);
+
+  MemoryBuffer newBuffer;
+  RendererBackend.allocateBufferInPool(RendererData.resourcePool, size, EV_USAGEFLAGS_RESOURCE_BUFFER, &newBuffer);
+
+  MemoryBuffer stagingBuffer;
+  RendererBackend.allocateStagingBuffer(size, &stagingBuffer);
+  RendererBackend.updateStagingBuffer(&stagingBuffer, size, RendererData.materialsBuffer.data);
+  RendererBackend.copyBuffer(size, &stagingBuffer, &newBuffer);
+  RendererBackend.freeMemoryBuffer(&stagingBuffer);
+
+  return newBuffer;
+}
+
 static int ev_renderer_startframe(ev_RenderCamera *camera)
 {
   ev_log_trace("Starting API specific new frame initialization : RendererBackend.startNewFrame()");
@@ -240,10 +273,18 @@ static int ev_renderer_startframe(ev_RenderCamera *camera)
   RendererBackend.pushDescriptorsToSet(textureDescriptorSet, textureDescriptors, RendererData.textureBuffers.length, 0);
   free(textureDescriptors);
 
+  //there must be atleast one material in game
+  MemoryBuffer mb = ev_renderer_uploadmaterial();
+  DescriptorSet materialDescriptorSet;
+  RendererBackend.allocateDescriptorSet(EV_DESCRIPTOR_SET_LAYOUT_BUFFER_TT, &materialDescriptorSet);
+  Descriptor materialDescriptor = {EV_DESCRIPTOR_TYPE_STORAGE_BUFFER, &mb};
+  RendererBackend.pushDescriptorsToSet(materialDescriptorSet, &materialDescriptor, 1, 0);
+
   DescriptorSet descriptorSets[] = {
     cameraDescriptorSet,
     resourceDescriptorSet,
     textureDescriptorSet,
+    materialDescriptorSet
   };
 
   RendererBackend.bindPipeline(EV_GRAPHICS_PIPELINE_BASE);

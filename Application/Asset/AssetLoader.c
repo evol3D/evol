@@ -164,19 +164,80 @@ static int ev_assetloader_load_gltf(const char *path)
   int32_t* materials = malloc(data->materials_count * sizeof(int32_t));
   for(int material_Idx = 0;material_Idx < data->materials_count; material_Idx++)
   {
-    if(data->materials[material_Idx].pbr_metallic_roughness.base_color_texture.texture)
-      {
-        int texWidth, texHeight, texChannels;
+    cgltf_material m_gltf = data->materials[material_Idx];
 
-        stbi_uc* pixels = stbi_load(data->materials[material_Idx].pbr_metallic_roughness.base_color_texture.texture->image->uri, &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
-        assert(pixels);
+    int albedoTexture = -1;
+    int metalic_RoughnessTexture = -1;
+    int normalTexture = -1;
+    int occlusionTexture = -1;
+    int emissiveTexture = -1;
 
-        materials[material_Idx] = Renderer.registerMaterial(pixels, texWidth, texHeight);
-      }
-      else
-      {
-        materials[material_Idx] = -1;
-      }
+    if(m_gltf.pbr_metallic_roughness.base_color_texture.texture)
+    {
+      int texWidth, texHeight, texChannels;
+
+      stbi_uc* pixels = stbi_load(m_gltf.pbr_metallic_roughness.base_color_texture.texture->image->uri, &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
+      assert(pixels);
+      albedoTexture = Renderer.registerTexture(pixels, texWidth, texHeight);
+    }
+
+    if(m_gltf.pbr_metallic_roughness.metallic_roughness_texture.texture)
+    {
+      int texWidth, texHeight, texChannels;
+      stbi_uc* pixels = stbi_load(m_gltf.pbr_metallic_roughness.metallic_roughness_texture.texture->image->uri, &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
+      assert(pixels);
+      metalic_RoughnessTexture = Renderer.registerTexture(pixels, texWidth, texHeight);
+    }
+
+    if(m_gltf.normal_texture.texture)
+    {
+      int texWidth, texHeight, texChannels;
+      stbi_uc* pixels = stbi_load(m_gltf.normal_texture.texture->image->uri, &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
+      assert(pixels);
+      normalTexture = Renderer.registerTexture(pixels, texWidth, texHeight);
+    }
+
+    if(m_gltf.occlusion_texture.texture)
+    {
+      int texWidth, texHeight, texChannels;
+      stbi_uc* pixels = stbi_load(m_gltf.occlusion_texture.texture->image->uri, &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
+      assert(pixels);
+      occlusionTexture = Renderer.registerTexture(pixels, texWidth, texHeight);
+    }
+
+    if(m_gltf.emissive_texture.texture)
+    {
+      int texWidth, texHeight, texChannels;
+      stbi_uc* pixels = stbi_load(m_gltf.emissive_texture.texture->image->uri, &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
+      assert(pixels);
+      emissiveTexture = Renderer.registerTexture(pixels, texWidth, texHeight);
+    }
+
+    Material m =
+  	{
+  		.albedoTexture = albedoTexture,
+  		.albdoFactor = {m_gltf.pbr_metallic_roughness.base_color_factor[0],
+          m_gltf.pbr_metallic_roughness.base_color_factor[1],
+          m_gltf.pbr_metallic_roughness.base_color_factor[2],
+          m_gltf.pbr_metallic_roughness.base_color_factor[3]},
+
+  		.metalic_RoughnessTexture = metalic_RoughnessTexture,
+  		.metalicFactor   = m_gltf.pbr_metallic_roughness.metallic_factor,
+  		.roughnessFactor = m_gltf.pbr_metallic_roughness.roughness_factor,
+
+  		.normalTexture = normalTexture,
+  		.normalScale   = m_gltf.normal_texture.scale,
+
+  		.occlusionTexture  = occlusionTexture,
+  		.occlusionStrength = m_gltf.occlusion_texture.scale,
+
+  		.emissiveTexture = emissiveTexture,
+  		.emissiveFactor  = {m_gltf.emissive_factor[0],
+  		    m_gltf.emissive_factor[1],
+    		  m_gltf.emissive_factor[2]}
+  	};
+
+    materials[material_Idx] = Renderer.registerMaterial(&m);
   }
 
   Entity *mesh_entities = malloc(sizeof(Entity) * data->meshes_count);

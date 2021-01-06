@@ -15,7 +15,8 @@ extern struct ev_Renderer {
   int (*deinit)();
 
   unsigned int (*registerBuffer)(RendererRegisterTypes type, void* data, unsigned long long size);
-  unsigned int (*registerMaterial)(void* pixels, uint32_t width, uint32_t height);
+  unsigned int (*registerTexture)(void* pixels, uint32_t width, uint32_t height);
+  unsigned int (*registerMaterial)(Material* material);
 
   int (*startFrame)(ev_RenderCamera *camera);
   int (*endFrame)();

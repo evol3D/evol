@@ -18,13 +18,33 @@
   typedef VmaPool               MemoryPool;
   typedef unsigned int          MemoryType;
 
-  typedef struct EvTexture
+  typedef struct
+  {
+  	int32_t albedoTexture;
+  	ev_Vector4 albdoFactor;
+
+  	int32_t metalic_RoughnessTexture;
+  	float metalicFactor;
+  	float roughnessFactor;
+
+  	int32_t normalTexture;
+  	float normalScale;
+
+  	int32_t occlusionTexture;
+  	float occlusionStrength;
+
+  	int32_t emissiveTexture;
+  	ev_Vector3 emissiveFactor;
+  } Material;
+
+  typedef struct EvTexturer
   {
       EvImage image;
       VkImageView imageView;
       VkSampler sampler;
   } EvTexture;
 
+  typedef vec_t(Material) MaterialVec;
   typedef vec_t(MemoryBuffer) MemoryBufferVec;
   typedef vec_t(EvTexture) MemoryImageVec;
 

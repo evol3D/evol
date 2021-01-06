@@ -1085,7 +1085,8 @@ static int ev_rendererbackend_loadbasepipelines()
   VkDescriptorSetLayout setLayouts[] = {
     BASE_DESCRIPTOR_SET_LAYOUTS[EV_DESCRIPTOR_SET_LAYOUT_CAMERA_PARAM],
     BASE_DESCRIPTOR_SET_LAYOUTS[EV_DESCRIPTOR_SET_LAYOUT_BUFFER_ARR],
-    BASE_DESCRIPTOR_SET_LAYOUTS[EV_DESCRIPTOR_SET_LAYOUT_BUFFER_MAT]
+    BASE_DESCRIPTOR_SET_LAYOUTS[EV_DESCRIPTOR_SET_LAYOUT_BUFFER_MAT],
+    BASE_DESCRIPTOR_SET_LAYOUTS[EV_DESCRIPTOR_SET_LAYOUT_BUFFER_TT]
   };
 
   VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo = {
@@ -1254,6 +1255,27 @@ static int ev_rendererbackend_loadbasedescriptorsetlayouts()
     };
 
     VK_ASSERT(vkCreateDescriptorSetLayout(Vulkan.getDevice(), &descriptorSetLayoutCreateInfo, NULL, &BASE_DESCRIPTOR_SET_LAYOUTS[EV_DESCRIPTOR_SET_LAYOUT_BUFFER_MAT]));
+  }
+
+  {
+    VkDescriptorSetLayoutBinding bindings[] =
+    {
+      {
+        .binding = 0,
+        .descriptorCount = 1, //TODO look into changing this
+        .descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+        .stageFlags = VK_SHADER_STAGE_ALL_GRAPHICS,
+      }
+    };
+
+    VkDescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo =
+    {
+      .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
+      .bindingCount = ARRAYSIZE(bindings),
+      .pBindings = bindings
+    };
+
+    VK_ASSERT(vkCreateDescriptorSetLayout(Vulkan.getDevice(), &descriptorSetLayoutCreateInfo, NULL, &BASE_DESCRIPTOR_SET_LAYOUTS[EV_DESCRIPTOR_SET_LAYOUT_BUFFER_TT]));
   }
 
   return 0;

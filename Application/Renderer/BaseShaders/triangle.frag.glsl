@@ -14,6 +14,30 @@ layout (push_constant) uniform PushConstant
 
 layout(set = 2, binding = 0) uniform sampler2D texSampler[];
 
+struct material
+{
+	int albedoTexture;
+	vec4 albdoFactor;
+
+	int metalic_RoughnessTexture;
+	float metalicFactor;
+	float roughnessFactor;
+
+	int normalTexture;
+	float normalScale;
+
+	int occlusionTexture;
+	float occlusionStrength;
+
+	int emissiveTexture;
+	vec3 emissiveFactor;
+};
+
+layout(set = 3, binding = 0) buffer materials
+{
+    material m[];
+};
+
 layout(location = 0) in vec2 uv;
 layout(location = 1) in vec3 normal;
 
@@ -25,10 +49,12 @@ float ambientLight = 0.2;
 void main()
 {
     vec4 color;
-    if(RenderData.materialIndex != -1) {
-      color = vec4(texture(texSampler[RenderData.materialIndex],uv).xyz,1);
+
+    if(m[RenderData.materialIndex].albedoTexture != -1)
+    {
+      color = vec4(texture(texSampler[m[RenderData.materialIndex].albedoTexture],uv).xyz,1);
     } else {
-      color = vec4(1, 1, 1, 1);
+      color = m[RenderData.materialIndex].albdoFactor;
     }
 
     vec3 normalizedLight = normalize(lightDir);
