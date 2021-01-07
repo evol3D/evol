@@ -324,11 +324,11 @@ PhysicsVehicle BulletState::createRaycastVehicle(RigidBodyHandle handle)
   btVector3 raycastDirection(0, -1, 0);
   btVector3 wheelAxle(1, 0, 0);
 
-  btScalar suspensionRestLength(0.5);
+  btScalar suspensionRestLength(0.55);
 
   btScalar wheelWidth(0.2);
 
-  btScalar wheelRadius(0.2);
+  btScalar wheelRadius(0.3);
 
   //The height where the wheels are connected to the chassis
   btScalar connectionHeight(0.1);
