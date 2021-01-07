@@ -45,9 +45,9 @@ layout(location = 3) in vec3 camPos;
 layout(location = 0) out vec4 outputColor;
 
 const float PI = 3.14159265359;
-vec3 lightDir = vec3(1, 0, 1);
-float lightIntensity = 2;
-float ambientLight = 0.2;
+vec3 lightDir = vec3(1, 1, 1);
+float lightIntensity = 1;
+float ambientLight = 0.1;
 
 vec3 materialcolor()
 {
@@ -107,13 +107,12 @@ vec3 BRDF(vec3 L, vec3 V, vec3 N, float metallic, float roughness)
 
   vec3 color = vec3(0.0);
 
-  if (dotNL > 0.0)
-  {
+  if (dotNL > 0.0) {
     float rroughness = max(0.05, roughness);
     // D = Normal distribution (Distribution of the microfacets)
-    float D = D_GGX(dotNH, roughness);
+    float D = D_GGX(dotNH, rroughness);
     // G = Geometric shadowing term (Microfacets shadowing)
-    float G = G_SchlicksmithGGX(dotNL, dotNV, roughness);
+    float G = G_SchlicksmithGGX(dotNL, dotNV, rroughness);
     // F = Fresnel factor (Reflectance depending on angle of incidence)
     vec3 F = F_Schlick(dotNV, metallic);
 
@@ -130,33 +129,26 @@ void main()
   vec3 N = normalize(nor);
   vec3 V = normalize(camPos - pos);
 
-  vec3 color;
+  vec3 color = vec3(1.0);
   float roughness = 0;
   float metallic = 0;
 
-  if(RenderData.materialIndex == -1)
-  {
-    color = vec3(1,1,1);
-  }
-  else
-  {
+  if(RenderData.materialIndex != -1) {
     color = materialcolor();
-
     roughness = m[RenderData.materialIndex].roughnessFactor;
     metallic  = m[RenderData.materialIndex].metalicFactor;
   }
 
   // Specular contribution
   vec3 Lo = vec3(0);
-  for (int i = 0; i < 1; i++)
-  {
-    vec3 L = normalize(lightDir * -1);
+  for (int i = 0; i < 1; i++) {
+    vec3 L = normalize(lightDir);
     Lo += BRDF(L, V, N, metallic, roughness);
   };
 
   // Combine with ambient
-  color *= ambientLight;
-  color += Lo * lightIntensity;
+  color *= ambientLight + dot(lightDir, N);
+  /* color += Lo * 0.0001; */
 
   // Gamma correct
   color = pow(color, vec3(0.4545));
