@@ -57,6 +57,8 @@ struct ev_Game_Data {
 struct {
   float verticalAxis;
   float horizontalAxis;
+  float cameraVerticalAxis;
+  float cameraHorizontalAxis;
   float rotationSpeed;
   float engineForce;
   PhysicsVehicle physicsVehicle;
@@ -67,8 +69,9 @@ static void ev_game_setplayer(Entity p)
   GameData.player = p;
   PlayerData.verticalAxis = 0;
   PlayerData.horizontalAxis = 0;
+  PlayerData.cameraVerticalAxis = 1;
+  PlayerData.cameraHorizontalAxis = 0;
   PlayerData.engineForce = 3000;
-  PlayerData.rotationSpeed = 1.0f;
 }
 
 static int ev_game_init()
@@ -210,6 +213,16 @@ void glm_mat4_forward(const vec4* m, float *v)
   v[2] *= -1;
 }
 
+void glm_mat4_left(const vec4* m, float *v)
+{
+  ev_Vector4 forwardQuat;
+  glm_mat4_quat((vec4*)m, (float*)&forwardQuat);
+  v[0] = 1 - 2 * (forwardQuat.y*forwardQuat.y + forwardQuat.z*forwardQuat.z);
+  v[1] = 2 * (forwardQuat.x*forwardQuat.y + forwardQuat.w*forwardQuat.z);
+  v[2] = 2 * (forwardQuat.x*forwardQuat.z - forwardQuat.w*forwardQuat.y);
+  v[0] *= -1;
+}
+
 void glm_lookdir(ev_Matrix4 eyeMat, ev_Matrix4 targetMat)
 {
   ev_Vector4 oldRotationQuat; glm_mat4_quat(eyeMat, (float*)&oldRotationQuat);
@@ -283,7 +296,7 @@ void cameraOnFixedUpdate(unsigned int entt)
   float cameraHeight = 2.f;
   float cameraDistance = 10.f;
   float heightDamping = 0.10f;
-  float positionDamping = 0.05f;
+  float positionDamping = 0.10f;
 
   TransformComponent *transComp = Entity_GetComponent_mut(entt, TransformComponent);
   TransformComponent *playerTransComp = (TransformComponent *)Entity_GetComponent(GameData.player, TransformComponent);
@@ -303,11 +316,20 @@ void cameraOnFixedUpdate(unsigned int entt)
 
 
   ev_Vector3 upVec = {0, 1, 0};
+
+  ev_Vector3 reverseVec = {0, 0, 0};
   ev_Vector3 forwardVec;
   glm_mat4_forward(playerTransComp->worldTransform, (float*)&forwardVec);
+  glm_vec3_scale(&forwardVec, PlayerData.cameraVerticalAxis, &forwardVec);
+  glm_vec3_add(&reverseVec, &forwardVec, &reverseVec);
+
+  ev_Vector3 leftVec;
+  glm_mat4_left(playerTransComp->worldTransform, (float*)&leftVec);
+  glm_vec3_scale(&leftVec, PlayerData.cameraHorizontalAxis, &leftVec);
+  glm_vec3_add(&reverseVec, &leftVec, &reverseVec);
 
   ev_Vector3 offset;
-  glm_vec3_scale((float*)&forwardVec, cameraDistance, (float*)&offset);
+  glm_vec3_scale((float*)&reverseVec, cameraDistance, (float*)&offset);
 
   ev_Vector3 targetPosition = *playerPosition;
   glm_vec3_sub((float*)&targetPosition, (float*)&offset, (float*)&targetPosition);
@@ -348,6 +370,20 @@ DECLARE_EVENT_HANDLER(PlayerKeyHandler, (KeyEvent *keyEvent) {
       case KEY_D:
       PlayerData.horizontalAxis += 1;
       break;
+      case KEY_UP_ARROW:
+      PlayerData.cameraVerticalAxis += 1;
+      break;
+      case KEY_DOWN_ARROW:
+      PlayerData.cameraVerticalAxis -= 2;
+      break;
+      case KEY_LEFT_ARROW:
+      PlayerData.cameraHorizontalAxis -= 1;
+      PlayerData.cameraVerticalAxis -= 1;
+      break;
+      case KEY_RIGHT_ARROW:
+      PlayerData.cameraHorizontalAxis += 1;
+      PlayerData.cameraVerticalAxis -= 1;
+      break;
       default:
       break;
     }
@@ -367,6 +403,20 @@ DECLARE_EVENT_HANDLER(PlayerKeyHandler, (KeyEvent *keyEvent) {
       break;
       case KEY_D:
       PlayerData.horizontalAxis -= 1;
+      break;
+      case KEY_UP_ARROW:
+      PlayerData.cameraVerticalAxis -= 1;
+      break;
+      case KEY_DOWN_ARROW:
+      PlayerData.cameraVerticalAxis += 2;
+      break;
+      case KEY_LEFT_ARROW:
+      PlayerData.cameraHorizontalAxis += 1;
+      PlayerData.cameraVerticalAxis += 1;
+      break;
+      case KEY_RIGHT_ARROW:
+      PlayerData.cameraHorizontalAxis -= 1;
+      PlayerData.cameraVerticalAxis += 1;
       break;
       default:
       break;
