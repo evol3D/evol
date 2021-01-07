@@ -1182,7 +1182,7 @@ static int ev_rendererbackend_loadbasedescriptorsetlayouts()
     {
       {
         .binding = 0,
-        .descriptorCount = 700 , //TODO look into changing this
+        .descriptorCount = 1000 , //TODO look into changing this
         .descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
         .stageFlags = VK_SHADER_STAGE_ALL_GRAPHICS,
       },
@@ -1232,7 +1232,7 @@ static int ev_rendererbackend_loadbasedescriptorsetlayouts()
     {
       {
         .binding = 0,
-        .descriptorCount = 200 , //TODO look into changing this
+        .descriptorCount = 500 , //TODO look into changing this
         .descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
         .stageFlags = VK_SHADER_STAGE_ALL_GRAPHICS,
       },
