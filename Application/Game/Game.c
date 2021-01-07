@@ -418,6 +418,23 @@ DECLARE_EVENT_HANDLER(PlayerKeyHandler, (KeyEvent *keyEvent) {
       PlayerData.cameraHorizontalAxis -= 1;
       PlayerData.cameraVerticalAxis += 1;
       break;
+      case KEY_R:
+      {
+        TransformComponent *playerTransform = Entity_GetComponent_mut(GameData.player, TransformComponent);
+        ev_Vector3 *playerPosition = playerTransform->worldTransform[3];
+
+        playerPosition->x = 10;
+        playerPosition->y = 10;
+        playerPosition->z = -20;
+
+        ev_Vector4 playerRotation; glm_mat4_quat(playerTransform->worldTransform, &playerRotation);
+        ev_Vector4 targetRotation; glm_quat_inv(&playerRotation, &targetRotation);
+
+        glm_quat_rotate(playerTransform->worldTransform, &targetRotation, playerTransform->worldTransform);
+
+        ecs_modified(World.getInstance(), GameData.player, TransformComponent);
+      }
+      break;
       default:
       break;
     }
