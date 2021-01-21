@@ -1,5 +1,6 @@
 #pragma once
 
+#include <evol/common/ev_types.h>
 #include <evol/common/ev_macros.h>
 
 #define EV_CONSTRUCTOR_FN_NAME ev_init
