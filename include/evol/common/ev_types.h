@@ -31,6 +31,24 @@ typedef void* PTR;
 
 typedef PTR evolmodule_t;
 
+typedef enum {
+  EV_TYPE_I8,
+  EV_TYPE_I16,
+  EV_TYPE_I32,
+  EV_TYPE_I64,
+
+  EV_TYPE_U8,
+  EV_TYPE_U16,
+  EV_TYPE_U32,
+  EV_TYPE_U64,
+
+  EV_TYPE_F32,
+  EV_TYPE_F64,
+
+  EV_TYPE_PTR,
+  EV_TYPE_FNPTR,
+} ev_type;
+
 /*!
  * \brief A specialized vector for sds (dynamic strings)
  */

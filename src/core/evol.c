@@ -236,7 +236,7 @@ evol_start(evolengine_t *engine)
     }
 
     vec_push(&(engine->startmods_handles), &handle);
-    void(*start_fn)() = (void(*)())evol_getmodfunc(handle, EV_STRINGIZE(EV_START_FN_NAME));
+    FN_PTR start_fn = (FN_PTR)evol_getmodfunc(handle, EV_STRINGIZE(EV_START_FN_NAME));
 
     if(!start_fn) {
       continue;

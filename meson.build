@@ -12,6 +12,7 @@ subproject('luajit')
 luajit = dependency('luajit')
 cargs  = dependency('cargs')
 evol_threads = dependency('evol_threads')
+hashmap = dependency('hashmap')
 dl = cc.find_library('dl', required: false)
 
 
@@ -29,6 +30,7 @@ evol_deps = [
   luajit,
   cargs,
   evol_threads,
+  hashmap,
   dl,
 ]
 

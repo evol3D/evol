@@ -36,7 +36,7 @@ evol_create();
  * evol_destroy(engine);
  * \endcode
 
-  \param engine Pointer to the `evolengine_t` object to destroyed
+  \param engine Pointer to the `evolengine_t` object to be destroyed
  */
 void
 evol_destroy(evolengine_t *engine);
