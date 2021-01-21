@@ -25,7 +25,8 @@ find_contains_r(const char *search_dir, const char *query, vec_t *res)
       strcat(path, "/");
       strcat(path, dp->d_name);
 
-      if (strstr(path, query)) {
+      char *dot = strrchr(path, '.');
+      if (dot &&!strcmp(dot, query)) {
         vec_push(res, &path_p);
       }
 
