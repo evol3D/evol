@@ -159,5 +159,5 @@ evol_unloadmodule(evolmodule_t module);
  * If the function was found, a function pointer is returned. Otherwise, `NULL`
  * is returned.
  */
-void *
+FN_PTR
 evol_getmodfunc(evolmodule_t module, const char *func_name);

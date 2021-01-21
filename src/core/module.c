@@ -39,11 +39,11 @@ ev_module_close(evolmodule_t module)
 #endif
 }
 
-inline void *
+inline FN_PTR
 ev_module_getfn(evolmodule_t module, const char *fn_name)
 {
 #if defined(EV_CC_GCC)
-  return dlsym(module, fn_name);
+  return (FN_PTR)dlsym(module, fn_name);
 #elif defined(EV_CC_MSVC)
 #error("ev_module_getfn(...) not implemented for MSVC")
 

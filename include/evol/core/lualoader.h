@@ -71,8 +71,8 @@ ev_lua_fnstack_pop();
 
 #define ev_lua_getvar(varname, var)                                            \
   _Generic((var),                                                              \
-      double  : ev_lua_getdouble,                                              \
-      int32_t : ev_lua_getint,                                                 \
+      F64     : ev_lua_getdouble,                                              \
+      I32     : ev_lua_getint,                                                 \
       sdsvec_t: ev_lua_getsdsvec,                                              \
       default : ev_lua_getstring)                                              \
                                                                 (varname, &var)

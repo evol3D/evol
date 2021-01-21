@@ -1,7 +1,8 @@
 /*! \file module.h */
 #pragma once
+#include <evol/common/ev_types.h>
 
-typedef void *evolmodule_t;
+typedef PTR evolmodule_t;
 
 /*!
  * \brief Loads a module into memory
@@ -49,5 +50,5 @@ ev_module_close(evolmodule_t module);
  * If the function was found, a function pointer is returned. Otherwise, `NULL`
  * is returned.
  */
-void *
+FN_PTR
 ev_module_getfn(evolmodule_t module, const char *fn_name);

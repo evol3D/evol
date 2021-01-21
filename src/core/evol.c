@@ -21,8 +21,8 @@
 
 typedef struct evconfig {
   char        name[EV_ENGINE_NAME_MAXLEN + 1];
-  uint32_t    version_minor;
-  uint32_t    version_major;
+  U32         version_minor;
+  U32         version_major;
   const char *configfile;
   char        module_directory[EV_ENGINE_MODDIR_MAXLEN + 1];
   sdsvec_t    startmods;
@@ -152,8 +152,8 @@ evol_deinit(evolengine_t *evengine)
   size_t startmods_len = vec_len(evengine->startmods_handles);
   if(startmods_len > 0) {
     for(size_t i = 0; i < startmods_len; ++i) {
-      evol_unloadmodule(((evolmodule_t*)evengine->startmods_handles)[i]);
       pthread_join(((pthread_t*)evengine->startmods_threadhandles)[i], NULL);
+      evol_unloadmodule(((evolmodule_t*)evengine->startmods_handles)[i]);
     }
   }
 
@@ -214,7 +214,7 @@ evol_unloadmodule(evolmodule_t module)
   ev_module_close(module);
 }
 
-inline void *
+inline FN_PTR
 evol_getmodfunc(evolmodule_t module, const char *func_name)
 {
   return ev_module_getfn(module, func_name);
