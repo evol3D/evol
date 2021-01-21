@@ -37,12 +37,13 @@ if get_option('colored_logging')
 endif
 
 evol_lib = library('evol',
-evol_src,
-include_directories: evol_incdir,
-dependencies: evol_deps,
-c_pch: 'pch/evpch.h',
-c_args: evol_c_args,
-install : true)
+  evol_src,
+  include_directories: evol_incdir,
+  dependencies: evol_deps,
+  c_pch: 'pch/evpch.h',
+  c_args: evol_c_args,
+  install : true
+)
 
 evollib_dep = declare_dependency(
   link_with: evol_lib,
