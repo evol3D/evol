@@ -4,6 +4,8 @@
 #pragma once
 
 #include <evol/common/ev_types.h>
+#include <evol/meta/strings.h>
+#include <evol/core/evstore.h>
 
 typedef struct evolengine evolengine_t;
 
@@ -11,6 +13,8 @@ typedef struct evolengine evolengine_t;
 #define RES_FILE <evol/meta/results/engineresults.h>
 #define RES_TYPE EvEngineResult
 #include <evol/meta/resdef.h>
+
+extern __attribute__((visibility("default")))evstore_t *GLOBAL_STORE;
 
 /*!
  * \brief Creates an engine instance and returns its reference.
@@ -67,21 +71,6 @@ evol_destroy(evolengine_t *engine);
 */
 EvEngineResult
 evol_init(evolengine_t *engine);
-
-/*!
- * \brief Runs the start function  in startmods
- * \details
- * For each module in the config's startmods, the EV_START function is called
- * in a separate thread.
- *
- * \param engine Pointer to the `evolengine_t` object
- *
- * \returns
- * - On success, returns `EV_ENGINE_SUCCESS`
- * - More TBD
- */
-EvEngineResult
-evol_start(evolengine_t *engine);
 
 /*!
  * \brief Parse commandline arguments into engine config

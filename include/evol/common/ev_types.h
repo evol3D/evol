@@ -26,6 +26,9 @@ typedef int64_t I64;
 typedef float   F32;
 typedef double  F64;
 
+typedef char *  STR;
+typedef const char *  CONST_STR;
+
 typedef void(*FN_PTR)();
 typedef void* PTR;
 
@@ -47,6 +50,8 @@ typedef enum {
 
   EV_TYPE_PTR,
   EV_TYPE_FNPTR,
+
+  EV_TYPE_STR,
 } ev_type;
 
 /*!

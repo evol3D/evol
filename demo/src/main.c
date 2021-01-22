@@ -1,3 +1,5 @@
+#include "evol/core/evol.h"
+#include "evol/core/evstore.h"
 #include <stdio.h>
 #include <evol/evol.h>
 
@@ -9,8 +11,6 @@ main(int argc, char **argv)
   evol_parse_args(evol, argc, argv);
 
   evol_init(evol);
-
-  evol_start(evol);
 
   evol_deinit(evol);
 

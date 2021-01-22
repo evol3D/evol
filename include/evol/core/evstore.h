@@ -11,6 +11,7 @@ typedef struct evstore_entry_t {
   const char *key;
   ev_type type;
   PTR data;
+  FN_PTR free;
 } evstore_entry_t;
 
 #define RES_PREFIX EV_STORE_
@@ -78,3 +79,14 @@ evstore_get_checktype(evstore_t *store, const char *key, ev_type type, evstore_e
  */
 EvStoreResult
 evstore_set(evstore_t *store, evstore_entry_t *entry);
+
+/*!
+ * \brief Frees all the entries that have a "free" field
+ *
+ * \param store pointer to the `evstore_t` instance to clear
+ *
+ * \returns
+ * - In all cases, EV_STORE_SUCCESS is returned
+ */
+EvStoreResult
+evstore_clear(evstore_t *store);

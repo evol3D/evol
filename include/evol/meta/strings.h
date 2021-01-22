@@ -1,0 +1,15 @@
+/*!
+ * \file strings.h
+ */
+#pragma once
+
+#include <evol/common/ev_macros.h>
+
+STRING_VAR(EV_CORE_NAME);
+
+STRING_VAR(EV_CORE_VERSION_MAJOR);
+STRING_VAR(EV_CORE_VERSION_MINOR);
+
+
+STRING_VAR(EV_CORE_CONFIGPATH);
+STRING_VAR(EV_CORE_MODULEDIR);

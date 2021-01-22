@@ -4,6 +4,7 @@ evol_src += [
   'src/core/lualoader.c',
   'src/core/modulemanager.c',
   'src/core/module.c',
+  'src/core/evstore.c',
 ]
 
 evol_src += [

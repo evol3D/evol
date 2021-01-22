@@ -8,7 +8,7 @@
 #elif defined(__linux__)
 #define EV_OS_LINUX
 #else
-/* Unknown OS */
+#error("Unknown OS")
 #endif
 
 #if defined(_MSC_VER)
@@ -16,7 +16,7 @@
 #elif defined(__GNUC__)
 #define EV_CC_GCC
 #else
-/* Unknown Compiler */
+#error("Unknown Compiler")
 #endif
 
 #if defined(EV_CC_MSVC)
@@ -63,3 +63,8 @@
  * \brief Macro to wrap tokens in double quotations ( " )
  */
 #define EV_STRINGIZE(...) EV_STRINGIZE_IMPL(__VA_ARGS__)
+
+/*!
+ * \brief Macro to create constant string values that have the same variable name and value
+ */
+#define STRING_VAR(x) static const char *x = EV_STRINGIZE(x)

@@ -13,7 +13,7 @@ struct evstore {
 uint64_t evstore_entry_hash(const void* data, uint64_t seed0, uint64_t seed1)
 {
   const evstore_entry_t *entry = data;
-  return hashmap_murmur(entry, strlen(entry->key), seed0, seed1);
+  return hashmap_murmur(entry->key, strlen(entry->key), seed0, seed1);
 }
 
 int32_t evstore_entry_compare(const void* data1, const void* data2, void* _udata)
@@ -23,6 +23,15 @@ int32_t evstore_entry_compare(const void* data1, const void* data2, void* _udata
   const evstore_entry_t *entry2 = data2;
 
   return strcmp(entry1->key, entry2->key);
+}
+
+bool entry_clear(const void *data, void *_udata)
+{
+  (void)_udata;
+  evstore_entry_t *entry = data;
+  if(entry->free)
+    entry->free(entry->data);
+  return true;
 }
 
 evstore_t *
@@ -75,6 +84,7 @@ evstore_destroy(evstore_t *store)
   if(store == NULL)
     return;
 
+  evstore_clear(store);
   hashmap_free(store->map);
   pthread_rwlock_destroy(&store->rwlock);
   free(store);
@@ -129,9 +139,25 @@ evstore_set(evstore_t *store, evstore_entry_t *entry)
   evstore_entry_t *prev_entry = hashmap_set(store->map, entry);
   pthread_rwlock_unlock(&store->rwlock);
 
-  if(prev_entry == NULL && hashmap_oom(store->map) == true) {
-    return EV_STORE_ERROR_OOM;
+  if(prev_entry == NULL) {
+    if(hashmap_oom(store->map) == true) {
+      return EV_STORE_ERROR_OOM;
+    }
+  } else {
+    if(prev_entry->free) {
+      prev_entry->free(prev_entry->data);
+    }
   }
+
+  return EV_STORE_SUCCESS;
+}
+
+EvStoreResult
+evstore_clear(evstore_t *store)
+{
+  pthread_rwlock_wrlock(&store->rwlock);
+  hashmap_scan(store->map, entry_clear, NULL);
+  pthread_rwlock_unlock(&store->rwlock);
 
   return EV_STORE_SUCCESS;
 }
