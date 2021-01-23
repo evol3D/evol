@@ -1,0 +1,5 @@
+[wrap-git]
+directory = hashmap
+url = https://github.com/mo7sener/hashmap.c
+revision = master
+depth = 1
