@@ -21,13 +21,17 @@
 
 #if defined(EV_CC_MSVC)
 
-#define EV_EXPORT
+#define EV_EXPORT __declspec(dllexport)
+#define EV_IMPORT __declspec(dllimport)
+
 #define EV_UNUSED
 #define EV_ALIGN(n)
 
 #elif defined(EV_CC_GCC)
 
 #define EV_EXPORT
+#define EV_IMPORT
+
 #define EV_UNUSED __attribute__((unused))
 #define EV_ALIGN(n) __attribute__((aligned(x)))
 
@@ -48,6 +52,14 @@
  */
 #define EV_ALIGN(n)
 
+#endif
+
+#if defined(EV_MODULE_DEFINE)
+#define EVCOREAPI EV_IMPORT
+#define EVMODAPI EV_EXPORT
+#else
+#define EVCOREAPI EV_EXPORT
+#define EVMODAPI
 #endif
 
 #define EV_CONCAT_IMPL(a, b) a##b

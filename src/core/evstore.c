@@ -1,7 +1,6 @@
 #include <evol/core/evstore.h>
 #include <evol/common/ev_log.h>
 #include <hashmap.h>
-#include <pthread.h>
 #include <string.h>
 #include <evolpthreads.h>
 

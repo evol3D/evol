@@ -1,10 +1,16 @@
 lua_rootdir = '.'
 
 if build_machine.system() == 'windows'
-  error('findWithExt.sh not implemented for Windows')
+  buildscriptname = 'findWithExt.ps1'
+  shellname = 'powershell.exe'
+  path_delim = '\\'
+else
+  buildscriptname = 'findWithExt.sh'
+  shellname = 'sh'
+  path_delim = '/'
 endif
 
-scriptlist = run_command(meson.project_source_root() + '/buildscripts/findWithExt.sh', meson.current_source_dir(), 'lua')
+scriptlist = run_command(shellname, meson.project_source_root() + '/buildscripts/' + buildscriptname, meson.current_source_dir(), 'lua')
 
 newline = '''
 '''
@@ -12,7 +18,9 @@ newline = '''
 scripts = scriptlist.stdout().strip().split(newline)
 
 foreach script : scripts
-scriptname = script.split('/')[-1]
+scriptname = script.split(path_delim)[-1]
+
+message(scriptname)
 
 configure_file(
   input: script,
@@ -22,4 +30,3 @@ configure_file(
 )
 
 endforeach
-

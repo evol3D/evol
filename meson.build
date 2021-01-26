@@ -2,7 +2,8 @@ project('evol', 'c',
 version : '0.2',
 default_options : [
   'warning_level=3',
-  'default_library=static'
+  'default_library=static',
+  'c_std=c11',
   ])
 
 cc = meson.get_compiler('c')
@@ -14,7 +15,7 @@ cargs  = dependency('cargs')
 evol_threads = dependency('evol_threads')
 hashmap = dependency('hashmap')
 dl = cc.find_library('dl', required: false)
-
+cute_files = dependency('cute_files')
 
 evol_src = []
 
@@ -32,19 +33,20 @@ evol_deps = [
   evol_threads,
   hashmap,
   dl,
+  cute_files,
 ]
 
 if get_option('colored_logging')
   evol_c_args += '-DLOG_USE_COLOR'
 endif
 
-evol_lib = library('evol',
+evol_lib = shared_library('evol',
   evol_src,
   include_directories: evol_incdir,
   dependencies: evol_deps,
   c_pch: 'pch/evpch.h',
   c_args: evol_c_args,
-  install : true
+  install : true,
 )
 
 evollib_dep = declare_dependency(
@@ -53,13 +55,8 @@ evollib_dep = declare_dependency(
   dependencies: evol_deps,
 )
 
-evolmod_dep = declare_dependency(
-  include_directories: evol_incdir,
-)
-
 if meson.version().version_compare('>= 0.54.0')
   meson.override_dependency('evol', evollib_dep)
-  meson.override_dependency('evolmod', evolmod_dep)
 endif
 
 if get_option('build_demo')

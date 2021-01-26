@@ -1,5 +1,7 @@
 #pragma once
 
+#include <evol/evol.h>
+#include <evol/core/evstore.h>
 #include <evol/common/ev_types.h>
 #include <evol/common/ev_macros.h>
 
@@ -25,14 +27,20 @@
 EV_CONSTRUCTOR;
 EV_DESTRUCTOR;
 
+
 const char MODULE_DATA[] =
 #include <module.lua.h>
+;
 
-const char * getMetadata() { return MODULE_DATA; }
+EVMODAPI const char * getMetadata() { return MODULE_DATA; }
+
 
 # if defined(EV_OS_WINDOWS)
 # include <windows.h>
-BOOL DllMain( HMODULE hModule,
+
+EVCOREAPI evstore_t *GLOBAL_STORE;
+
+BOOL __stdcall DllMain( HMODULE hModule,
                        DWORD  ul_reason_for_call,
                        LPVOID lpReserved)
 {
@@ -53,14 +61,10 @@ BOOL DllMain( HMODULE hModule,
   }
   return TRUE;
 }
-
-
-# elif defined(EV_OS_LINUX)
+# else
 
 EV_CONSTRUCTOR_ATTR void evmod_constructor_fn() { EV_CONSTRUCTOR_FN_NAME(); }
 EV_DESTRUCTOR_ATTR  void evmod_destructor_fn()  { EV_DESTRUCTOR_FN_NAME(); }
-
-# else
 
 # endif
 #endif

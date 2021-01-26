@@ -5,6 +5,8 @@
 
 #if defined(EV_CC_GCC)
 #include <dlfcn.h>
+#elif defined(EV_CC_MSVC)
+#include <Windows.h>
 #endif
 
 evolmodule_t
@@ -15,7 +17,10 @@ ev_module_open(const char *modpath)
   res = dlopen(modpath, RTLD_LAZY);
 
 #elif defined(EV_CC_MSVC)
-#error("ev_module_open(...) not implemented for MSVC")
+  res = LoadLibrary(modpath);
+  if (!res) {
+    printf("%s couldn't be loaded, Error: %d\n", modpath, GetLastError());
+  }
 
 #else
 #error("Unknown compiler. Can't open module")
@@ -31,7 +36,7 @@ ev_module_close(evolmodule_t module)
   dlclose(module);
 
 #elif defined(EV_CC_MSVC)
-#error("ev_module_close(...) not implemented for MSVC")
+  FreeLibrary(module);
 
 #else
 #error("Unknown compiler. This shouldn't be reachable")
@@ -39,13 +44,13 @@ ev_module_close(evolmodule_t module)
 #endif
 }
 
-inline FN_PTR
+FN_PTR
 ev_module_getfn(evolmodule_t module, const char *fn_name)
 {
 #if defined(EV_CC_GCC)
   return (FN_PTR)dlsym(module, fn_name);
 #elif defined(EV_CC_MSVC)
-#error("ev_module_getfn(...) not implemented for MSVC")
+  return (FN_PTR)GetProcAddress(module, fn_name);
 
 #else
 #error("Unknown compiler. This shouldn't be reachable")

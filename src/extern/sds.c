@@ -367,7 +367,7 @@ sdsAllocPtr(sds s)
  * sdsIncrLen(s, nread);
  */
 void
-sdsIncrLen(sds s, ssize_t incr)
+sdsIncrLen(sds s, size_t incr)
 {
   unsigned char flags = s[-1];
   size_t        len;
@@ -819,7 +819,7 @@ sdstrim(sds s, const char *cset)
  * sdsrange(s,1,-1); => "ello World"
  */
 void
-sdsrange(sds s, ssize_t start, ssize_t end)
+sdsrange(sds s, size_t start, size_t end)
 {
   size_t newlen, len = sdslen(s);
 
@@ -837,9 +837,9 @@ sdsrange(sds s, ssize_t start, ssize_t end)
   }
   newlen = (start > end) ? 0 : (end - start) + 1;
   if (newlen != 0) {
-    if (start >= (ssize_t)len) {
+    if (start >= (size_t)len) {
       newlen = 0;
-    } else if (end >= (ssize_t)len) {
+    } else if (end >= (size_t)len) {
       end    = len - 1;
       newlen = (start > end) ? 0 : (end - start) + 1;
     }
@@ -915,7 +915,7 @@ sdscmp(const sds s1, const sds s2)
  * same function but for zero-terminated strings.
  */
 sds *
-sdssplitlen(const char *s, ssize_t len, const char *sep, int seplen, int *count)
+sdssplitlen(const char *s, size_t len, const char *sep, int seplen, int *count)
 {
   int  elements = 0, slots = 5;
   long start = 0, j;

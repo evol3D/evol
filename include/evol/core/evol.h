@@ -4,6 +4,7 @@
 #pragma once
 
 #include <evol/common/ev_types.h>
+#include <evol/common/ev_macros.h>
 #include <evol/meta/strings.h>
 #include <evol/core/evstore.h>
 
@@ -14,7 +15,7 @@ typedef struct evolengine evolengine_t;
 #define RES_TYPE EvEngineResult
 #include <evol/meta/resdef.h>
 
-extern __attribute__((visibility("default")))evstore_t *GLOBAL_STORE;
+EVCOREAPI extern evstore_t *GLOBAL_STORE;
 
 /*!
  * \brief Creates an engine instance and returns its reference.
@@ -24,7 +25,7 @@ extern __attribute__((visibility("default")))evstore_t *GLOBAL_STORE;
  * - Pointer to new instance
  * - If creation failed, `NULL` is returned
  */
-evolengine_t *
+EVCOREAPI evolengine_t *
 evol_create();
 
 /*!
@@ -42,7 +43,7 @@ evol_create();
 
   \param engine Pointer to the `evolengine_t` object to be destroyed
  */
-void
+EVCOREAPI void
 evol_destroy(evolengine_t *engine);
 
 /*!
@@ -69,7 +70,7 @@ evol_destroy(evolengine_t *engine);
   - If a problem occured while initializing the lualoader, returns `EV_ENGINE_ERROR_LUA`
   - If a problem occured in the modulemanager, returns `EV_ENGINE_ERROR_MODULEMANAGER`
 */
-EvEngineResult
+EVCOREAPI EvEngineResult
 evol_init(evolengine_t *engine);
 
 /*!
@@ -86,7 +87,7 @@ evol_init(evolengine_t *engine);
  * - Currently the only way to fail is by an OOM error. In that case,
  *   `EV_ENGINE_ERROR_OOM` is returned
  */
-EvEngineResult
+EVCOREAPI EvEngineResult
 evol_parse_args(evolengine_t *engine, int argc, char **argv);
 
 /*!
@@ -94,7 +95,7 @@ evol_parse_args(evolengine_t *engine, int argc, char **argv);
  *
  * \param engine Pointer to the `evolengine_t` object to deinitialized
  */
-void
+EVCOREAPI void
 evol_deinit(evolengine_t *engine);
 
 /*!
@@ -117,7 +118,7 @@ evol_deinit(evolengine_t *engine);
  *   - If the module was found and successfully loaded, then it is returned.
  *   - If the process fails, `NULL` is returned.
  */
-evolmodule_t
+EVCOREAPI evolmodule_t
 evol_loadmodule(const char *modquery);
 
 /*!
@@ -135,7 +136,7 @@ evol_loadmodule(const char *modquery);
  *
  * \param module The module to unload
  */
-void
+EVCOREAPI void
 evol_unloadmodule(evolmodule_t module);
 
 /*!
@@ -148,5 +149,5 @@ evol_unloadmodule(evolmodule_t module);
  * If the function was found, a function pointer is returned. Otherwise, `NULL`
  * is returned.
  */
-FN_PTR
+EVCOREAPI FN_PTR
 evol_getmodfunc(evolmodule_t module, const char *func_name);

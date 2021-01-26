@@ -1,5 +1,3 @@
-#include "evol/core/evol.h"
-#include "evol/core/evstore.h"
 #include <stdio.h>
 #include <evol/evol.h>
 

@@ -177,13 +177,13 @@ evol_parse_args(evolengine_t *evengine, int argc, char **argv)
   return EV_ENGINE_SUCCESS;
 }
 
-inline evolmodule_t
+evolmodule_t
 evol_loadmodule(CONST_STR modquery)
 {
   return ev_modulemanager_openmodule(modquery);
 }
 
-inline void
+void
 evol_unloadmodule(evolmodule_t module)
 {
   if (!module)
@@ -191,7 +191,7 @@ evol_unloadmodule(evolmodule_t module)
   ev_module_close(module);
 }
 
-inline FN_PTR
+FN_PTR
 evol_getmodfunc(evolmodule_t module, CONST_STR func_name)
 {
   return ev_module_getfn(module, func_name);

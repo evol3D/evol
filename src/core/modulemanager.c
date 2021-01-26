@@ -29,9 +29,17 @@ ev_modulemanager_detect(const char *module_dir)
     int res = 0;
 
     evolmodule_t mod = ev_module_open(*iter);
+    if(!mod) {
+      ev_log_warn("Module %s could not be loaded", *iter);
+      continue;
+    }
+    ev_log_debug("Module %s loaded successfully", *iter);
     char *(*meta)()  = (char *(*)())ev_module_getfn(mod, "getMetadata");
     if (meta) {
+      ev_log_debug("Module %s is a valid evol module", *iter);
       ev_lua_callfn("add_module", "ss>i", *iter, meta(), &res);
+    } else {
+      ev_log_warn("Module %s is not a valid evol module", *iter);
     }
     ev_module_close(mod);
 

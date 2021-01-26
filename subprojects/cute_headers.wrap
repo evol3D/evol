@@ -1,0 +1,10 @@
+[wrap-git]
+directory = cute_headers
+url = https://github.com/RandyGaul/cute_headers
+revision = master
+depth = 1
+
+patch_directory = cute_headers
+
+[provide]
+dependency_names = cute_files
