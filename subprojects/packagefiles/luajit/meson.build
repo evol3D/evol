@@ -12,10 +12,12 @@ endif
 luajit_dep = declare_dependency(
   dependencies: [
     cc.find_library('dl', required: false),
-    cc.find_library('luajit', dirs: meson.current_source_dir() + '/src', static: true).partial_dependency(link_args: ['-Wl,-export-dynamic']),
+    cc.find_library('luajit', dirs: meson.current_source_dir() + '/src'),
+    cc.find_library('lua51', dirs: meson.current_source_dir() + '/src'),
     cc.find_library('m', required: false),
   ],
-  include_directories: include_directories('src'))
+  include_directories: include_directories('src')
+)
 
 if meson.version().version_compare('>= 0.54.0')
   meson.override_dependency('luajit', luajit_dep)
