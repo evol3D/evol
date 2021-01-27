@@ -13,7 +13,7 @@ luajit_dep = declare_dependency(
   dependencies: [
     cc.find_library('dl', required: false),
     cc.find_library('luajit', dirs: meson.current_source_dir() + '/src'),
-    cc.find_library('lua51', dirs: meson.current_source_dir() + '/src'),
+    cc.find_library('lua51', dirs: meson.current_source_dir() + '/src', required: false),
     cc.find_library('m', required: false),
   ],
   include_directories: include_directories('src')
