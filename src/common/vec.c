@@ -78,24 +78,13 @@ vec_fini(vec_t v)
 int32_t
 vec_push(vec_t *v, void *val)
 {
-  void *           buf      = ((char *)(*v) - sizeof(struct vec_meta));
-  struct vec_meta *metadata = (struct vec_meta *)buf;
+  struct vec_meta *metadata =
+    (struct vec_meta *)((char *)(*v) - sizeof(struct vec_meta));
 
   if (metadata->length == metadata->capacity) {
-    void *tmp =
-      realloc(buf,
-              sizeof(struct vec_meta) +
-                (metadata->capacity * metadata->elemsize * VEC_GROWTH_RATE));
-    if (!tmp) {
+    if(vec_setcapacity(v, metadata->capacity * VEC_GROWTH_RATE)) {
       return 1;
     }
-
-    buf = tmp;
-
-    metadata           = (struct vec_meta *)buf;
-    metadata->capacity = metadata->capacity * VEC_GROWTH_RATE;
-
-    *v = (char *)buf + sizeof(struct vec_meta);
   }
 
   void *dst = ((char *)*v) + (metadata->length * metadata->elemsize);
@@ -122,4 +111,58 @@ vec_capacity(vec_t v)
   struct vec_meta *metadata =
     (struct vec_meta *)((char *)v - sizeof(struct vec_meta));
   return metadata->capacity;
+}
+
+int32_t
+vec_clear(vec_t v)
+{
+  struct vec_meta *metadata =
+    (struct vec_meta *)((char *)v - sizeof(struct vec_meta));
+  if (metadata->destr_fn) {
+    for (void *elem = vec_iter_begin(v); elem != vec_iter_end(v);
+         vec_iter_next(v, &elem)) {
+      metadata->destr_fn(elem);
+    }
+  }
+
+  metadata->length = 0;
+}
+
+int32_t
+vec_setlen(vec_t *v, size_t len)
+{
+  struct vec_meta *metadata =
+    (struct vec_meta *)((char *)(*v) - sizeof(struct vec_meta));
+
+  if(len > metadata->capacity && vec_setcapacity(v, len)) {
+      return 1;
+  }
+
+  metadata->length = len;
+  return 0;
+}
+
+int32_t
+vec_setcapacity(vec_t *v, size_t cap)
+{
+  struct vec_meta *metadata =
+    (struct vec_meta *)((char *)(*v) - sizeof(struct vec_meta));
+  if(metadata->capacity == cap) {
+    return 0;
+  }
+
+  void *buf = ((char *)(*v) - sizeof(struct vec_meta));
+  void *tmp = realloc(buf, sizeof(struct vec_meta) + (cap * metadata->elemsize));
+
+  if (!tmp) {
+    return 1;
+  }
+
+  buf = tmp;
+
+  metadata           = (struct vec_meta *)buf;
+  metadata->capacity = cap;
+
+  *v = (char *)buf + sizeof(struct vec_meta);
+  return 0;
 }

@@ -4,6 +4,7 @@
 #pragma once
 
 #include <stdlib.h>
+#include <stdint.h>
 
 #ifndef VEC_INIT_CAP
 /*!
@@ -132,3 +133,34 @@ vec_len(vec_t v);
  */
 size_t
 vec_capacity(vec_t v);
+
+/*!
+ * \brief Calls the free operation (if exists) on every element, then sets
+ * the length to 0.
+ *
+ * \param v The vector object
+ */
+int32_t
+vec_clear(vec_t v);
+
+/*!
+ * \brief Sets the length of the vector to `len`.
+ *
+ * \details If `len` is less than `v`'s current length, then `v`'s length is
+ * amended. Otherwise, the capcity is checked to make sure that there is enough
+ * space for the new len.
+ *
+ * \param v The vector object
+ * \param len The desired new length
+ */
+int32_t
+vec_setlen(vec_t *v, size_t len);
+
+/*!
+ * \brief Sets the capacity of the vector to `cap`.
+ *
+ * \param v The vector object
+ * \param cap The desired new capacity
+ */
+int32_t
+vec_setcapacity(vec_t *v, size_t cap);
