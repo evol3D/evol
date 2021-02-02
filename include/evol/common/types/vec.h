@@ -23,6 +23,15 @@
 typedef void *vec_t;
 
 /*!
+ * \brief For the sake of readability
+ * \details Sample usage:
+ * ```
+ * vec(int) v = vec_init(int, 0, 0);
+ * ```
+ */
+#define vec(type) vec_t
+
+/*!
  * \brief Signature of a function that copies data from one address to another.
  * \details For copying elements of type `T`, an equivalent signature should be:
  * ```
@@ -109,7 +118,7 @@ vec_fini(vec_t v);
  * with a length of `vec_meta.elemsize`. If a resize is needed but fails due to
  * 'OOM' issues, then the vector is left unchanged and a non-zero is returned.
  *
- * \param v The vector object
+ * \param v Reference to the vector object
  * \param val A pointer to the element that is to be copied to the end of the
  * vector
  *
@@ -122,6 +131,8 @@ vec_push(vec_t *v, void *val);
  * \brief A function that returns the length of a vector
  *
  * \param v The vector object
+ *
+ * \returns Current length of the vector
  */
 size_t
 vec_len(vec_t v);
@@ -130,6 +141,8 @@ vec_len(vec_t v);
  * \brief A function that returns the capacity of a vector
  *
  * \param v The vector object
+ *
+ * \returns Current capacity of the vector
  */
 size_t
 vec_capacity(vec_t v);
@@ -139,6 +152,8 @@ vec_capacity(vec_t v);
  * the length to 0.
  *
  * \param v The vector object
+ *
+ * \returns 0 on success
  */
 int32_t
 vec_clear(vec_t v);
@@ -150,8 +165,10 @@ vec_clear(vec_t v);
  * amended. Otherwise, the capcity is checked to make sure that there is enough
  * space for the new len.
  *
- * \param v The vector object
+ * \param v Reference to the vector object
  * \param len The desired new length
+ *
+ * \returns 0 on success
  */
 int32_t
 vec_setlen(vec_t *v, size_t len);
@@ -159,8 +176,20 @@ vec_setlen(vec_t *v, size_t len);
 /*!
  * \brief Sets the capacity of the vector to `cap`.
  *
- * \param v The vector object
+ * \param v Reference to the vector object
  * \param cap The desired new capacity
+ *
+ * \returns 0 on success
  */
 int32_t
 vec_setcapacity(vec_t *v, size_t cap);
+
+/*!
+ * \brief Grows the vector's capacity by a factor of `VEC_GROWTH_RATE`
+ *
+ * \param Reference to the vector object
+ *
+ * \returns 0 on success
+ */
+int32_t
+vec_grow(vec_t *v);
