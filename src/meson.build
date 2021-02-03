@@ -5,12 +5,15 @@ evol_src += [
   'src/core/modulemanager.c',
   'src/core/module.c',
   'src/core/evstore.c',
+  'src/core/eventsystem.c',
+  'src/core/event.c',
 ]
 
 evol_src += [
   # Common
   'src/common/log.c',
   'src/common/vec.c',
+  'src/common/dvec.c',
 ]
 
 evol_src += [

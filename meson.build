@@ -3,7 +3,7 @@ version : '0.2',
 default_options : [
   'warning_level=3',
   'default_library=both',
-  'c_std=c11',
+  'c_std=gnu11',
   ])
 
 cc = meson.get_compiler('c')

@@ -1,0 +1,79 @@
+#pragma once
+
+#include <evol/common/ev_types.h>
+
+typedef U32 ev_eventtype_t;
+
+static const U32 TOTAL_BITS  = sizeof(ev_eventtype_t);
+static const U32 PRIMARY_BITS = TOTAL_BITS / 2;
+static const U32 SECONDARY_BITS = TOTAL_BITS - PRIMARY_BITS;
+
+static const ev_eventtype_t PRIMARY_BITMASK = (~((ev_eventtype_t)0)) << SECONDARY_BITS;
+static const ev_eventtype_t SECONDARY_BITMASK = ~PRIMARY_BITMASK;
+
+typedef struct {
+  ev_eventtype_t type;
+  PTR data;
+} ev_event_t;
+
+extern ev_eventtype_t EVENT_TYPE_COUNT;
+extern ev_eventtype_t PRIMARY_EVENT_TYPE_COUNT;
+extern ev_eventtype_t SECONDARY_EVENT_TYPE_COUNT;
+
+#define EVENT_TYPE(type) EVENT_TYPE_##type
+
+#define EVENT_DECLARE(T, ...)                                                \
+  typedef struct {ev_eventtype_t type; struct __VA_ARGS__;} T;               \
+  extern ev_eventtype_t EVENT_TYPE(T);                                       \
+  extern ev_eventtype_t EV_CONCAT(EVENT_TYPE(T), _CHILDCOUNT);
+
+#define EVENT_DEFINE(T)                                                      \
+  ev_eventtype_t EVENT_TYPE(T);                                              \
+  ev_eventtype_t EV_CONCAT(EVENT_TYPE(T), _CHILDCOUNT);
+
+#define EVENT_INIT_PRIMARY(T) do {                                           \
+  EVENT_TYPE(T) = (++PRIMARY_EVENT_TYPE_COUNT) << SECONDARY_BITS;            \
+  EV_CONCAT(EVENT_TYPE(T), _CHILDCOUNT) = 0;                                 \
+  EVENT_TYPE_COUNT++;                                                        \
+} while (0)
+
+#define EVENT_INIT_SECONDARY(T, P) do {                                      \
+  EVENT_TYPE(T) = (++EV_CONCAT(EVENT_TYPE(P), _CHILDCOUNT)) | EVENT_TYPE(P); \
+  SECONDARY_EVENT_TYPE_COUNT ++;                                             \
+  EVENT_TYPE_COUNT ++;                                                       \
+} while (0)
+
+#define GET_PRIMARY_TYPE(T) (T >> SECONDARY_BITS)
+#define GET_SECONDARY_TYPE(T) (T & SECONDARY_BITMASK)
+
+#define EVENT_CHILD_COUNT(T) (EV_CONCAT(EVENT_TYPE(T), _CHILDCOUNT))
+
+#define EVENT_MATCH(A, B) \
+   (((PRIMARY_BITMASK & A) == B) \
+  ||((PRIMARY_BITMASK & B) == A) \
+  || (A==B))
+
+// ===========================================================================//
+// ===========================================================================//
+// ===========================================================================//
+// ===========================================================================//
+//                                                                            //
+// This macro should not be used directly by the user. They're only here for//
+// other macros to use                                                        //
+
+#define WRAP_EVENT(T, ...) \
+  T *e = malloc(sizeof(T)); \
+  *e = (T) __VA_ARGS__; \
+  e->type = EVENT_TYPE(T); \
+  ev_event_t wrapper = { \
+    .type = EVENT_TYPE(t), \
+    .event= (PTR) e \
+  }
+
+#define FREE_EVENT(wrapper) \
+  free(wrapper.event)
+
+// ===========================================================================//
+// ===========================================================================//
+// ===========================================================================//
+// ===========================================================================//
