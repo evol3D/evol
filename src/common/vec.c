@@ -21,7 +21,7 @@ struct vec_meta_t {
 };
 
 #define vec_meta(v) \
-  (struct vec_meta_t *)((char *)(v) - sizeof(struct vec_meta_t))
+  ((struct vec_meta_t *)((char *)(v) - sizeof(struct vec_meta_t)))
 
 vec_t
 vec_init_impl(size_t elemsize, elem_copy copy, elem_destr destr)
