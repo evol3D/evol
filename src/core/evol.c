@@ -2,6 +2,7 @@
  * \file evol.c
  */
 #include <evol/core/evol.h>
+#include <evol/core/eventsystem.h>
 #include <cargs.h>
 #include <string.h>
 #include <stdlib.h>
@@ -93,6 +94,9 @@ evol_init(evolengine_t *evengine)
 {
   I32 res = 0;
 
+  //TODO Error checking
+  EventSystem.init();
+
   EvLuaLoaderResult luaLoader_init_result = ev_lua_init();
   if (luaLoader_init_result != EV_LUALOADER_SUCCESS) {
     ev_log_error("LuaLoader error: %s",
@@ -136,6 +140,8 @@ evol_deinit(evolengine_t *evengine)
   if (ev_lua_isactive()) {
     ev_lua_deinit();
   }
+
+  EventSystem.deinit();
 }
 
 EvEngineResult

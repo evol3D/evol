@@ -80,3 +80,12 @@
  * \brief Macro to create constant string values that have the same variable name and value
  */
 #define STRING_VAR(x) static const char *x = EV_STRINGIZE(x)
+
+#if defined(DEBUG)
+#define Debug if(1)
+#else
+/*!
+ * \brief Code that executes only when compiled in debug mode.
+ */
+#define Debug if(0)
+#endif
