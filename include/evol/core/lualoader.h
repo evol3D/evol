@@ -52,7 +52,7 @@ EvLuaLoaderResult
 ev_lua_getstring(const char *globalName, const char **result);
 
 EvLuaLoaderResult
-ev_lua_getint(const char *globalName, long *result);
+ev_lua_getint(const char *globalName, I64 *result);
 
 EvLuaLoaderResult
 ev_lua_getdouble(const char *globalName, double *result);
@@ -72,7 +72,7 @@ ev_lua_fnstack_pop();
 #define ev_lua_getvar(varname, var)                                            \
   _Generic((var),                                                              \
       F64     : ev_lua_getdouble,                                              \
-      I32     : ev_lua_getint,                                                 \
+      I64     : ev_lua_getint,                                                 \
       sdsvec_t: ev_lua_getsdsvec,                                              \
       default : ev_lua_getstring)                                              \
                                                                 (varname, &var)

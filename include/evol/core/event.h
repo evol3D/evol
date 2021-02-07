@@ -4,7 +4,7 @@
 
 typedef U32 ev_eventtype_t;
 
-static const U32 TOTAL_BITS  = sizeof(ev_eventtype_t);
+static const U32 TOTAL_BITS  = sizeof(ev_eventtype_t) * 8;
 static const U32 PRIMARY_BITS = TOTAL_BITS / 2;
 static const U32 SECONDARY_BITS = TOTAL_BITS - PRIMARY_BITS;
 
@@ -22,26 +22,34 @@ extern ev_eventtype_t SECONDARY_EVENT_TYPE_COUNT;
 
 #define EVENT_TYPE(type) EVENT_TYPE_##type
 
-#define EVENT_DECLARE(T, ...)                                                \
-  typedef struct {ev_eventtype_t type; struct __VA_ARGS__;} T;               \
+#define EVENT_DECLARE_PRIMARY(T, ...)                                                \
+  typedef struct T {ev_eventtype_t type; struct __VA_ARGS__;} T;               \
   extern ev_eventtype_t EVENT_TYPE(T);                                       \
   extern ev_eventtype_t EV_CONCAT(EVENT_TYPE(T), _CHILDCOUNT);
 
-#define EVENT_DEFINE(T)                                                      \
+#define EVENT_DECLARE_SECONDARY(P, T, ...)                                                \
+  typedef struct T {struct P; struct __VA_ARGS__;} T;               \
+  extern ev_eventtype_t EVENT_TYPE(T);                                       \
+  extern ev_eventtype_t EV_CONCAT(EVENT_TYPE(T), _CHILDCOUNT);
+
+#define EVENT_DEFINE_PRIMARY(T, ...)                                                      \
   ev_eventtype_t EVENT_TYPE(T);                                              \
   ev_eventtype_t EV_CONCAT(EVENT_TYPE(T), _CHILDCOUNT);
 
-#define EVENT_INIT_PRIMARY(T) do {                                           \
+#define EVENT_DEFINE_SECONDARY(P, T, ...)                                                      \
+  ev_eventtype_t EVENT_TYPE(T);                                              \
+
+#define EVENT_INIT_PRIMARY(T, ...) do {                                           \
   EVENT_TYPE(T) = (++PRIMARY_EVENT_TYPE_COUNT) << SECONDARY_BITS;            \
   EV_CONCAT(EVENT_TYPE(T), _CHILDCOUNT) = 0;                                 \
   EVENT_TYPE_COUNT++;                                                        \
-} while (0)
+} while (0);
 
-#define EVENT_INIT_SECONDARY(T, P) do {                                      \
+#define EVENT_INIT_SECONDARY(P, T, ...) do {                                      \
   EVENT_TYPE(T) = (++EV_CONCAT(EVENT_TYPE(P), _CHILDCOUNT)) | EVENT_TYPE(P); \
   SECONDARY_EVENT_TYPE_COUNT ++;                                             \
   EVENT_TYPE_COUNT ++;                                                       \
-} while (0)
+} while (0);
 
 #define GET_PRIMARY_TYPE(T) (T >> SECONDARY_BITS)
 #define GET_SECONDARY_TYPE(T) (T & SECONDARY_BITMASK)
@@ -66,8 +74,8 @@ extern ev_eventtype_t SECONDARY_EVENT_TYPE_COUNT;
   *e = (T) __VA_ARGS__; \
   e->type = EVENT_TYPE(T); \
   ev_event_t wrapper = { \
-    .type = EVENT_TYPE(t), \
-    .event= (PTR) e \
+    .type = EVENT_TYPE(T), \
+    .data= (PTR) e \
   }
 
 #define FREE_EVENT(wrapper) \

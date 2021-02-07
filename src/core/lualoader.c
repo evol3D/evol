@@ -100,7 +100,7 @@ ev_lua_getstring(const char *globalName, const char **result)
 }
 
 EvLuaLoaderResult
-ev_lua_getint(const char *globalName, long *result)
+ev_lua_getint(const char *globalName, I64 *result)
 {
   EvLuaLoaderResult res;
 

@@ -28,7 +28,7 @@ evol_incdir = [
 
 subdir('src')
 
-evol_c_args = []
+evol_c_args = ['-fms-extensions']
 
 evol_deps = [
   luajit,

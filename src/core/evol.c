@@ -65,9 +65,9 @@ evol_config_loadlua(CONST_STR configfile)
 
   ev_log_trace("Reading config file");
 
-  const char *name;
+  const char *name = NULL;
   ev_lua_getvar_s(CONFIGVAR_NAME, name);
-  if (name) {
+  if (name != NULL) {
     evstore_set(GLOBAL_STORE, &(evstore_entry_t) {
         .key  = EV_CORE_NAME,
         .type = EV_TYPE_STR,
@@ -76,14 +76,24 @@ evol_config_loadlua(CONST_STR configfile)
     });
   }
 
-  const char *module_directory;
+  const char *module_directory = NULL;
   ev_lua_getvar_s(CONFIGVAR_MODDIR, module_directory);
-  if (module_directory) {
+  if (module_directory != NULL) {
     evstore_set(GLOBAL_STORE, &(evstore_entry_t) {
         .key  = EV_CORE_MODULEDIR,
         .type = EV_TYPE_STR,
         .data = sdsnew(module_directory),
         .free = sdsfree,
+    });
+  }
+
+  I64 eventsystem_updaterate = 0;
+  ev_lua_getvar_s(CONFIGVAR_EVENTSYSTEM_UPDATERATE, eventsystem_updaterate);
+  if(eventsystem_updaterate != 0) {
+    evstore_set(GLOBAL_STORE, &(evstore_entry_t) {
+        .key  = EV_CORE_EVENTSYSTEM_UPDATERATE,
+        .type = EV_TYPE_I64,
+        .data = (PTR)eventsystem_updaterate,
     });
   }
   return EV_ENGINE_SUCCESS;
@@ -93,9 +103,6 @@ EvEngineResult
 evol_init(evolengine_t *evengine)
 {
   I32 res = 0;
-
-  //TODO Error checking
-  EventSystem.init();
 
   EvLuaLoaderResult luaLoader_init_result = ev_lua_init();
   if (luaLoader_init_result != EV_LUALOADER_SUCCESS) {
@@ -112,6 +119,12 @@ evol_init(evolengine_t *evengine)
     if (luaConfig_load_result != EV_ENGINE_SUCCESS)
       return luaConfig_load_result;
   }
+
+  // Config loading should be the first thing to be done as multiple modules'
+  // initialization depends on variables initialized in the config file
+
+  //TODO Error checking
+  EventSystem.init();
 
   evstore_entry_t moduledir;
   res = evstore_get_checktype(GLOBAL_STORE, EV_CORE_MODULEDIR, EV_TYPE_STR, &moduledir);

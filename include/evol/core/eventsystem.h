@@ -6,12 +6,14 @@
 #include <evol/common/ev_types.h>
 #include <evol/common/ev_macros.h>
 
+#include <evol/common/ev_log.h>
+
 #include <evolpthreads.h>
 #include <evolthreadpool.h>
 
 #define DISPATCH_EVENT(T, ...) \
   if(!EVENT_TYPE(T)) { \
-    printf("EventType \"%s\" registered but not initalized\n", #T); \
+    ev_log_error("EventType \"%s\" registered but not initalized\n", #T); \
   } \
   else { \
     if(GET_SECONDARY_TYPE(EVENT_TYPE(T))) { \
