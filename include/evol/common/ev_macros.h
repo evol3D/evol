@@ -62,7 +62,8 @@
 #define EVMODAPI
 #endif
 
-#define EV_CONCAT_IMPL(a, b) a##b
+#define EV_CONCAT_IMPL2(a, b) a##b
+#define EV_CONCAT_IMPL(a, b) EV_CONCAT_IMPL2(a,b)
 
 /*!
  * \brief Macro to concatenate two tokens together
@@ -123,15 +124,15 @@
 #define EV_VA_ARGS_ARG_N(_1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, N, ...) N
 #define EV_VA_ARGS_RSEQ_N() 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0
 
-#define EV_SUB_EACH_1 (I, ...) EV_CHARCODE(I)
-#define EV_SUB_EACH_2 (I, ...) EV_CONCAT(EV_CHARCODE(I), EV_SUB_EACH_1(__VA_ARGS__))
-#define EV_SUB_EACH_3 (I, ...) EV_CONCAT(EV_CHARCODE(I), EV_SUB_EACH_2(__VA_ARGS__))
-#define EV_SUB_EACH_4 (I, ...) EV_CONCAT(EV_CHARCODE(I), EV_SUB_EACH_3(__VA_ARGS__))
-#define EV_SUB_EACH_5 (I, ...) EV_CONCAT(EV_CHARCODE(I), EV_SUB_EACH_4(__VA_ARGS__))
-#define EV_SUB_EACH_6 (I, ...) EV_CONCAT(EV_CHARCODE(I), EV_SUB_EACH_5(__VA_ARGS__))
-#define EV_SUB_EACH_7 (I, ...) EV_CONCAT(EV_CHARCODE(I), EV_SUB_EACH_6(__VA_ARGS__))
-#define EV_SUB_EACH_8 (I, ...) EV_CONCAT(EV_CHARCODE(I), EV_SUB_EACH_7(__VA_ARGS__))
-#define EV_SUB_EACH_9 (I, ...) EV_CONCAT(EV_CHARCODE(I), EV_SUB_EACH_8(__VA_ARGS__))
+#define EV_SUB_EACH_1(I, ...) EV_CHARCODE(I)
+#define EV_SUB_EACH_2(I, ...) EV_CONCAT(EV_CHARCODE(I), EV_SUB_EACH_1(__VA_ARGS__))
+#define EV_SUB_EACH_3(I, ...) EV_CONCAT(EV_CHARCODE(I), EV_SUB_EACH_2(__VA_ARGS__))
+#define EV_SUB_EACH_4(I, ...) EV_CONCAT(EV_CHARCODE(I), EV_SUB_EACH_3(__VA_ARGS__))
+#define EV_SUB_EACH_5(I, ...) EV_CONCAT(EV_CHARCODE(I), EV_SUB_EACH_4(__VA_ARGS__))
+#define EV_SUB_EACH_6(I, ...) EV_CONCAT(EV_CHARCODE(I), EV_SUB_EACH_5(__VA_ARGS__))
+#define EV_SUB_EACH_7(I, ...) EV_CONCAT(EV_CHARCODE(I), EV_SUB_EACH_6(__VA_ARGS__))
+#define EV_SUB_EACH_8(I, ...) EV_CONCAT(EV_CHARCODE(I), EV_SUB_EACH_7(__VA_ARGS__))
+#define EV_SUB_EACH_9(I, ...) EV_CONCAT(EV_CHARCODE(I), EV_SUB_EACH_8(__VA_ARGS__))
 #define EV_SUB_EACH_10(I, ...) EV_CONCAT(EV_CHARCODE(I), EV_SUB_EACH_9(__VA_ARGS__))
 #define EV_SUB_EACH_11(I, ...) EV_CONCAT(EV_CHARCODE(I), EV_SUB_EACH_10(__VA_ARGS__))
 #define EV_SUB_EACH_12(I, ...) EV_CONCAT(EV_CHARCODE(I), EV_SUB_EACH_11(__VA_ARGS__))
