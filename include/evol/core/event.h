@@ -4,12 +4,12 @@
 
 typedef U32 ev_eventtype_t;
 
-static const U32 TOTAL_BITS  = sizeof(ev_eventtype_t) * 8;
-static const U32 PRIMARY_BITS = TOTAL_BITS / 2;
-static const U32 SECONDARY_BITS = TOTAL_BITS - PRIMARY_BITS;
+#define TOTAL_BITS  sizeof(ev_eventtype_t) * 8
+#define PRIMARY_BITS TOTAL_BITS / 2
+#define SECONDARY_BITS  TOTAL_BITS - PRIMARY_BITS
 
-static const ev_eventtype_t PRIMARY_BITMASK = (~((ev_eventtype_t)0)) << SECONDARY_BITS;
-static const ev_eventtype_t SECONDARY_BITMASK = ~PRIMARY_BITMASK;
+#define PRIMARY_BITMASK   (~((ev_eventtype_t)0)) << SECONDARY_BITS
+#define SECONDARY_BITMASK  ~PRIMARY_BITMASK
 
 typedef struct {
   ev_eventtype_t type;
