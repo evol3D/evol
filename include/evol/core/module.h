@@ -52,3 +52,16 @@ ev_module_close(evolmodule_t module);
  */
 FN_PTR
 ev_module_getfn(evolmodule_t module, const char *fn_name);
+
+/*!
+ * \brief Retrieve global variable from module
+ *
+ * \param module The module to search for the variable
+ * \param var_name Name of the variable to load
+ *
+ * \returns
+ * If the variable was found, its pointer is returned. Otherwise, `NULL` is
+ * returned.
+ */
+PTR
+ev_module_getvar(evolmodule_t module, const char *var_name);

@@ -27,8 +27,16 @@
 
 #if defined(EV_MODULE_DEFINE)
 // Events
-#define PRIMARY EVENT_DECLARE_PRIMARY
-#define SECONDARY EVENT_DECLARE_SECONDARY
+
+#if defined(PRIMARY)
+#undef PRIMARY
+#endif
+#if defined(SECONDARY)
+#undef SECONDARY
+#endif
+
+#define PRIMARY EVENT_DECLARE_PRIMARY_EXPORT
+#define SECONDARY EVENT_DECLARE_SECONDARY_EXPORT
 #include <meta/evmod.events>
 
 #define PRIMARY EVENT_DEFINE_PRIMARY
@@ -45,6 +53,9 @@ void STATIC_INIT()
 #include <meta/evmod.events>
   EventSystem.sync();
 }
+
+#undef PRIMARY
+#undef SECONDARY
 
 void STATIC_DEINIT() {}
 

@@ -71,9 +71,6 @@ void *eventsystem_loop(void *_)
 
   while(EventSystemData.keepalive) {
     ev_eventsystem_progress();
-    new = clock();
-    printf("%f\n", ((double)(new - old)) / CLOCKS_PER_SEC * 1000);
-    old = new;
   }
 }
 
