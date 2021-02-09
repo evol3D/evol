@@ -1,6 +1,7 @@
 /*!
  * \file lualoader.c
  */
+#define EV_CORE_FILE
 #include <evol/core/lualoader.h>
 #include <evol/common/ev_log.h>
 

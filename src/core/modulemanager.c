@@ -1,6 +1,7 @@
 /*!
  * \file modulemanager.c
  */
+#define EV_CORE_FILE
 #include <evol/core/modulemanager.h>
 #include <evol/core/lualoader.h>
 

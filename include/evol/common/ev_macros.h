@@ -54,12 +54,16 @@
 
 #endif
 
-#if defined(EV_MODULE_DEFINE)
+#if defined(EV_CORE_FILE)
+#define EVCOREAPI EV_EXPORT
+#else
 #define EVCOREAPI EV_IMPORT
+#endif
+
+#if defined(EV_MODULE_DEFINE)
 #define EVMODAPI EV_EXPORT
 #else
-#define EVCOREAPI EV_EXPORT
-#define EVMODAPI
+#define EVMODAPI EV_IMPORT
 #endif
 
 #define EV_CONCAT_IMPL2(a, b) a##b

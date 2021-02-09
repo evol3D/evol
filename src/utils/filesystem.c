@@ -1,6 +1,7 @@
 /*!
  * \file filesystem.c
  */
+#define EV_CORE_FILE
 #include <evol/utils/filesystem.h>
 
 #include <string.h>

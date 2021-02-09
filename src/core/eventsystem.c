@@ -1,3 +1,4 @@
+#define EV_CORE_FILE
 #include <evol/core/evol.h>
 #include <evol/core/eventsystem.h>
 #include <evol/common/types/dvec.h>

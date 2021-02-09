@@ -103,5 +103,5 @@ EV_DESTRUCTOR_ATTR  void evmod_destructor_fn()  { EV_DESTRUCTOR_FN_NAME(); STATI
 
 # endif
 
-
+#undef EV_MODULE_DEFINE
 #endif

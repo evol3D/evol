@@ -1,3 +1,4 @@
+#define EV_CORE_FILE
 #include <evol/core/evstore.h>
 #include <evol/common/ev_log.h>
 #include <hashmap.h>

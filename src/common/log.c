@@ -20,6 +20,7 @@
  * IN THE SOFTWARE.
  */
 
+#define EV_CORE_FILE
 #include <evol/common/ev_log.h>
 
 #define MAX_CALLBACKS 32

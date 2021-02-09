@@ -1,6 +1,7 @@
 /*!
  * \file evol.c
  */
+#define EV_CORE_FILE
 #include <evol/core/evol.h>
 #include <evol/core/eventsystem.h>
 #include <cargs.h>
