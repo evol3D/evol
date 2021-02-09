@@ -24,12 +24,12 @@ EVCOREAPI extern ev_eventtype_t SECONDARY_EVENT_TYPE_COUNT;
 
 #define EVENT_DECLARE_PRIMARY_EXPORT(T, ...)                                                \
   typedef struct T {ev_eventtype_t type; struct __VA_ARGS__;} T;               \
-  EV_EXPORT ev_eventtype_t EVENT_TYPE(T);                                       \
-  EV_EXPORT ev_eventtype_t EV_CONCAT(EVENT_TYPE(T), _CHILDCOUNT);
+  EV_EXPORT extern ev_eventtype_t EVENT_TYPE(T);                                       \
+  EV_EXPORT extern ev_eventtype_t EV_CONCAT(EVENT_TYPE(T), _CHILDCOUNT);
 
 #define EVENT_DECLARE_SECONDARY_EXPORT(P, T, ...)                                                \
   typedef struct T {struct P; struct __VA_ARGS__;} T;               \
-  EV_EXPORT ev_eventtype_t EVENT_TYPE(T);
+  EV_EXPORT extern ev_eventtype_t EVENT_TYPE(T);
 
 #define EVENT_DECLARE_PRIMARY_IMPORT(T, ...)                                                \
   typedef struct T {ev_eventtype_t type; struct __VA_ARGS__;} T;               \
