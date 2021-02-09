@@ -33,10 +33,7 @@ evol_create()
 {
   evolengine_t *evengine = calloc(sizeof(evolengine_t), 1);
   if (evengine) {
-
     GLOBAL_STORE = evstore_create();
-
-#include <evol/meta/defaults.h>
   }
 
   return evengine;
@@ -55,6 +52,7 @@ evol_destroy(evolengine_t *evengine)
   ev_log_trace("Free'd memory used by the instance");
 }
 
+
 EvEngineResult
 evol_config_loadlua(CONST_STR configfile)
 {
@@ -66,38 +64,19 @@ evol_config_loadlua(CONST_STR configfile)
 
   ev_log_trace("Reading config file");
 
-  const char *name = NULL;
-  ev_lua_getvar_s(CONFIGVAR_NAME, name);
-  if (name != NULL) {
-    evstore_set(GLOBAL_STORE, &(evstore_entry_t) {
-        .key  = EV_CORE_NAME,
-        .type = EV_TYPE_STR,
-        .data = sdsnew(name),
-        .free = sdsfree,
-    });
-  }
-
-  const char *module_directory = NULL;
-  ev_lua_getvar_s(CONFIGVAR_MODDIR, module_directory);
-  if (module_directory != NULL) {
-    evstore_set(GLOBAL_STORE, &(evstore_entry_t) {
-        .key  = EV_CORE_MODULEDIR,
-        .type = EV_TYPE_STR,
-        .data = sdsnew(module_directory),
-        .free = sdsfree,
-    });
-  }
-
-  I64 eventsystem_updaterate = 0;
-  ev_lua_getvar_s(CONFIGVAR_EVENTSYSTEM_UPDATERATE, eventsystem_updaterate);
-  if(eventsystem_updaterate != 0) {
-    evstore_set(GLOBAL_STORE, &(evstore_entry_t) {
-        .key  = EV_CORE_EVENTSYSTEM_UPDATERATE,
-        .type = EV_TYPE_I64,
-        .data = (PTR)eventsystem_updaterate,
-    });
-  }
   return EV_ENGINE_SUCCESS;
+}
+
+void evol_loadconfigvars(void)
+{
+  CONFIG_ENTRY(CONFIGVAR_NAME, EV_CORE_NAME, SDS, "evol-app")
+  CONFIG_ENTRY(CONFIGVAR_MODDIR, EV_CORE_MODULEDIR, SDS, ".")
+  CONFIG_ENTRY(CONFIGVAR_VERSION_MAJOR, EV_CORE_VERSION_MAJOR, U8, 0)
+  CONFIG_ENTRY(CONFIGVAR_VERSION_MINOR, EV_CORE_VERSION_MINOR, U8, 1)
+
+#ifdef EV_APP_CONFIG
+#include EV_APP_CONFIG
+#endif
 }
 
 EvEngineResult
@@ -121,6 +100,8 @@ evol_init(evolengine_t *evengine)
       return luaConfig_load_result;
   }
 
+  evol_loadconfigvars();
+
   // Config loading should be the first thing to be done as multiple modules'
   // initialization depends on variables initialized in the config file
 
@@ -128,7 +109,7 @@ evol_init(evolengine_t *evengine)
   EventSystem.init();
 
   evstore_entry_t moduledir;
-  res = evstore_get_checktype(GLOBAL_STORE, EV_CORE_MODULEDIR, EV_TYPE_STR, &moduledir);
+  res = evstore_get_checktype(GLOBAL_STORE, EV_CORE_MODULEDIR, EV_TYPE_SDS, &moduledir);
 
   if(res == EV_STORE_ENTRY_FOUND) {
     EvModuleManagerResult modulemanager_det_result =
