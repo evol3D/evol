@@ -35,9 +35,15 @@
 #undef SECONDARY
 #endif
 
+#if defined(TYPE)
+#undef TYPE
+#endif
+
 #define PRIMARY EVENT_DECLARE_PRIMARY
 #define SECONDARY EVENT_DECLARE_SECONDARY
+#define TYPE(name, ...) typedef struct __VA_ARGS__ name;
 #include <meta/evmod.events>
+#undef TYPE
 #undef SECONDARY
 #undef PRIMARY
 
@@ -48,12 +54,14 @@ void STATIC_INIT()
 {
 #define PRIMARY EVENT_INIT_PRIMARY
 #define SECONDARY EVENT_INIT_SECONDARY
+#define TYPE(name, ...)
 #include <meta/evmod.events>
   EventSystem.sync();
 }
 
-#undef PRIMARY
+#undef TYPE
 #undef SECONDARY
+#undef PRIMARY
 
 void STATIC_DEINIT() {}
 
