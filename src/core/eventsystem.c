@@ -16,16 +16,16 @@ I32
 ev_eventsystem_subscribe(ev_eventlistener_t *listener);
 
 I32
-ev_eventsystem_progress();
+ev_eventsystem_progress(void);
 
 U32
-ev_eventsystem_sync();
+ev_eventsystem_sync(void);
 
 I32
-ev_eventsystem_lock();
+ev_eventsystem_lock(void);
 
 I32
-ev_eventsystem_unlock();
+ev_eventsystem_unlock(void);
 
 struct ev_eventsystem EventSystem = {
   .init = ev_eventsystem_init,
@@ -65,10 +65,6 @@ eventbuf_destr(dvec_t *buf)
 void *eventsystem_loop(void *_)
 {
   (void)_;
-
-  clock_t old, new;
-  old = clock();
-
   while(EventSystemData.keepalive) {
     ev_eventsystem_progress();
   }
@@ -118,7 +114,7 @@ ev_eventsystem_dispatch(ev_event_t event)
 }
 
 U32
-ev_eventsystem_sync()
+ev_eventsystem_sync(void)
 {
   U32 prev_len = vec_len(EventSystem.buffers);
   U32 new_len = PRIMARY_EVENT_TYPE_COUNT + 1;
@@ -153,7 +149,7 @@ ev_eventsystem_subscribe(ev_eventlistener_t *listener)
 }
 
 I32
-ev_eventsystem_progress()
+ev_eventsystem_progress(void)
 {
   ev_eventsystem_lock();
   for(U32 primary_type = 1; primary_type < vec_len(EventSystem.buffers); primary_type++) {
@@ -189,13 +185,13 @@ ev_eventsystem_progress()
 }
 
 I32
-ev_eventsystem_lock()
+ev_eventsystem_lock(void)
 {
   pthread_mutex_lock(&EventSystemData.systemlock);
 }
 
 I32
-ev_eventsystem_unlock()
+ev_eventsystem_unlock(void)
 {
   pthread_mutex_unlock(&EventSystemData.systemlock);
 }
