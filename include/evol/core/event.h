@@ -4,12 +4,12 @@
 
 typedef U32 ev_eventtype_t;
 
-#define TOTAL_BITS  sizeof(ev_eventtype_t) * 8
-#define PRIMARY_BITS TOTAL_BITS / 2
-#define SECONDARY_BITS  TOTAL_BITS - PRIMARY_BITS
+#define TOTAL_BITS  (sizeof(ev_eventtype_t) * 8)
+#define PRIMARY_BITS ((TOTAL_BITS) / 2)
+#define SECONDARY_BITS  ((TOTAL_BITS) - (PRIMARY_BITS))
 
-#define PRIMARY_BITMASK   (~((ev_eventtype_t)0)) << SECONDARY_BITS
-#define SECONDARY_BITMASK  ~PRIMARY_BITMASK
+#define PRIMARY_BITMASK   ((~((ev_eventtype_t)0)) << (SECONDARY_BITS))
+#define SECONDARY_BITMASK  (~(PRIMARY_BITMASK))
 
 typedef struct {
   ev_eventtype_t type;
@@ -48,25 +48,26 @@ extern ev_eventtype_t SECONDARY_EVENT_TYPE_COUNT;
   ev_eventtype_t EVENT_TYPE(T);                                              \
 
 #define EVENT_INIT_PRIMARY(T, ...) do {                                           \
-  EVENT_TYPE(T) = (++PRIMARY_EVENT_TYPE_COUNT) << SECONDARY_BITS;            \
+  EVENT_TYPE(T) = ((++PRIMARY_EVENT_TYPE_COUNT) << (SECONDARY_BITS));            \
   EV_CONCAT(EVENT_TYPE(T), _CHILDCOUNT) = 0;                                 \
   EVENT_TYPE_COUNT++;                                                        \
 } while (0);
 
 #define EVENT_INIT_SECONDARY(P, T, ...) do {                                      \
   EVENT_TYPE(T) = (++EV_CONCAT(EVENT_TYPE(P), _CHILDCOUNT)) | EVENT_TYPE(P); \
-  SECONDARY_EVENT_TYPE_COUNT ++;                                             \
+  SECONDARY_EVENT_TYPE_COUNT ++;                                                       \
   EVENT_TYPE_COUNT ++;                                                       \
 } while (0);
 
-#define GET_PRIMARY_TYPE(T) (T >> SECONDARY_BITS)
-#define GET_SECONDARY_TYPE(T) (T & SECONDARY_BITMASK)
+#define GET_PRIMARY_TYPE(T) ((T) >> (SECONDARY_BITS))
+
+#define GET_SECONDARY_TYPE(T) ((T) & (SECONDARY_BITMASK))
 
 #define EVENT_CHILD_COUNT(T) (EV_CONCAT(EVENT_TYPE(T), _CHILDCOUNT))
 
 #define EVENT_MATCH(A, B) \
-   (((PRIMARY_BITMASK & A) == B) \
-  ||((PRIMARY_BITMASK & B) == A) \
+   ((((PRIMARY_BITMASK) & A) == B) \
+  ||(((PRIMARY_BITMASK) & B) == A) \
   || (A==B))
 
 // ===========================================================================//
