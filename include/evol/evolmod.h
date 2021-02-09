@@ -73,14 +73,12 @@ EVMODAPI const char * getMetadata() { return MODULE_DATA; }
 # if defined(EV_OS_WINDOWS)
 # include <windows.h>
 
-EVCOREAPI evstore_t *GLOBAL_STORE;
-
-BOOL __stdcall DllMain( HMODULE hModule,
+BOOL __stdcall DllMain( HMODULE _hModule,
                        DWORD  ul_reason_for_call,
-                       LPVOID lpReserved)
+                       LPVOID _lpReserved)
 {
-  switch (ul_reason_for_call)
-  {
+  (void)_lpReserved,_hModule;
+  switch (ul_reason_for_call) {
   case DLL_PROCESS_ATTACH:
     STATIC_INIT();
     EV_CONSTRUCTOR_FN_NAME();
