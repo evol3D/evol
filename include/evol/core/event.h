@@ -77,9 +77,10 @@ extern ev_eventtype_t SECONDARY_EVENT_TYPE_COUNT;
 //                                                                            //
 // This macro should not be used directly by the user. They're only here for//
 // other macros to use                                                        //
-
+#include <assert.h>
 #define WRAP_EVENT(T, ...) \
   T *e = malloc(sizeof(T)); \
+  assert(e || !"WRAP_EVENT malloc failed"); \
   *e = (T) __VA_ARGS__; \
   e->type = EVENT_TYPE(T); \
   ev_event_t wrapper = { \
