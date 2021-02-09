@@ -151,3 +151,16 @@ evol_unloadmodule(evolmodule_t module);
  */
 EVCOREAPI FN_PTR
 evol_getmodfunc(evolmodule_t module, const char *func_name);
+
+/*!
+ * \brief Retrieve variable from module
+ *
+ * \param module The module to search for the variable
+ * \param var_name Name of the variable to load
+ *
+ * \returns
+ * If the variable was found, a pointer is returned. Otherwise, `NULL`
+ * is returned.
+ */
+EVCOREAPI PTR
+evol_getmodvar(evolmodule_t module, const char *var_name);

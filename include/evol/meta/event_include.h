@@ -25,11 +25,11 @@ void EVENT_IMPORT_FN_NAME(evolmodule_t mod)
 {
 #undef PRIMARY
 #define PRIMARY(T, ...) \
-  EVENT_TYPE(T) = *(ev_eventtype_t *)ev_module_getvar(mod, EV_STRINGIZE(EVENT_TYPE(T)));
+  EVENT_TYPE(T) = *(ev_eventtype_t *)evol_getmodvar(mod, EV_STRINGIZE(EVENT_TYPE(T)));
 
 #undef SECONDARY
 #define SECONDARY(P, T, ...) \
-  EVENT_TYPE(T) = *(ev_eventtype_t *)ev_module_getvar(mod, EV_STRINGIZE(EVENT_TYPE(T)));
+  EVENT_TYPE(T) = *(ev_eventtype_t *)evol_getmodvar(mod, EV_STRINGIZE(EVENT_TYPE(T)));
 
 #include EV_STRINGIZE(EVENT_MODULE/meta/evmod.events)
 }

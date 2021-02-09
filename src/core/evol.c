@@ -216,3 +216,9 @@ evol_getmodfunc(evolmodule_t module, CONST_STR func_name)
 {
   return ev_module_getfn(module, func_name);
 }
+
+PTR
+evol_getmodvar(evolmodule_t module, CONST_STR var_name)
+{
+  return ev_module_getvar(module, var_name);
+}
