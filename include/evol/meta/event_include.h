@@ -16,25 +16,25 @@
 #undef SECONDARY
 #endif
 
-#define PRIMARY EVENT_DECLARE_PRIMARY_IMPORT
-#define SECONDARY EVENT_DECLARE_SECONDARY_IMPORT
+#define PRIMARY EVENT_DECLARE_PRIMARY
+#define SECONDARY EVENT_DECLARE_SECONDARY
 #include EV_STRINGIZE(EVENT_MODULE/meta/evmod.events)
+#undef SECONDARY
+#undef PRIMARY
 
 #define EVENT_IMPORT_FN_NAME EV_CONCAT(IMPORT_EVENTS_, EVENT_MODULE)
 void EVENT_IMPORT_FN_NAME(evolmodule_t mod)
 {
-#undef PRIMARY
 #define PRIMARY(T, ...) \
   EVENT_TYPE(T) = *(ev_eventtype_t *)evol_getmodvar(mod, EV_STRINGIZE(EVENT_TYPE(T)));
 
-#undef SECONDARY
 #define SECONDARY(P, T, ...) \
   EVENT_TYPE(T) = *(ev_eventtype_t *)evol_getmodvar(mod, EV_STRINGIZE(EVENT_TYPE(T)));
 
 #include EV_STRINGIZE(EVENT_MODULE/meta/evmod.events)
-}
-
 #undef SECONDARY
 #undef PRIMARY
+}
+
 #undef EVENT_IMPORT_FN_NAME
 #undef EVENT_MODULE

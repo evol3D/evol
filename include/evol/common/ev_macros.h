@@ -63,7 +63,7 @@
 #if defined(EV_MODULE_DEFINE)
 #define EVMODAPI EV_EXPORT
 #else
-#define EVMODAPI EV_IMPORT
+#define EVMODAPI
 #endif
 
 #define EV_CONCAT_IMPL2(a, b) a##b
