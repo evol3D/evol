@@ -16,9 +16,9 @@ typedef struct {
   PTR data;
 } ev_event_t;
 
-extern ev_eventtype_t EVENT_TYPE_COUNT;
-extern ev_eventtype_t PRIMARY_EVENT_TYPE_COUNT;
-extern ev_eventtype_t SECONDARY_EVENT_TYPE_COUNT;
+EVCOREAPI extern ev_eventtype_t EVENT_TYPE_COUNT;
+EVCOREAPI extern ev_eventtype_t PRIMARY_EVENT_TYPE_COUNT;
+EVCOREAPI extern ev_eventtype_t SECONDARY_EVENT_TYPE_COUNT;
 
 #define EVENT_TYPE(type) EVENT_TYPE_##type
 
