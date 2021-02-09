@@ -40,8 +40,6 @@ struct ev_eventsystem EventSystem = {
 struct ev_eventsystemdata {
   I64 updaterate;
   pthread_mutex_t systemlock;
-  pthread_t loopthread;
-  bool keepalive;
 } EventSystemData;
 
 void
@@ -62,16 +60,6 @@ eventbuf_destr(dvec_t *buf)
   dvec_fini(*buf);
 }
 
-#include <time.h>
-void *eventsystem_loop(void *_)
-{
-  (void)_;
-  while(EventSystemData.keepalive) {
-    ev_eventsystem_progress();
-  }
-}
-
-
 I32
 ev_eventsystem_init(void)
 {
@@ -80,21 +68,13 @@ ev_eventsystem_init(void)
   EventSystem.listeners = vec_init(vec(ev_eventlistener_t), NULL, (elem_destr)vec_destr);
   EventSystem.handlers_tpool = ev_tpool_create(0);
 
-  EventSystemData.keepalive = true;
   pthread_mutex_init(&EventSystemData.systemlock, NULL);
-  evstore_entry_t updaterate;
-  evstore_get(GLOBAL_STORE, EV_CORE_EVENTSYSTEM_UPDATERATE, &updaterate);
-  EventSystemData.updaterate = (I64)updaterate.data;
-
-  pthread_create(&EventSystemData.loopthread, NULL, eventsystem_loop, NULL);
-
   return 0;
 }
 
 I32
 ev_eventsystem_deinit(void)
 {
-  EventSystemData.keepalive = false;
   ev_eventsystem_lock();
   vec_fini(EventSystem.buffers);
   vec_fini(EventSystem.buffer_write_mutex);
@@ -102,7 +82,6 @@ ev_eventsystem_deinit(void)
   ev_tpool_destroy(EventSystem.handlers_tpool);
   ev_eventsystem_unlock();
   pthread_mutex_destroy(&EventSystemData.systemlock);
-  pthread_join(EventSystemData.loopthread, NULL);
 }
 
 I32
