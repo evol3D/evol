@@ -149,4 +149,19 @@
 
 #define EV_MOD_ID_EQ(A, B) EV_SUB_EACH(A) == EV_SUB_EACH(B)
 
+#define EV_TYPE_NAME(Type) EV_CONCAT(EV_TYPE_, Type)
+#define EV_TYPE_NEW(Type) EV_CONCAT(EV_TYPE_NEW_, Type)
+#define EV_TYPE_FREE(Type) EV_CONCAT(EV_TYPE_FREE_, Type)
+
+#define CONFIG_ENTRY(config_name, store_name, Type, defval) do { \
+    Type var = NULL; \
+    ev_lua_getvar_s(config_name, var); \
+    evstore_set(GLOBAL_STORE, &(evstore_entry_t){ \
+      .key = store_name, \
+      .type = EV_TYPE_NAME(Type), \
+      .data = EV_TYPE_NEW(Type)((var == NULL)?defval:var), \
+      .free = EV_TYPE_FREE(Type), \
+    }); \
+  } while(0);
+
 #endif
