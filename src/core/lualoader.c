@@ -15,7 +15,7 @@
 struct ev_LuaLoaderData {
   lua_State *state;
   bool       isActive;
-  uint32_t   fn_retstack;
+  I32   fn_retstack;
 } LuaLoaderData = {
   .state       = NULL,
   .isActive    = false,
