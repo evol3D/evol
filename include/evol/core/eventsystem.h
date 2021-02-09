@@ -23,7 +23,7 @@
   }
 
 
-extern struct ev_eventsystem {
+EVCOREAPI extern struct ev_eventsystem {
   I32 (*dispatch)(ev_event_t);
   I32 (*init)(void);
   I32 (*deinit)(void);
