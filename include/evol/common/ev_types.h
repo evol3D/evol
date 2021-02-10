@@ -26,6 +26,12 @@ typedef int64_t I64;
 typedef float   F32;
 typedef double  F64;
 
+#ifdef EV_PRECISION_HIGH
+typedef F64 REAL;
+#else
+typedef F32 REAL;
+#endif
+
 typedef char *  STR;
 typedef const char *  CONST_STR;
 
