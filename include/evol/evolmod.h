@@ -9,7 +9,7 @@
 
 #define EV_CONSTRUCTOR_FN_NAME ev_init
 #define EV_DESTRUCTOR_FN_NAME  ev_fini
-#define EV_START_FN_NAME       ev_start
+#define EV_UPDATE_FN_NAME      ev_update
 
 #if defined(EV_OS_LINUX)
 # define EV_CONSTRUCTOR_ATTR __attribute__((constructor))
@@ -23,7 +23,7 @@
 
 #define EV_CONSTRUCTOR EV_EXPORT I32 EV_CONSTRUCTOR_FN_NAME()
 #define EV_DESTRUCTOR  EV_EXPORT I32 EV_DESTRUCTOR_FN_NAME()
-#define EV_START       EV_EXPORT I32 EV_START_FN_NAME()
+#define EV_UPDATE      EV_EXPORT I32 EV_UPDATE_FN_NAME(REAL deltaTime)
 
 #if defined(EV_MODULE_DEFINE)
 // Events
