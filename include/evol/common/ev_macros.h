@@ -54,6 +54,8 @@
 
 #endif
 
+#define EV_UNUSED_PARAM(A) (void)A
+
 #if defined(EV_CORE_FILE)
 #define EVCOREAPI EV_EXPORT
 #else
