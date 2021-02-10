@@ -83,6 +83,8 @@ vec_push(vec_t *v, void *val)
   if (metadata->length == metadata->capacity) {
     if(vec_grow(v)) {
       return 1;
+    } else {
+      metadata = vec_meta(*v);
     }
   }
 
