@@ -165,5 +165,19 @@
       .free = EV_TYPE_FREE(Type), \
     }); \
   } while(0);
+#endif
 
+#if defined(EV_OS_WINDOWS)
+# define EV_BREAK_IF(cond) cond ? __debugbreak():0
+#elif defined(EV_OS_LINUX)
+#include <signal.h>
+# define EV_BREAK_IF(cond) cond ? raise(SIGTRAP):0
+#else
+# define EV_BREAK_IF(cond)
+#endif
+
+#if defined(DEBUG)
+# define EV_DEBUG_BREAK_IF EV_BREAK_IF
+#else
+# define EV_DEBUG_BREAK_IF
 #endif
