@@ -165,6 +165,7 @@
       .free = EV_TYPE_FREE(Type), \
     }); \
   } while(0);
+#endif
 
 #if defined(EV_OS_WINDOWS)
 # define EV_BREAK_IF(cond) cond ? __debugbreak():0
@@ -179,6 +180,4 @@
 # define EV_DEBUG_BREAK_IF EV_BREAK_IF
 #else
 # define EV_DEBUG_BREAK_IF
-#endif
-
 #endif
