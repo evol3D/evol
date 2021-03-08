@@ -1,6 +1,7 @@
 #pragma once
 
 #include <evol/common/ev_types.h>
+#include <evol/common/ev_macros.h>
 
 typedef U32 ev_eventtype_t;
 
@@ -22,12 +23,56 @@ EVCOREAPI extern ev_eventtype_t SECONDARY_EVENT_TYPE_COUNT;
 
 #define EVENT_TYPE(type) EVENT_TYPE_##type
 
-#define EVENT_DECLARE_PRIMARY(T, ...)                                                \
-  typedef struct T {ev_eventtype_t type; struct __VA_ARGS__;} T;               \
+#define EVENT_DECLARE_PRIMARY(...) \
+  EV_CONCAT(EVENT_DECLARE_PRIMARY, EV_VA_ARGS_NARG(__VA_ARGS__))(__VA_ARGS__)
+
+#define EVENT_DECLARE_PRIMARY1(T)                                              \
+  typedef struct T {                                                           \
+    ev_eventtype_t type;                                                       \
+  } T;                                                                         \
+  EVMODAPI ev_eventtype_t EVENT_TYPE(T);                                       \
+  EVMODAPI ev_eventtype_t EV_CONCAT(EVENT_TYPE(T), _CHILDCOUNT);
+#define EVENT_DECLARE_PRIMARY2 EVENT_DECLARE_PRIMARYN
+#define EVENT_DECLARE_PRIMARY3 EVENT_DECLARE_PRIMARYN
+#define EVENT_DECLARE_PRIMARY4 EVENT_DECLARE_PRIMARYN
+#define EVENT_DECLARE_PRIMARY5 EVENT_DECLARE_PRIMARYN
+#define EVENT_DECLARE_PRIMARY6 EVENT_DECLARE_PRIMARYN
+#define EVENT_DECLARE_PRIMARY7 EVENT_DECLARE_PRIMARYN
+#define EVENT_DECLARE_PRIMARY8 EVENT_DECLARE_PRIMARYN
+#define EVENT_DECLARE_PRIMARY9 EVENT_DECLARE_PRIMARYN
+#define EVENT_DECLARE_PRIMARY10 EVENT_DECLARE_PRIMARYN
+#define EVENT_DECLARE_PRIMARY11 EVENT_DECLARE_PRIMARYN
+#define EVENT_DECLARE_PRIMARY12 EVENT_DECLARE_PRIMARYN
+#define EVENT_DECLARE_PRIMARY13 EVENT_DECLARE_PRIMARYN
+#define EVENT_DECLARE_PRIMARY14 EVENT_DECLARE_PRIMARYN
+#define EVENT_DECLARE_PRIMARY15 EVENT_DECLARE_PRIMARYN
+#define EVENT_DECLARE_PRIMARYN(T, ...)                                         \
+  typedef struct T {                                                           \
+    ev_eventtype_t type;                                                       \
+    struct __VA_ARGS__;                                                        \
+  } T;                                                                         \
   EVMODAPI ev_eventtype_t EVENT_TYPE(T);                                       \
   EVMODAPI ev_eventtype_t EV_CONCAT(EVENT_TYPE(T), _CHILDCOUNT);
 
-#define EVENT_DECLARE_SECONDARY(P, T, ...)                                                \
+#define EVENT_DECLARE_SECONDARY(...)                                             \
+  EV_CONCAT(EVENT_DECLARE_SECONDARY, EV_VA_ARGS_NARG(__VA_ARGS__))(__VA_ARGS__)
+#define EVENT_DECLARE_SECONDARY2(P, T) \
+  typedef struct T {struct P;}; \
+  EVMODAPI ev_eventtype_t EVENT_TYPE(T);
+#define EVENT_DECLARE_SECONDARY3 EVENT_DECLARE_SECONDARYN
+#define EVENT_DECLARE_SECONDARY4 EVENT_DECLARE_SECONDARYN
+#define EVENT_DECLARE_SECONDARY5 EVENT_DECLARE_SECONDARYN
+#define EVENT_DECLARE_SECONDARY6 EVENT_DECLARE_SECONDARYN
+#define EVENT_DECLARE_SECONDARY7 EVENT_DECLARE_SECONDARYN
+#define EVENT_DECLARE_SECONDARY8 EVENT_DECLARE_SECONDARYN
+#define EVENT_DECLARE_SECONDARY9 EVENT_DECLARE_SECONDARYN
+#define EVENT_DECLARE_SECONDARY10 EVENT_DECLARE_SECONDARYN
+#define EVENT_DECLARE_SECONDARY11 EVENT_DECLARE_SECONDARYN
+#define EVENT_DECLARE_SECONDARY12 EVENT_DECLARE_SECONDARYN
+#define EVENT_DECLARE_SECONDARY13 EVENT_DECLARE_SECONDARYN
+#define EVENT_DECLARE_SECONDARY14 EVENT_DECLARE_SECONDARYN
+#define EVENT_DECLARE_SECONDARY15 EVENT_DECLARE_SECONDARYN
+#define EVENT_DECLARE_SECONDARYN(P, T, ...)                                                \
   typedef struct T {struct P; struct __VA_ARGS__;} T;               \
   EVMODAPI ev_eventtype_t EVENT_TYPE(T);
 
