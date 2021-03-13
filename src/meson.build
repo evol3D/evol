@@ -7,6 +7,7 @@ evol_src += [
   'src/core/evstore.c',
   'src/core/eventsystem.c',
   'src/core/event.c',
+  'src/core/namespace.c',
 ]
 
 evol_src += [
