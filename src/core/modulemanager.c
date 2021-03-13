@@ -25,8 +25,8 @@ ev_modulemanager_detect(const char *module_dir)
 
 #include <src/lua/modulesystem.lua.h>
 
-  for (sds *iter = vec_iter_begin(modules); iter != vec_iter_end(modules);
-       vec_iter_next(modules, (void **)&iter)) {
+  sds *iter;
+  vec_foreach(iter, modules) {
     int res = 0;
 
     evolmodule_t mod = ev_module_open(*iter);
