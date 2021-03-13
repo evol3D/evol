@@ -20,16 +20,16 @@ typedef struct Namespace {
   struct hashmap *functions;
 } NS;
 
-uint32_t NamespaceInit(NS *ns);
-uint32_t NamespaceSetName(NS *ns, const char *name);
-uint32_t NamespaceAddFn(NS *ns, NSFn fn);
-void NamespacePrint(NS *ns);
-void NamespaceDeinit(NS *ns);
+EVCOREAPI uint32_t NamespaceInit(NS *ns);
+EVCOREAPI uint32_t NamespaceSetName(NS *ns, const char *name);
+EVCOREAPI uint32_t NamespaceAddFn(NS *ns, NSFn *fn);
+EVCOREAPI void NamespacePrint(NS *ns);
+EVCOREAPI void NamespaceDeinit(NS *ns);
 
-uint32_t FunctionInit(NSFn *fn);
-uint32_t FunctionSetName(NSFn *fn, const char *name);
-uint32_t FunctionSetReturnType(NSFn *fn, const char *ret_type);
-uint32_t FunctionPushParams(NSFn *fn, ...);
-uint32_t FunctionBind(NSFn *fn, FN_PTR fn_impl);
-void FunctionDeinit(NSFn *fn);
+EVCOREAPI uint32_t FunctionInit(NSFn *fn);
+EVCOREAPI uint32_t FunctionSetName(NSFn *fn, const char *name);
+EVCOREAPI uint32_t FunctionSetReturnType(NSFn *fn, const char *ret_type);
+EVCOREAPI uint32_t FunctionPushParams(NSFn *fn, ...);
+EVCOREAPI uint32_t FunctionBind(NSFn *fn, FN_PTR fn_impl);
+EVCOREAPI void FunctionDeinit(NSFn *fn);
 
