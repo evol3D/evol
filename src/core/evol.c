@@ -7,12 +7,15 @@
 #include <cargs.h>
 #include <string.h>
 #include <stdlib.h>
+#include <hashmap.h>
+
 
 #include <evol/common/ev_log.h>
 #include <evol/common/ev_globals.h>
 
 #include <evol/core/lualoader.h>
 #include <evol/core/modulemanager.h>
+#include <evol/core/namespace.h>
 
 #include <evol/evolmod.h>
 
@@ -25,7 +28,7 @@
 evstore_t *GLOBAL_STORE = NULL;
 
 struct evolengine {
-  U32 dummy;
+  struct hashmap *namespaces;
 };
 
 evolengine_t *
@@ -34,7 +37,17 @@ evol_create()
   evolengine_t *evengine = calloc(sizeof(evolengine_t), 1);
   if (evengine) {
     GLOBAL_STORE = evstore_create();
+    evengine->namespaces = hashmap_new(sizeof(NS), 8, 0, 0, NS_hash, NS_cmp, NULL);
   }
+
+  evstore_entry_t evol_instance = {
+    .key = "EVOL_INSTANCE",
+    .type = EV_TYPE_PTR,
+    .data = evengine,
+    .free = NULL,
+  };
+  evstore_set(GLOBAL_STORE, &evol_instance);
+  // NOTE should handle oom but this runs so early in the lifetime of the process that an oom is very unlikely
 
   return evengine;
 }
@@ -47,6 +60,11 @@ evol_destroy(evolengine_t *evengine)
     return;
 
   evstore_destroy(GLOBAL_STORE);
+
+  if(evengine->namespaces) {
+    hashmap_scan(evengine->namespaces, NS_free, NULL);
+    hashmap_free(evengine->namespaces);
+  }
 
   free(evengine);
   ev_log_trace("Free'd memory used by the instance");
@@ -202,4 +220,49 @@ PTR
 evol_getmodvar(evolmodule_t module, CONST_STR var_name)
 {
   return ev_module_getvar(module, var_name);
+}
+
+U32
+evol_registerNS(evolengine_t *evengine, NS *ns)
+{
+  //TODO handle oom
+  hashmap_set(evengine->namespaces, ns);
+}
+
+U32
+evol_bindNSFunction(evolengine_t *evengine, STR nsName, STR fnName, FN_PTR fnHandle)
+{
+  NS  queryNS;
+  queryNS.name = nsName;
+  NS *ns = hashmap_get(evengine->namespaces, &queryNS);
+  if(!ns)
+    return -1;
+
+  NSFn  queryFn;
+  queryFn.name = fnName;
+  NSFn *fn = hashmap_get(ns->functions, &queryFn);
+  if(!fn)
+    return -2;
+  
+  FunctionBind(fn, fnHandle);
+
+  return 0;
+}
+
+FN_PTR
+evol_getNSBinding(evolengine_t *evengine, STR nsName, STR fnName)
+{
+  NS  queryNS;
+  queryNS.name = nsName;
+  NS *ns = hashmap_get(evengine->namespaces, &queryNS);
+  if(!ns)
+    return -1;
+
+  NSFn  queryFn;
+  queryFn.name = fnName;
+  NSFn *fn = hashmap_get(ns->functions, &queryFn);
+  if(!fn)
+    return -2;
+
+  return fn->handle;
 }

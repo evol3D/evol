@@ -7,6 +7,7 @@
 #include <evol/common/ev_macros.h>
 #include <evol/meta/strings.h>
 #include <evol/core/evstore.h>
+#include <evol/core/namespace.h>
 
 typedef struct evolengine evolengine_t;
 
@@ -164,3 +165,13 @@ evol_getmodfunc(evolmodule_t module, const char *func_name);
  */
 EVCOREAPI PTR
 evol_getmodvar(evolmodule_t module, const char *var_name);
+
+
+EVCOREAPI U32
+evol_registerNS(evolengine_t *evengine, NS *ns);
+
+EVCOREAPI U32
+evol_bindNSFunction(evolengine_t *evengine, STR nsName, STR fnName, FN_PTR fnHandle);
+
+EVCOREAPI FN_PTR
+evol_getNSBinding(evolengine_t *evengine, STR nsName, STR fnName);
