@@ -1,12 +1,40 @@
+#define EV_CORE_FILE
 #include <evol/core/namespace.h>
 #include <hashmap.h>
+
+U64
+NS_hash(const void *item, U64 seed0, U64 seed1)
+{
+  NS *ns = (NS *)item;
+  return hashmap_murmur(ns->name, strlen(ns->name), seed0, seed1);
+}
+
+int
+NS_cmp(const void *item1, const void *item2, void *_udata)
+{
+  EV_UNUSED_PARAM(_udata);
+  NS *ns1 = (NS *)item1;
+  NS *ns2 = (NS *)item2;
+
+  return strcmp(ns1->name, ns2->name);
+}
+
+bool
+NS_free(void *item, void *_udata)
+{
+  EV_UNUSED_PARAM(_udata);
+  if(item)
+    NamespaceDeinit((NS*)item);
+  return true;
+}
+
 
 U64
 NSFn_hash(const void *item, U64 seed0, U64 seed1)
 {
   NSFn *fn = (NSFn *)item;
 
-  return hashmap_murmur(fn->name, sdslen(fn->name), seed0, seed1);
+  return hashmap_murmur(fn->name, strlen(fn->name), seed0, seed1);
 }
 
 int
@@ -16,7 +44,7 @@ NSFn_cmp(const void *item1, const void *item2, void *_udata)
   NSFn *fn1 = (NSFn *)item1;
   NSFn *fn2 = (NSFn *)item2;
 
-  return sdscmp(fn1->name, fn2->name);
+  return strcmp(fn1->name, fn2->name);
 }
 
 bool
