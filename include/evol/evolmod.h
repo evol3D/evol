@@ -29,6 +29,17 @@
 
 #if defined(EV_MODULE_DEFINE)
 
+#if defined (EVMOD_TYPES_DEF)
+# if defined(TYPE)
+#  undef TYPE
+# endif
+
+# define TYPE(name, ...) typedef struct __VA_ARGS__ name;
+# include <meta/evmod.types>
+
+# undef TYPE
+#endif
+
 #if defined (EVMOD_EVENTS_DEF)
 # if defined(PRIMARY)
 #  undef PRIMARY
@@ -36,15 +47,10 @@
 # if defined(SECONDARY)
 #  undef SECONDARY
 # endif
-# if defined(TYPE)
-#  undef TYPE
-# endif
 
 # define PRIMARY EVENT_DECLARE_PRIMARY
 # define SECONDARY EVENT_DECLARE_SECONDARY
-# define TYPE(name, ...) typedef struct __VA_ARGS__ name;
 # include <meta/evmod.events>
-# undef TYPE
 # undef SECONDARY
 # undef PRIMARY
 #endif
