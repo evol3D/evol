@@ -140,16 +140,14 @@ ev_eventsystem_progress(void)
     vec_t listeners_vec = ((vec_t*)EventSystem.listeners)[primary_type];
 
     dvec_swap(buffer);
-    vec_t read = dvec_read(buffer);
 
-    for(U32 event_idx = 0; event_idx < vec_len(read); event_idx++) {
-      for(U32 listener_idx = 0; listener_idx < vec_len(listeners_vec); listener_idx++) {
-        ev_event_t event = ((ev_event_t *)read)[event_idx];
-        ev_eventlistener_t listener = ((ev_eventlistener_t *)listeners_vec)[listener_idx];
-        if (!EVENT_MATCH(event.type, listener.type)) {
+    ev_event_t *event;
+    ev_eventlistener_t *listener;
+    vec_foreach(event, dvec_read(buffer)) {
+      vec_foreach(listener, listeners_vec) {
+        if (!EVENT_MATCH(event->type, listener->type))
           continue;
-        }
-        ev_tpool_add_work(EventSystem.handlers_tpool, listener.handler, event.data);
+        ev_tpool_add_work(EventSystem.handlers_tpool, listener->handler, event->data);
       }
     }
   }

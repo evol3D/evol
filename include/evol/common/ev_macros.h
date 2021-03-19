@@ -96,60 +96,46 @@
  */
 #define Debug if(0)
 
-
-#define EV_SUB_CharCode_A 1
-#define EV_SUB_CharCode_B 2
-#define EV_SUB_CharCode_C 3
-#define EV_SUB_CharCode_D 4
-#define EV_SUB_CharCode_E 5
-#define EV_SUB_CharCode_F 6
-#define EV_SUB_CharCode_G 7
-#define EV_SUB_CharCode_H 8
-#define EV_SUB_CharCode_I 9
-#define EV_SUB_CharCode_J 10
-#define EV_SUB_CharCode_K 11
-#define EV_SUB_CharCode_L 12
-#define EV_SUB_CharCode_M 13
-#define EV_SUB_CharCode_N 14
-#define EV_SUB_CharCode_O 15
-#define EV_SUB_CharCode_P 16
-#define EV_SUB_CharCode_Q 17
-#define EV_SUB_CharCode_R 18
-#define EV_SUB_CharCode_S 19
-#define EV_SUB_CharCode_T 20
-#define EV_SUB_CharCode_U 21
-#define EV_SUB_CharCode_V 22
-#define EV_SUB_CharCode_W 23
-#define EV_SUB_CharCode_X 24
-#define EV_SUB_CharCode_Y 25
-#define EV_SUB_CharCode_Z 26
-#define EV_CHARCODE(L) EV_CONCAT(EV_SUB_CharCode, L)
-
 #define EV_VA_ARGS_NARG(...) EV_VA_ARGS_NARG_IMPL(__VA_ARGS__, EV_VA_ARGS_RSEQ_N())
 #define EV_VA_ARGS_NARG_IMPL(...) EV_VA_ARGS_ARG_N(__VA_ARGS__)
 #define EV_VA_ARGS_ARG_N(_1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, N, ...) N
 #define EV_VA_ARGS_RSEQ_N() 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0
 
-#define EV_SUB_EACH_1(I, ...) EV_CHARCODE(I)
-#define EV_SUB_EACH_2(I, ...) EV_CONCAT(EV_CHARCODE(I), EV_SUB_EACH_1(__VA_ARGS__))
-#define EV_SUB_EACH_3(I, ...) EV_CONCAT(EV_CHARCODE(I), EV_SUB_EACH_2(__VA_ARGS__))
-#define EV_SUB_EACH_4(I, ...) EV_CONCAT(EV_CHARCODE(I), EV_SUB_EACH_3(__VA_ARGS__))
-#define EV_SUB_EACH_5(I, ...) EV_CONCAT(EV_CHARCODE(I), EV_SUB_EACH_4(__VA_ARGS__))
-#define EV_SUB_EACH_6(I, ...) EV_CONCAT(EV_CHARCODE(I), EV_SUB_EACH_5(__VA_ARGS__))
-#define EV_SUB_EACH_7(I, ...) EV_CONCAT(EV_CHARCODE(I), EV_SUB_EACH_6(__VA_ARGS__))
-#define EV_SUB_EACH_8(I, ...) EV_CONCAT(EV_CHARCODE(I), EV_SUB_EACH_7(__VA_ARGS__))
-#define EV_SUB_EACH_9(I, ...) EV_CONCAT(EV_CHARCODE(I), EV_SUB_EACH_8(__VA_ARGS__))
-#define EV_SUB_EACH_10(I, ...) EV_CONCAT(EV_CHARCODE(I), EV_SUB_EACH_9(__VA_ARGS__))
-#define EV_SUB_EACH_11(I, ...) EV_CONCAT(EV_CHARCODE(I), EV_SUB_EACH_10(__VA_ARGS__))
-#define EV_SUB_EACH_12(I, ...) EV_CONCAT(EV_CHARCODE(I), EV_SUB_EACH_11(__VA_ARGS__))
-#define EV_SUB_EACH_13(I, ...) EV_CONCAT(EV_CHARCODE(I), EV_SUB_EACH_12(__VA_ARGS__))
-#define EV_SUB_EACH_14(I, ...) EV_CONCAT(EV_CHARCODE(I), EV_SUB_EACH_13(__VA_ARGS__))
-#define EV_SUB_EACH_15(I, ...) EV_CONCAT(EV_CHARCODE(I), EV_SUB_EACH_14(__VA_ARGS__))
+#define EV_EXPAND(...) __VA_ARGS__
 
-#define EV_SUB_EACH_IMPL(N, ...) EV_CONCAT(EV_SUB_EACH_, N)(__VA_ARGS__)
-#define EV_SUB_EACH(...) EV_SUB_EACH_IMPL(EV_VA_ARGS_NARG(__VA_ARGS__), __VA_ARGS__)
+#define FOREACH_LAST1(OP, LAST_OP, a, ...) LAST_OP(a)
+#define FOREACH_LAST2(OP, LAST_OP, a, ...) OP(a) FOREACH_LAST1(OP, LAST_OP, __VA_ARGS__)
+#define FOREACH_LAST3(OP, LAST_OP, a, ...) OP(a) FOREACH_LAST2(OP, LAST_OP, __VA_ARGS__)
+#define FOREACH_LAST4(OP, LAST_OP, a, ...) OP(a) FOREACH_LAST3(OP, LAST_OP, __VA_ARGS__)
+#define FOREACH_LAST5(OP, LAST_OP, a, ...) OP(a) FOREACH_LAST4(OP, LAST_OP, __VA_ARGS__)
+#define FOREACH_LAST6(OP, LAST_OP, a, ...) OP(a) FOREACH_LAST5(OP, LAST_OP, __VA_ARGS__)
+#define FOREACH_LAST7(OP, LAST_OP, a, ...) OP(a) FOREACH_LAST6(OP, LAST_OP, __VA_ARGS__)
+#define FOREACH_LAST8(OP, LAST_OP, a, ...) OP(a) FOREACH_LAST7(OP, LAST_OP, __VA_ARGS__)
+#define FOREACH_LAST9(OP, LAST_OP, a, ...) OP(a) FOREACH_LAST8(OP, LAST_OP, __VA_ARGS__)
+#define FOREACH_LAST10(OP, LAST_OP, a, ...) OP(a) FOREACH_LAST9(OP, LAST_OP, __VA_ARGS__)
+#define FOREACH_LAST11(OP, LAST_OP, a, ...) OP(a) FOREACH_LAST10(OP, LAST_OP, __VA_ARGS__)
+#define FOREACH_LAST12(OP, LAST_OP, a, ...) OP(a) FOREACH_LAST11(OP, LAST_OP, __VA_ARGS__)
+#define FOREACH_LAST13(OP, LAST_OP, a, ...) OP(a) FOREACH_LAST12(OP, LAST_OP, __VA_ARGS__)
+#define FOREACH_LAST14(OP, LAST_OP, a, ...) OP(a) FOREACH_LAST13(OP, LAST_OP, __VA_ARGS__)
+#define FOREACH_LAST15(OP, LAST_OP, a, ...) OP(a) FOREACH_LAST14(OP, LAST_OP, __VA_ARGS__)
+#define FOREACH_LAST(OP, LAST_OP, ...) EV_CONCAT(FOREACH_LAST, EV_VA_ARGS_NARG(__VA_ARGS__))(OP, LAST_OP, __VA_ARGS__)
 
-#define EV_MOD_ID_EQ(A, B) EV_SUB_EACH(A) == EV_SUB_EACH(B)
+#define FOREACH1(OP, a, ...) OP(a)
+#define FOREACH2(OP, a, ...) OP(a) FOREACH1(OP, __VA_ARGS__)
+#define FOREACH3(OP, a, ...) OP(a) FOREACH2(OP, __VA_ARGS__)
+#define FOREACH4(OP, a, ...) OP(a) FOREACH3(OP, __VA_ARGS__)
+#define FOREACH5(OP, a, ...) OP(a) FOREACH4(OP, __VA_ARGS__)
+#define FOREACH6(OP, a, ...) OP(a) FOREACH5(OP, __VA_ARGS__)
+#define FOREACH7(OP, a, ...) OP(a) FOREACH6(OP, __VA_ARGS__)
+#define FOREACH8(OP, a, ...) OP(a) FOREACH7(OP, __VA_ARGS__)
+#define FOREACH9(OP, a, ...) OP(a) FOREACH8(OP, __VA_ARGS__)
+#define FOREACH10(OP, a, ...) OP(a) FOREACH9(OP, __VA_ARGS__)
+#define FOREACH11(OP, a, ...) OP(a) FOREACH10(OP, __VA_ARGS__)
+#define FOREACH12(OP, a, ...) OP(a) FOREACH11(OP, __VA_ARGS__)
+#define FOREACH13(OP, a, ...) OP(a) FOREACH12(OP, __VA_ARGS__)
+#define FOREACH14(OP, a, ...) OP(a) FOREACH13(OP, __VA_ARGS__)
+#define FOREACH15(OP, a, ...) OP(a) FOREACH14(OP, __VA_ARGS__)
+#define FOREACH(OP, ...) EV_CONCAT(FOREACH, EV_VA_ARGS_NARG(__VA_ARGS__))(OP, __VA_ARGS__)
 
 #define EV_TYPE_NAME(Type) EV_CONCAT(EV_TYPE_, Type)
 #define EV_TYPE_NEW(Type) EV_CONCAT(EV_TYPE_NEW_, Type)

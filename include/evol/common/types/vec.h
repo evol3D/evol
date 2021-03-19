@@ -101,6 +101,9 @@ vec_iter_end(vec_t v);
 void
 vec_iter_next(vec_t v, void **iter);
 
+#define vec_foreach(ref, vec) \
+  for(ref = vec_iter_begin(vec); (void*)ref < vec_iter_end(vec); vec_iter_next(vec, (void**)&ref))
+
 /*!
  * \brief A function that destroys a vector object. If a destructor function was
  * passed while initializing the vector, then this function is called on every
