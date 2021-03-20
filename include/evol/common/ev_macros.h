@@ -19,13 +19,22 @@
 #error("Unknown Compiler")
 #endif
 
+/*!
+ * \brief Macro to get a type's alignment
+ */
+#define EV_ALIGNOF _Alignof
+
+/*!
+ * \brief Attribute to specify the minimum alignment of a variable or structure
+ */
+#define EV_ALIGNAS _Alignas
+
 #if defined(EV_CC_MSVC)
 
 #define EV_EXPORT __declspec(dllexport)
 #define EV_IMPORT __declspec(dllimport)
 
 #define EV_UNUSED
-#define EV_ALIGN(n)
 
 #elif defined(EV_CC_GCC)
 
@@ -33,7 +42,6 @@
 #define EV_IMPORT
 
 #define EV_UNUSED __attribute__((unused))
-#define EV_ALIGN(n) __attribute__((aligned(x)))
 
 #else
 
@@ -46,11 +54,6 @@
  * \brief Attribute to silence compiler warnings for unused functions/variables
  */
 #define EV_UNUSED
-
-/*!
- * \brief Attribute to specify the minimum alignment of a variable or structure
- */
-#define EV_ALIGN(n)
 
 #endif
 
