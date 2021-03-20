@@ -3,21 +3,7 @@
  */
 #pragma once
 
-#if defined(_WIN32)
-#define EV_OS_WINDOWS
-#elif defined(__linux__)
-#define EV_OS_LINUX
-#else
-#error("Unknown OS")
-#endif
-
-#if defined(_MSC_VER)
-#define EV_CC_MSVC
-#elif defined(__GNUC__)
-#define EV_CC_GCC
-#else
-#error("Unknown Compiler")
-#endif
+#include <buildconfig.h>
 
 /*!
  * \brief Macro to get a type's alignment
@@ -160,13 +146,13 @@
 # define EV_BREAK_IF(cond) cond ? __debugbreak():0
 #elif defined(EV_OS_LINUX)
 #include <signal.h>
-# define EV_BREAK_IF(cond) cond ? raise(SIGTRAP):0
+# define _EV_BREAK_IF(cond) cond ? raise(SIGTRAP):0
 #else
-# define EV_BREAK_IF(cond)
+# define _EV_BREAK_IF(cond)
 #endif
 
-#if defined(DEBUG)
-# define EV_DEBUG_BREAK_IF EV_BREAK_IF
+#if (defined(EV_BUILD_DEBUG) || defined(EV_BUILD_DEBUGOPT))
+# define EV_DEBUG_BREAK_IF _EV_BREAK_IF
 #else
 # define EV_DEBUG_BREAK_IF
 #endif
