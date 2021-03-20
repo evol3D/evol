@@ -162,6 +162,18 @@ const char MODULE_DATA[] =
 
 EVMODAPI const char * getMetadata() { return MODULE_DATA; }
 
+void _ev_module_construct()
+{
+  EV_CHECK_CORE_ACTIVE;
+  STATIC_INIT();
+  EV_CONSTRUCTOR_FN_NAME();
+}
+void _ev_module_destruct()
+{
+  EV_CHECK_CORE_ACTIVE;
+  EV_DESTRUCTOR_FN_NAME();
+  STATIC_DEINIT();
+}
 
 # if defined(EV_OS_WINDOWS)
 # include <windows.h>
@@ -173,16 +185,14 @@ BOOL __stdcall DllMain( HMODULE _hModule,
   (void)_lpReserved,_hModule;
   switch (ul_reason_for_call) {
   case DLL_PROCESS_ATTACH:
-    STATIC_INIT();
-    EV_CONSTRUCTOR_FN_NAME();
+    _ev_module_construct();
     break;
   case DLL_THREAD_ATTACH:
     break;
   case DLL_THREAD_DETACH:
     break;
   case DLL_PROCESS_DETACH:
-    EV_DESTRUCTOR_FN_NAME();
-    STATIC_DEINIT();
+    _ev_module_destruct();
     break;
   default:
     break;
@@ -191,8 +201,9 @@ BOOL __stdcall DllMain( HMODULE _hModule,
 }
 # else
 
-EV_CONSTRUCTOR_ATTR void evmod_constructor_fn() { STATIC_INIT(); EV_CONSTRUCTOR_FN_NAME(); }
-EV_DESTRUCTOR_ATTR  void evmod_destructor_fn()  { EV_DESTRUCTOR_FN_NAME(); STATIC_DEINIT(); }
+
+EV_CONSTRUCTOR_ATTR void evmod_constructor_fn() { _ev_module_construct(); }
+EV_DESTRUCTOR_ATTR  void evmod_destructor_fn()  { _ev_module_destruct(); }
 
 # endif
 

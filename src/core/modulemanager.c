@@ -4,6 +4,9 @@
 #define EV_CORE_FILE
 #include <evol/core/modulemanager.h>
 #include <evol/core/lualoader.h>
+#include <evol/core/evstore.h>
+#include <evol/common/ev_log.h>
+#include <evol/core/evol.h>
 
 #include <evol/utils/filesystem.h>
 

@@ -49,6 +49,14 @@ evol_create()
   evstore_set(GLOBAL_STORE, &evol_instance);
   // NOTE should handle oom but this runs so early in the lifetime of the process that an oom is very unlikely
 
+  evstore_entry_t core_active;
+  core_active.key = "EV_CORE_ACTIVE";
+  core_active.type = EV_TYPE_I8;
+  core_active.data = 0;
+  core_active.free = EV_TYPE_FREE_I8;
+
+  evstore_set(GLOBAL_STORE, &core_active);
+
   return evengine;
 }
 
@@ -140,6 +148,14 @@ evol_init(evolengine_t *evengine)
   } else {
     ev_log_error("Module directory not specified");
   }
+
+  evstore_entry_t core_active;
+  core_active.key = "EV_CORE_ACTIVE";
+  core_active.type = EV_TYPE_I8;
+  core_active.data = (PTR)1;
+  core_active.free = EV_TYPE_FREE_I8;
+
+  evstore_set(GLOBAL_STORE, &core_active);
 
   return EV_ENGINE_SUCCESS;
 }
