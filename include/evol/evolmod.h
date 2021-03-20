@@ -154,8 +154,11 @@ evolengine_t *evol_instance = store_entry.data;
 void STATIC_DEINIT() {}
 
 const char MODULE_DATA[] =
-#include <module.lua.h>
-;
+#if defined(EVMOD_LUA)
+#include EV_STRINGIZE(EVMOD_LUA)
+#else
+{'\0'};
+#endif
 
 EVMODAPI const char * getMetadata() { return MODULE_DATA; }
 
