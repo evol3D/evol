@@ -45,7 +45,6 @@
   NAMESPACE(name) *name;                                                                                                   \
   void IMPORT_NAMESPACE_FN(name)                                                                                           \
   {                                                                                                                        \
-    EV_BREAK_IF(!mod);                                                                                                     \
     NAMESPACE(name)*(*getns)() = (NAMESPACE(name)*(*)())evol_getmodfunc(mod, EV_STRINGIZE(EV_CONCAT(GetNamespace, name))); \
     if (!getns)                                                                                                            \
       return;                                                                                                              \

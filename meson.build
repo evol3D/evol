@@ -8,6 +8,38 @@ default_options : [
 
 cc = meson.get_compiler('c')
 
+build_config = configuration_data()
+
+buildtype = get_option('buildtype')
+if buildtype == 'debug'
+  build_config.set('EV_BUILD_DEBUG', true)
+elif buildtype == 'debugoptimized'
+  build_config.set('EV_BUILD_DEBUGOPT', true)
+else
+  build_config.set('EV_BUILD_RELEASE', true)
+endif
+
+os = build_machine.system()
+if os == 'windows'
+  build_config.set('EV_OS_WINDOWS', true)
+elif os == 'linux'
+  build_config.set('EV_OS_LINUX', true)
+else
+  error('Unsupported operating system')
+endif
+
+compiler_name = cc.get_id()
+if compiler_name == 'msvc'
+  build_config.set('EV_CC_MSVC', true)
+elif compiler_name == 'gcc'
+  build_config.set('EV_CC_GCC', true)
+else
+  error('Unsupported compiler')
+endif
+
+configure_file(output: 'buildconfig.h',
+  configuration: build_config)
+
 # Subprojects
 subproject('luajit')
 luajit = dependency('luajit')
@@ -24,6 +56,7 @@ evol_src = []
 
 evol_incdir = [
   'include',
+  '.',
 ]
 
 subdir('src')
@@ -48,7 +81,7 @@ endif
 
 evol_lib = shared_library('evol',
   evol_src,
-  include_directories: evol_incdir,
+  include_directories: include_directories(evol_incdir),
   dependencies: evol_deps,
   link_with: evol_link_libs,
   c_pch: 'pch/evpch.h',
