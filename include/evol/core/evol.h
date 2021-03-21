@@ -175,3 +175,10 @@ evol_bindNSFunction(evolengine_t *evengine, STR nsName, STR fnName, FN_PTR fnHan
 
 EVCOREAPI FN_PTR
 evol_getNSBinding(evolengine_t *evengine, STR nsName, STR fnName);
+
+#define EV_CHECK_CORE_ACTIVE do {                                                \
+  evstore_entry_t core_active;                                                   \
+  EvStoreResult res = evstore_get(GLOBAL_STORE, "EV_CORE_ACTIVE", &core_active); \
+  if(res == EV_STORE_ENTRY_NOTFOUND || core_active.data == 0)                    \
+    return;                                                                      \
+} while (0)
