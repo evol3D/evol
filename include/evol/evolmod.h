@@ -34,7 +34,7 @@
 #  undef TYPE
 # endif
 
-# define TYPE(name, ...) typedef struct __VA_ARGS__ name;
+# define TYPE(name, ...) typedef __VA_ARGS__ name;
 # include <meta/evmod.types>
 
 # undef TYPE

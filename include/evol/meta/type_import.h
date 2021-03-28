@@ -13,7 +13,7 @@
 #  undef TYPE
 # endif
 
-# define TYPE(name, ...) typedef struct __VA_ARGS__ name;
+# define TYPE(name, ...) typedef __VA_ARGS__ name;
 #include EV_STRINGIZE(TYPE_MODULE/meta/evmod.types)
 #undef TYPE
 

@@ -156,3 +156,10 @@
 #else
 # define EV_DEBUG_BREAK_IF
 #endif
+
+#if (defined(EV_BUILD_DEBUG) || defined(EV_BUILD_DEBUGOPT))
+#include <assert.h>
+# define DEBUG_ASSERT assert
+#else
+# define DEBUG_ASSERT
+#endif
