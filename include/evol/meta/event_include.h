@@ -2,7 +2,7 @@
  * \file event_include.h
  */
 #include <evol/common/ev_macros.h>
-#include <evol/core/event.h>
+#include <evol/core/eventsystem.h>
 #include <evol/core/module.h>
 
 #if !defined(EVENT_MODULE)

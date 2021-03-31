@@ -72,6 +72,11 @@ evol_deps = [
   cute_files,
 ]
 
+if get_option('using_cglm')
+  cglm_dep = dependency('cglm')
+  evol_deps += cglm_dep
+endif
+
 evol_link_libs = [
 ]
 
