@@ -11,7 +11,10 @@
 #include <evol/meta/resdef.h>
 
 #include <evol/common/types/vec.h>
+
+#if !defined(__cplusplus)
 #include <evol/extern/sds.h>
+#endif
 
 typedef uint8_t  U8;
 typedef uint16_t U16;
@@ -35,7 +38,9 @@ typedef F32 REAL;
 typedef char *  STR;
 typedef const char *  CONST_STR;
 
+#if !defined(__cplusplus)
 typedef sds SDS;
+#endif
 
 typedef void(*FN_PTR)();
 typedef void* PTR;
@@ -98,6 +103,7 @@ typedef enum {
 } ev_type;
 
 
+#if !defined(__cplusplus)
 /*!
  * \brief A specialized vector for sds (dynamic strings)
  */
@@ -126,3 +132,5 @@ sdsvecdestr(void *elem)
  * vector with the default values for sds.
  */
 #define sdsvec_init() vec_init_impl(sizeof(sds), sdsveccopy, sdsvecdestr)
+
+#endif

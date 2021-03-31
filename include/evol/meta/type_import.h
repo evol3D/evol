@@ -2,8 +2,7 @@
  * \file type_import.h
  */
 #include <evol/common/ev_macros.h>
-#include <evol/core/module.h>
-#include <evol/core/namespace.h>
+#include <evol/common/ev_types.h>
 
 #if !defined(TYPE_MODULE)
 #error "TYPE_MODULE needs to be defined"
