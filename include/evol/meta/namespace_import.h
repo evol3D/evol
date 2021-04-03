@@ -4,6 +4,7 @@
 #include <evol/common/ev_macros.h>
 #include <evol/core/module.h>
 #include <evol/core/namespace.h>
+#include <evol/evol.h>
 
 #if !defined(NAMESPACE_MODULE)
 #error "NAMESPACE_MODULE needs to be defined"

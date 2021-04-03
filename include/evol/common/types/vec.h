@@ -62,7 +62,7 @@ typedef void (*elem_destr)(void *d);
  *
  * \returns A vector object
  */
-vec_t
+EVCOREAPI vec_t
 vec_init_impl(size_t elemsize, elem_copy copy, elem_destr destr);
 
 
@@ -80,7 +80,7 @@ vec_init_impl(size_t elemsize, elem_copy copy, elem_destr destr);
  *
  * \returns A pointer to the first element in a vector
  */
-void *
+EVCOREAPI void *
 vec_iter_begin(vec_t v);
 
 /*!
@@ -88,7 +88,7 @@ vec_iter_begin(vec_t v);
  *
  * \returns A pointer to the memory block right after the last element in the vector
  */
-void *
+EVCOREAPI void *
 vec_iter_end(vec_t v);
 
 /*!
@@ -98,7 +98,7 @@ vec_iter_end(vec_t v);
  * \param v The vector that is being iterated over
  * \param iter Reference to the iterator that is being incremented
  */
-void
+EVCOREAPI void
 vec_iter_next(vec_t v, void **iter);
 
 #define vec_foreach(ref, vec) \
@@ -111,7 +111,7 @@ vec_iter_next(vec_t v, void **iter);
  *
  * \param v The vector that is being destroyed
  */
-void
+EVCOREAPI void
 vec_fini(vec_t v);
 
 /*!
@@ -127,7 +127,7 @@ vec_fini(vec_t v);
  *
  * \returns An error code. If the operation was successful, then `0` is returned.
  */
-int32_t
+EVCOREAPI int32_t
 vec_push(vec_t *v, void *val);
 
 /*!
@@ -137,7 +137,7 @@ vec_push(vec_t *v, void *val);
  *
  * \returns Current length of the vector
  */
-size_t
+EVCOREAPI size_t
 vec_len(vec_t v);
 
 /*!
@@ -147,7 +147,7 @@ vec_len(vec_t v);
  *
  * \returns Current capacity of the vector
  */
-size_t
+EVCOREAPI size_t
 vec_capacity(vec_t v);
 
 /*!
@@ -158,14 +158,14 @@ vec_capacity(vec_t v);
  *
  * \returns 0 on success
  */
-int32_t
+EVCOREAPI int32_t
 vec_clear(vec_t v);
 
 /*!
  * \brief Sets the length of the vector to `len`.
  *
  * \details If `len` is less than `v`'s current length, then `v`'s length is
- * amended. Otherwise, the capcity is checked to make sure that there is enough
+ * amended. Otherwise, the capacity is checked to make sure that there is enough
  * space for the new len.
  *
  * \param v Reference to the vector object
@@ -173,7 +173,7 @@ vec_clear(vec_t v);
  *
  * \returns 0 on success
  */
-int32_t
+EVCOREAPI int32_t
 vec_setlen(vec_t *v, size_t len);
 
 /*!
@@ -184,7 +184,7 @@ vec_setlen(vec_t *v, size_t len);
  *
  * \returns 0 on success
  */
-int32_t
+EVCOREAPI int32_t
 vec_setcapacity(vec_t *v, size_t cap);
 
 /*!
@@ -194,5 +194,5 @@ vec_setcapacity(vec_t *v, size_t cap);
  *
  * \returns 0 on success
  */
-int32_t
+EVCOREAPI int32_t
 vec_grow(vec_t *v);

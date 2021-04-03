@@ -26,7 +26,11 @@ typedef enum EV_CONCAT(RES_TYPE, Codes) {
 
 EV_UNUSED static const char *EV_CONCAT(RES_TYPE, Strings)[] = {
 #define RESULT(x) EV_STRINGIZE(EV_CONCAT(RES_PREFIX, x)),
+#ifdef __cplusplus // No designated initializers in cpp yet
+#define RESULT_VAL(x, n) EV_STRINGIZE(EV_CONCAT(RES_PREFIX, x)),
+#else
 #define RESULT_VAL(x, n) [n] = EV_STRINGIZE(EV_CONCAT(RES_PREFIX, x)),
+#endif
 #include RES_FILE
 #undef RESULT
 #undef RESULT_VAL

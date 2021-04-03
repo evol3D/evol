@@ -77,13 +77,14 @@
  */
 #define STRING_VAR(x) static const char *x = EV_STRINGIZE(x)
 
-#if defined(DEBUG)
-#define Debug if(1)
+#if (defined(EV_BUILD_DEBUG) || defined(EV_BUILD_DEBUGOPT))
+#define DEBUG(x) x
 #else
 /*!
- * \brief Code that executes only when compiled in debug mode.
+ * \brief Code that is only included when compiled in debug mode.
  */
-#define Debug if(0)
+#define DEBUG(x)
+#endif
 
 #define EV_VA_ARGS_NARG(...) EV_VA_ARGS_NARG_IMPL(__VA_ARGS__, EV_VA_ARGS_RSEQ_N())
 #define EV_VA_ARGS_NARG_IMPL(...) EV_VA_ARGS_ARG_N(__VA_ARGS__)
@@ -140,7 +141,6 @@
       .free = EV_TYPE_FREE(Type), \
     }); \
   } while(0);
-#endif
 
 #if defined(EV_OS_WINDOWS)
 # define EV_BREAK_IF(cond) cond ? __debugbreak():0
@@ -163,3 +163,5 @@
 #else
 # define DEBUG_ASSERT
 #endif
+
+# define UNIMPLEMENTED() assert(!"Hit an unimplemented path")

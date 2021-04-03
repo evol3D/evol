@@ -12,9 +12,17 @@
 
 #include <evol/common/types/vec.h>
 
-#if !defined(__cplusplus)
 #include <evol/extern/sds.h>
-#endif
+
+// #if defined(MATH_SUPPORT)
+//TODO if use_math build option enabled
+
+#include <cglm/cglm.h>
+typedef vec3 Vec3;
+#define Vec3(x, y, z) (Vec3){x, y, z}
+
+// #endif
+
 
 typedef uint8_t  U8;
 typedef uint16_t U16;
@@ -29,7 +37,7 @@ typedef int64_t I64;
 typedef float   F32;
 typedef double  F64;
 
-#ifdef EV_PRECISION_HIGH
+#if defined(EV_PRECISION_HIGH)
 typedef F64 REAL;
 #else
 typedef F32 REAL;
@@ -38,9 +46,7 @@ typedef F32 REAL;
 typedef char *  STR;
 typedef const char *  CONST_STR;
 
-#if !defined(__cplusplus)
 typedef sds SDS;
-#endif
 
 typedef void(*FN_PTR)();
 typedef void* PTR;
@@ -103,7 +109,6 @@ typedef enum {
 } ev_type;
 
 
-#if !defined(__cplusplus)
 /*!
  * \brief A specialized vector for sds (dynamic strings)
  */
@@ -132,5 +137,3 @@ sdsvecdestr(void *elem)
  * vector with the default values for sds.
  */
 #define sdsvec_init() vec_init_impl(sizeof(sds), sdsveccopy, sdsvecdestr)
-
-#endif

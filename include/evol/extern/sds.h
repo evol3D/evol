@@ -39,50 +39,52 @@ extern const char *SDS_NOINIT;
 #include <sys/types.h>
 #include <stdarg.h>
 #include <stdint.h>
+#include <evol/common/ev_macros.h>
 
 typedef char *sds;
 
-#if defined(_MSC_VER)
-#pragma pack(push, 1)
-#define SDS_PACKED
+#if defined(EV_CC_MSVC)
+#define SDS_PACKED(decl) __pragma(pack(push, 1)) decl __pragma(pack(pop))
 #else
-#define SDS_PACKED __attribute__((__packed__))
+#define SDS_PACKED(decl) decl __attribute__((__packed__))
 #endif
 
 /* Note: sdshdr5 is never used, we just access the flags byte directly.
  * However is here to document the layout of type 5 SDS strings. */
-struct SDS_PACKED sdshdr5 {
+SDS_PACKED(struct sdshdr5 {
     unsigned char flags; /* 3 lsb of type, and 5 msb of string length */
     char buf[];
-};
-struct SDS_PACKED sdshdr8 {
+});
+
+SDS_PACKED(struct sdshdr8 {
     uint8_t len; /* used */
     uint8_t alloc; /* excluding the header and null terminator */
     unsigned char flags; /* 3 lsb of type, 5 unused bits */
     char buf[];
-};
-struct SDS_PACKED sdshdr16 {
+});
+
+SDS_PACKED(struct sdshdr16 {
     uint16_t len; /* used */
     uint16_t alloc; /* excluding the header and null terminator */
     unsigned char flags; /* 3 lsb of type, 5 unused bits */
     char buf[];
-};
-struct SDS_PACKED sdshdr32 {
+});
+
+SDS_PACKED(struct sdshdr32 {
     uint32_t len; /* used */
     uint32_t alloc; /* excluding the header and null terminator */
     unsigned char flags; /* 3 lsb of type, 5 unused bits */
     char buf[];
-};
-struct SDS_PACKED sdshdr64 {
+});
+
+SDS_PACKED(struct sdshdr64 {
     uint64_t len; /* used */
     uint64_t alloc; /* excluding the header and null terminator */
     unsigned char flags; /* 3 lsb of type, 5 unused bits */
     char buf[];
-};
+});
 
-#if defined(_MSC_VER)
-#pragma pack(pop)
-#endif
+#undef SDS_PACKED
 
 #define SDS_TYPE_5  0
 #define SDS_TYPE_8  1
@@ -91,7 +93,7 @@ struct SDS_PACKED sdshdr64 {
 #define SDS_TYPE_64 4
 #define SDS_TYPE_MASK 7
 #define SDS_TYPE_BITS 3
-#define SDS_HDR_VAR(T,s) struct sdshdr##T *sh = (void*)((s)-(sizeof(struct sdshdr##T)));
+#define SDS_HDR_VAR(T,s) struct sdshdr##T *sh = (struct sdshdr##T*)((s)-(sizeof(struct sdshdr##T)));
 #define SDS_HDR(T,s) ((struct sdshdr##T *)((s)-(sizeof(struct sdshdr##T))))
 #define SDS_TYPE_5_LEN(f) ((f)>>SDS_TYPE_BITS)
 
