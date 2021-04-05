@@ -69,6 +69,14 @@ evol_deps = [
   cute_files,
 ]
 
+remotery_dep = dependency('remotery')
+evol_deps += remotery_dep
+evol_c_args += '-DRMT_IMPL'
+
+if get_option('enable_profiling') == true
+  build_config.set('EV_PROFILING_ENABLED', true)
+endif
+
 if get_option('using_cglm')
   cglm_dep = dependency('cglm')
   evol_deps += cglm_dep

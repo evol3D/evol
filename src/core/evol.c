@@ -13,6 +13,8 @@
 #include <evol/common/ev_log.h>
 #include <evol/common/ev_globals.h>
 
+#include <evol/common/ev_profile.h>
+
 #include <evol/core/lualoader.h>
 #include <evol/core/modulemanager.h>
 #include <evol/core/namespace.h>
@@ -29,6 +31,7 @@ evstore_t *GLOBAL_STORE = NULL;
 
 struct evolengine {
   struct hashmap *namespaces;
+  Remotery *rmt;
 };
 
 evolengine_t *
@@ -38,6 +41,10 @@ evol_create()
   if (evengine) {
     GLOBAL_STORE = evstore_create();
     evengine->namespaces = hashmap_new(sizeof(NS), 8, 0, 0, NS_hash, NS_cmp, NULL);
+    rmtError error = rmt_CreateGlobalInstance(&(evengine->rmt));
+    if(error != RMT_ERROR_NONE) {
+      evengine->rmt = NULL;
+    }
   }
 
   evstore_entry_t evol_instance = {
@@ -72,6 +79,10 @@ evol_destroy(evolengine_t *evengine)
   if(evengine->namespaces) {
     hashmap_scan(evengine->namespaces, NS_free, NULL);
     hashmap_free(evengine->namespaces);
+  }
+
+  if(evengine->rmt) {
+    rmt_DestroyGlobalInstance(evengine->rmt);
   }
 
   free(evengine);
