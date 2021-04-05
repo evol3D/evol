@@ -37,9 +37,6 @@ else
   error('Unsupported compiler')
 endif
 
-configure_file(output: 'buildconfig.h',
-  configuration: build_config)
-
 # Subprojects
 subproject('luajit')
 luajit = dependency('luajit')
@@ -84,6 +81,9 @@ if get_option('colored_logging')
   evol_c_args += '-DLOG_USE_COLOR'
 endif
 
+configure_file(output: 'buildconfig.h',
+  configuration: build_config)
+
 evol_lib = shared_library('evol',
   evol_src,
   include_directories: include_directories(evol_incdir),
@@ -94,10 +94,15 @@ evol_lib = shared_library('evol',
   install : true,
 )
 
+evol_extern_deps = []
+foreach dep : evol_deps
+  evol_extern_deps += dep.partial_dependency(includes: true, compile_args: true)
+endforeach
+
 evollib_dep = declare_dependency(
   link_with: evol_lib,
   include_directories: evol_incdir,
-  dependencies: evol_deps,
+  dependencies: evol_extern_deps,
 )
 
 if meson.version().version_compare('>= 0.54.0')
