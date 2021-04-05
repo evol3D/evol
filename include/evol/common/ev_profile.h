@@ -1,5 +1,15 @@
 #include <evol/common/ev_macros.h>
 
+/*
+----------------------------WARNING----------------------------
+If remotery ever fails to export its functions on visual studio
+through __declspec(dllexport), then this is because of the fact
+that #23 had a hacky way to export statically linked functions
+from the evol DLL. If the exports start failing, then the issue
+should be checked for hints on how to fix it.
+More info: https://github.com/evol3D/evol/issues/23
+*/
+
 #if (defined(EV_PROFILING_ENABLED) && defined(EV_BUILD_RELEASE))
 #define RMT_ENABLED 1
 #else
