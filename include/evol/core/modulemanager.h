@@ -29,7 +29,8 @@
  *   is returned
  */
 EvModuleManagerResult
-ev_modulemanager_detect(const char *module_dir);
+ev_modulemanager_detect(
+    const char *module_dir);
 
 /*!
  * \brief Loads a module from the modules directory. Searches by name.
@@ -48,7 +49,8 @@ ev_modulemanager_detect(const char *module_dir);
  *   - If the process fails, `NULL` is returned.
  */
 evolmodule_t
-ev_modulemanager_openmodule_w_name(const char *modname);
+ev_modulemanager_openmodule_w_name(
+    const char *modname);
 
 /*!
  * \brief Loads a module from the modules directory. Searches by category.
@@ -67,7 +69,8 @@ ev_modulemanager_openmodule_w_name(const char *modname);
  *   - If the process fails, `NULL` is returned.
  */
 evolmodule_t
-ev_modulemanager_openmodule_w_category(const char *modcategory);
+ev_modulemanager_openmodule_w_category(
+    const char *modcategory);
 
 /*!
  * \brief Loads a module from the modules directory. Searches by both category and name.
@@ -91,4 +94,11 @@ ev_modulemanager_openmodule_w_category(const char *modcategory);
  *   - If the process fails, `NULL` is returned.
  */
 evolmodule_t
-ev_modulemanager_openmodule(const char *module_query);
+ev_modulemanager_openmodule(
+    const char *module_query);
+
+EvModuleManagerResult
+ev_modulemanager_init();
+
+void
+ev_modulemanager_deinit();

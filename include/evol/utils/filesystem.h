@@ -13,4 +13,7 @@
  * \param res The vector where the results will be stored
  */
 void
-find_contains_r(const char *module_dir, const char *query, vec_t *res_modules);
+find_contains_r(
+    const char *module_dir, 
+    const char *query, 
+    vec_t *res_modules);

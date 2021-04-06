@@ -1,9 +1,9 @@
 evol_src += [
   # Core
   'src/core/evol.c',
-  'src/core/lualoader.c',
   'src/core/modulemanager.c',
   'src/core/module.c',
+  'src/core/configloader.c',
   'src/core/evstore.c',
   'src/core/eventsystem.c',
   'src/core/event.c',
@@ -20,6 +20,7 @@ evol_src += [
 evol_src += [
   # Utils
   'src/utils/filesystem.c',
+  'src/utils/lua_evutils.c',
 ]
 
 evol_src += [

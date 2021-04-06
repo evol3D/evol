@@ -10,7 +10,8 @@
 #endif
 
 evolmodule_t
-ev_module_open(const char *modpath)
+ev_module_open(
+  CONST_STR modpath)
 {
   evolmodule_t res = 0;
 #if defined(EV_CC_GCC)
@@ -30,7 +31,8 @@ ev_module_open(const char *modpath)
 }
 
 void
-ev_module_close(evolmodule_t module)
+ev_module_close(
+  evolmodule_t module)
 {
 #if defined(EV_CC_GCC)
   dlclose(module);
@@ -42,7 +44,9 @@ ev_module_close(evolmodule_t module)
 }
 
 FN_PTR
-ev_module_getfn(evolmodule_t module, const char *fn_name)
+ev_module_getfn(
+  evolmodule_t module, 
+  CONST_STR fn_name)
 {
 #if defined(EV_CC_GCC)
   return (FN_PTR)dlsym(module, fn_name);
@@ -54,7 +58,9 @@ ev_module_getfn(evolmodule_t module, const char *fn_name)
 }
 
 PTR
-ev_module_getvar(evolmodule_t module, const char *var_name)
+ev_module_getvar(
+  evolmodule_t module, 
+  CONST_STR var_name)
 {
 #if defined(EV_CC_GCC)
   return (PTR)dlsym(module, var_name);

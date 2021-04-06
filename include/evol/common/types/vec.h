@@ -63,7 +63,10 @@ typedef void (*elem_destr)(void *d);
  * \returns A vector object
  */
 EVCOREAPI vec_t
-vec_init_impl(size_t elemsize, elem_copy copy, elem_destr destr);
+vec_init_impl(
+  size_t elemsize, 
+  elem_copy copy, 
+  elem_destr destr);
 
 
 /*!
@@ -81,7 +84,8 @@ vec_init_impl(size_t elemsize, elem_copy copy, elem_destr destr);
  * \returns A pointer to the first element in a vector
  */
 EVCOREAPI void *
-vec_iter_begin(vec_t v);
+vec_iter_begin(
+  vec_t v);
 
 /*!
  * \param v The vector that we want an iterator for
@@ -89,7 +93,8 @@ vec_iter_begin(vec_t v);
  * \returns A pointer to the memory block right after the last element in the vector
  */
 EVCOREAPI void *
-vec_iter_end(vec_t v);
+vec_iter_end(
+  vec_t v);
 
 /*!
  * \brief A function that increments an iterator to make it point to the next
@@ -99,7 +104,9 @@ vec_iter_end(vec_t v);
  * \param iter Reference to the iterator that is being incremented
  */
 EVCOREAPI void
-vec_iter_next(vec_t v, void **iter);
+vec_iter_next(
+  vec_t v, 
+  void **iter);
 
 #define vec_foreach(ref, vec) \
   for(ref = vec_iter_begin(vec); (void*)ref < vec_iter_end(vec); vec_iter_next(vec, (void**)&ref))
@@ -112,7 +119,8 @@ vec_iter_next(vec_t v, void **iter);
  * \param v The vector that is being destroyed
  */
 EVCOREAPI void
-vec_fini(vec_t v);
+vec_fini(
+  vec_t v);
 
 /*!
  * \brief A function that copies a value to the end of a vector. If a copy
@@ -128,7 +136,9 @@ vec_fini(vec_t v);
  * \returns An error code. If the operation was successful, then `0` is returned.
  */
 EVCOREAPI int32_t
-vec_push(vec_t *v, void *val);
+vec_push(
+  vec_t *v, 
+  void *val);
 
 /*!
  * \brief A function that returns the length of a vector
@@ -138,7 +148,8 @@ vec_push(vec_t *v, void *val);
  * \returns Current length of the vector
  */
 EVCOREAPI size_t
-vec_len(vec_t v);
+vec_len(
+  vec_t v);
 
 /*!
  * \brief A function that returns the capacity of a vector
@@ -148,7 +159,8 @@ vec_len(vec_t v);
  * \returns Current capacity of the vector
  */
 EVCOREAPI size_t
-vec_capacity(vec_t v);
+vec_capacity(
+  vec_t v);
 
 /*!
  * \brief Calls the free operation (if exists) on every element, then sets
@@ -159,7 +171,8 @@ vec_capacity(vec_t v);
  * \returns 0 on success
  */
 EVCOREAPI int32_t
-vec_clear(vec_t v);
+vec_clear(
+  vec_t v);
 
 /*!
  * \brief Sets the length of the vector to `len`.
@@ -174,7 +187,9 @@ vec_clear(vec_t v);
  * \returns 0 on success
  */
 EVCOREAPI int32_t
-vec_setlen(vec_t *v, size_t len);
+vec_setlen(
+  vec_t *v, 
+  size_t len);
 
 /*!
  * \brief Sets the capacity of the vector to `cap`.
@@ -185,7 +200,9 @@ vec_setlen(vec_t *v, size_t len);
  * \returns 0 on success
  */
 EVCOREAPI int32_t
-vec_setcapacity(vec_t *v, size_t cap);
+vec_setcapacity(
+  vec_t *v, 
+  size_t cap);
 
 /*!
  * \brief Grows the vector's capacity by a factor of `VEC_GROWTH_RATE`
@@ -195,4 +212,5 @@ vec_setcapacity(vec_t *v, size_t cap);
  * \returns 0 on success
  */
 EVCOREAPI int32_t
-vec_grow(vec_t *v);
+vec_grow(
+  vec_t *v);

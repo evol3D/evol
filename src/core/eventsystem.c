@@ -4,28 +4,36 @@
 #include <evol/threads/evolpthreads.h>
 
 I32
-ev_eventsystem_init(void);
+ev_eventsystem_init(
+  void);
 
 I32
-ev_eventsystem_deinit(void);
+ev_eventsystem_deinit(
+  void);
 
 I32
-ev_eventsystem_dispatch(ev_event_t event);
+ev_eventsystem_dispatch(
+  ev_event_t event);
 
 I32
-ev_eventsystem_subscribe(ev_eventlistener_t *listener);
+ev_eventsystem_subscribe(
+  ev_eventlistener_t *listener);
 
 I32
-ev_eventsystem_progress(void);
+ev_eventsystem_progress(
+  void);
 
 U32
-ev_eventsystem_sync(void);
+ev_eventsystem_sync(
+  void);
 
 I32
-ev_eventsystem_lock(void);
+ev_eventsystem_lock(
+  void);
 
 I32
-ev_eventsystem_unlock(void);
+ev_eventsystem_unlock(
+  void);
 
 struct ev_eventsystem EventSystem = {
   .init = ev_eventsystem_init,
@@ -42,25 +50,29 @@ struct ev_eventsystemdata {
 } EventSystemData;
 
 void
-event_destr(ev_event_t *event)
+event_destr(
+  ev_event_t *event)
 {
   free(event->data);
 }
 
 void
-vec_destr(vec_t *v)
+vec_destr(
+  vec_t *v)
 {
   vec_fini(*v);
 }
 
 void
-eventbuf_destr(dvec_t *buf)
+eventbuf_destr(
+  dvec_t *buf)
 {
   dvec_fini(*buf);
 }
 
 I32
-ev_eventsystem_init(void)
+ev_eventsystem_init(
+  void)
 {
   EventSystem.buffers = vec_init(dvec(ev_event_t), NULL, (elem_destr)eventbuf_destr);
   EventSystem.buffer_write_mutex = vec_init(pthread_mutex_t, NULL, (elem_destr)pthread_mutex_destroy);
@@ -72,7 +84,8 @@ ev_eventsystem_init(void)
 }
 
 I32
-ev_eventsystem_deinit(void)
+ev_eventsystem_deinit(
+  void)
 {
   ev_eventsystem_lock();
   vec_fini(EventSystem.buffers);
@@ -84,7 +97,8 @@ ev_eventsystem_deinit(void)
 }
 
 I32
-ev_eventsystem_dispatch(ev_event_t event)
+ev_eventsystem_dispatch(
+  ev_event_t event)
 {
   ev_eventtype_t primary_type = GET_PRIMARY_TYPE(event.type);
   pthread_mutex_lock(&((pthread_mutex_t *)EventSystem.buffer_write_mutex)[primary_type]);
@@ -93,7 +107,8 @@ ev_eventsystem_dispatch(ev_event_t event)
 }
 
 U32
-ev_eventsystem_sync(void)
+ev_eventsystem_sync(
+  void)
 {
   U32 prev_len = vec_len(EventSystem.buffers);
   U32 new_len = PRIMARY_EVENT_TYPE_COUNT + 1;
@@ -119,7 +134,8 @@ ev_eventsystem_sync(void)
 }
 
 I32
-ev_eventsystem_subscribe(ev_eventlistener_t *listener)
+ev_eventsystem_subscribe(
+  ev_eventlistener_t *listener)
 {
   ev_eventtype_t primary_type = GET_PRIMARY_TYPE(listener->type);
   ev_eventsystem_lock();
@@ -128,7 +144,8 @@ ev_eventsystem_subscribe(ev_eventlistener_t *listener)
 }
 
 I32
-ev_eventsystem_progress(void)
+ev_eventsystem_progress(
+  void)
 {
   ev_eventsystem_lock();
   for(U32 primary_type = 1; primary_type < vec_len(EventSystem.buffers); primary_type++) {
@@ -162,13 +179,15 @@ ev_eventsystem_progress(void)
 }
 
 I32
-ev_eventsystem_lock(void)
+ev_eventsystem_lock(
+  void)
 {
   pthread_mutex_lock(&EventSystemData.systemlock);
 }
 
 I32
-ev_eventsystem_unlock(void)
+ev_eventsystem_unlock(
+  void)
 {
   pthread_mutex_unlock(&EventSystemData.systemlock);
 }

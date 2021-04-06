@@ -2,12 +2,12 @@
  * \file modulemanager.c
  */
 #include <evol/core/modulemanager.h>
-#include <evol/core/lualoader.h>
 #include <evol/core/evstore.h>
 #include <evol/common/ev_log.h>
 #include <evol/core/evol.h>
 
 #include <evol/utils/filesystem.h>
+#include <evol/utils/lua_evutils.h>
 
 // Should this check be for the compiler or the operating system?
 // Or should we just change the library prefix/suffix from the
@@ -18,14 +18,37 @@
 #define LIB_EXTENSION ".so"
 #endif
 
+struct ev_ModuleManagerData {
+  lua_State *state;
+} ModuleManagerData = {
+  .state = NULL,
+};
+
+static const char modulesystem_script[] = 
+#include <src/lua/modulesystem.lua.h>
+
 EvModuleManagerResult
-ev_modulemanager_detect(const char *module_dir)
+ev_modulemanager_init()
+{
+  ModuleManagerData.state = ev_lua_newState(true);
+  assert(ModuleManagerData.state);
+
+  ev_lua_runstring(ModuleManagerData.state, (CONST_STR) modulesystem_script);
+}
+
+void
+ev_modulemanager_deinit()
+{
+  ev_lua_destroyState(&ModuleManagerData.state);
+}
+
+EvModuleManagerResult
+ev_modulemanager_detect(
+  CONST_STR module_dir)
 {
   sdsvec_t modules = sdsvec_init();
 
   find_contains_r(module_dir, LIB_EXTENSION, &modules);
-
-#include <src/lua/modulesystem.lua.h>
 
   sds *iter;
   vec_foreach(iter, modules) {
@@ -40,7 +63,7 @@ ev_modulemanager_detect(const char *module_dir)
     char *(*meta)()  = (char *(*)())ev_module_getfn(mod, "getMetadata");
     if (meta) {
       ev_log_debug("Module %s is a valid evol module", *iter);
-      ev_lua_callfn("add_module", "ss>i", *iter, meta(), &res);
+      ev_lua_callfn(ModuleManagerData.state, "add_module", "ss>i", *iter, meta(), &res);
     } else {
       ev_log_warn("Module %s is not a valid evol module", *iter);
     }
@@ -49,14 +72,12 @@ ev_modulemanager_detect(const char *module_dir)
     if (res) {
       // Do something?
     }
-
-    ev_lua_fnstack_pop();
   }
 
   vec_fini(modules);
 
   bool valid = false;
-  ev_lua_callfn("validate_modulesystem", ">b", &valid);
+  ev_lua_callfn(ModuleManagerData.state, "validate_modulesystem", ">b", &valid);
   if (!valid)
     return EV_MODULEMANAGER_ERROR_DEPENDENCY_INVALID;
 
@@ -64,48 +85,53 @@ ev_modulemanager_detect(const char *module_dir)
 }
 
 evolmodule_t
-ev_modulemanager_openmodule_w_name(const char *modname)
+ev_modulemanager_openmodule_w_name(
+  CONST_STR modname)
 {
   evolmodule_t module = NULL;
 
-  char *modpath;
-  ev_lua_callfn("get_module_with_name", "s>s", modname, &modpath);
+  sds modpath;
+  ev_lua_callfn(ModuleManagerData.state, "get_module_with_name", "s>s", modname, &modpath);
 
   if (modpath) {
     module = ev_module_open(modpath);
   }
 
-  ev_lua_fnstack_pop();
+  sdsfree(modpath);
+
   return module;
 }
 
 evolmodule_t
-ev_modulemanager_openmodule_w_category(const char *modcategory)
+ev_modulemanager_openmodule_w_category(
+  CONST_STR modcategory)
 {
   evolmodule_t module = NULL;
 
-  char *modpath;
-  ev_lua_callfn("get_module_with_category", "s>s", modcategory, &modpath);
+  sds modpath;
+  ev_lua_callfn(ModuleManagerData.state, "get_module_with_category", "s>s", modcategory, &modpath);
 
   if (modpath) {
     module = ev_module_open(modpath);
   }
 
-  ev_lua_fnstack_pop();
+  sdsfree(modpath);
+
   return module;
 }
 
 evolmodule_t
-ev_modulemanager_openmodule(const char *module_query)
+ev_modulemanager_openmodule(
+  CONST_STR module_query)
 {
   evolmodule_t module = NULL;
-  char *       modpath;
-  ev_lua_callfn("get_module", "s>s", module_query, &modpath);
+  sds modpath;
+  ev_lua_callfn(ModuleManagerData.state, "get_module", "s>s", module_query, &modpath);
 
   if (modpath) {
     module = ev_module_open(modpath);
   }
+  sdsfree(modpath);
 
-  ev_lua_fnstack_pop();
   return module;
 }

@@ -36,7 +36,8 @@ evstore_create();
  * \param store pointer to the `evstore_t` instance to be destroyed
  */
 EVCOREAPI void
-evstore_destroy(evstore_t *store);
+evstore_destroy(
+  evstore_t *store);
 
 /*!
  * \brief Gets the entry with the specified key
@@ -50,7 +51,10 @@ evstore_destroy(evstore_t *store);
  * - If an entry was not found, EV_STORE_ENTRY_NOTFOUND is returned
  */
 EVCOREAPI EvStoreResult
-evstore_get(evstore_t *store, const char *key, evstore_entry_t *res);
+evstore_get(
+  evstore_t *store, 
+  const char *key, 
+  evstore_entry_t *res);
 
 /*!
  * \brief Gets the entry with the specified key and checks for its type
@@ -66,7 +70,11 @@ evstore_get(evstore_t *store, const char *key, evstore_entry_t *res);
  * - If an entry was not found, EV_STORE_ENTRY_NOTFOUND is returned
  */
 EVCOREAPI EvStoreResult
-evstore_get_checktype(evstore_t *store, const char *key, ev_type type, evstore_entry_t *res);
+evstore_get_checktype(
+  evstore_t *store, 
+  const char *key, 
+  ev_type type, 
+  evstore_entry_t *res);
 
 /*!
  * \brief Sets/Adds the passed entry to the store
@@ -79,7 +87,9 @@ evstore_get_checktype(evstore_t *store, const char *key, ev_type type, evstore_e
  * - If an OOM is encountered, EV_STORE_ERROR_OOM is returned
  */
 EVCOREAPI EvStoreResult
-evstore_set(evstore_t *store, evstore_entry_t *entry);
+evstore_set(
+  evstore_t *store, 
+  evstore_entry_t *entry);
 
 /*!
  * \brief Frees all the entries that have a "free" field
@@ -90,4 +100,5 @@ evstore_set(evstore_t *store, evstore_entry_t *entry);
  * - In all cases, EV_STORE_SUCCESS is returned
  */
 EVCOREAPI EvStoreResult
-evstore_clear(evstore_t *store);
+evstore_clear(
+  evstore_t *store);

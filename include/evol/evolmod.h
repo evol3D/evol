@@ -2,6 +2,7 @@
 
 #include <evol/evol.h>
 #include <evol/core/evstore.h>
+#include <evol/core/configloader.h>
 #include <evol/common/ev_types.h>
 #include <evol/common/ev_macros.h>
 #include <evol/core/event.h>
@@ -29,17 +30,27 @@
 
 #if defined(EV_MODULE_DEFINE)
 
+// Create module-scoped global variables for configuration params
+#if defined (EVMOD_CONFIGVARS_DEF)
+# if defined(EV_CONFIG_VAR)
+#  undef EV_CONFIG_VAR
+# endif
+# define EV_CONFIG_VAR(v, t, d) static t v;
+# include <meta/evmod.configvars>
+# undef EV_CONFIG_VAR
+#endif
+
+// Define module types
 #if defined (EVMOD_TYPES_DEF)
 # if defined(TYPE)
 #  undef TYPE
 # endif
-
 # define TYPE(name, ...) typedef __VA_ARGS__ name;
 # include <meta/evmod.types>
-
 # undef TYPE
 #endif
 
+// Define module events
 #if defined (EVMOD_EVENTS_DEF)
 # if defined(PRIMARY)
 #  undef PRIMARY
@@ -47,7 +58,6 @@
 # if defined(SECONDARY)
 #  undef SECONDARY
 # endif
-
 # define PRIMARY EVENT_DECLARE_PRIMARY
 # define SECONDARY EVENT_DECLARE_SECONDARY
 # include <meta/evmod.events>
@@ -69,6 +79,7 @@ EV_BINDINGS;
 #  undef EV_NS_DEF_FN
 # endif
 
+// TODO if-def-undef for each of the lines in the following blocks
 # define FNPARAM_UNWRAP_IMPL_LAST2(type, name) type name 
 # define FNPARAM_UNWRAP_IMPL_LAST(...) FNPARAM_UNWRAP_IMPL_LAST2 __VA_ARGS__
 # define FNPARAM_UNWRAP_IMPL2(type, name) type name, 
@@ -94,14 +105,32 @@ EV_BINDINGS;
 EV_CONSTRUCTOR;
 EV_DESTRUCTOR;
 
-void STATIC_INIT()
+void 
+STATIC_INIT()
 {
 #if defined(EVMOD_EVENTS_DEF)
+# if defined(PRIMARY)
+#  undef PRIMARY
+# endif
+# if defined(SECONDARY)
+#  undef SECONDARY
+# endif
 # define PRIMARY EVENT_INIT_PRIMARY
 # define SECONDARY EVENT_INIT_SECONDARY
-# define TYPE(name, ...)
 # include <meta/evmod.events>
   EventSystem.sync();
+# undef PRIMARY
+# undef SECONDARY
+#endif
+
+#if defined(EVMOD_CONFIGVARS_DEF)
+# if defined(EV_CONFIG_VAR)
+#  undef EV_CONFIG_VAR
+# endif
+// If result != success, initialize variable with default
+# define EV_CONFIG_VAR(n, t, d) if(ev_configloader_get(EV_STRINGIZE(n), EV_TYPE_NAME(t), &n) != EV_CONFIGLOADER_SUCCESS) { n = EV_TYPE_NEW(t)(d); }
+# include <meta/evmod.configvars>
+# undef EV_CONFIG_VAR
 #endif
 
 #if defined(EVMOD_NAMESPACES_DEF)
@@ -151,7 +180,18 @@ evolengine_t *evol_instance = store_entry.data;
 #endif
 }
 
-void STATIC_DEINIT() {}
+void 
+STATIC_DEINIT() 
+{
+#if defined(EVMOD_CONFIGVARS_DEF)
+# if defined(EV_CONFIG_VAR)
+#  undef EV_CONFIG_VAR
+# endif
+# define EV_CONFIG_VAR(n, t, d) EV_TYPE_FREE(t)(n);
+# include <meta/evmod.configvars>
+# undef EV_CONFIG_VAR
+#endif
+}
 
 const char MODULE_DATA[] =
 #if defined(EVMOD_LUA)

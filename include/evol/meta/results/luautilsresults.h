@@ -1,5 +1,5 @@
 /*!
- * \file lualoaderresults.h
+ * \file luautilsresults.h
  */
 // Initialization Codes
 RESULT_VAL(SUCCESS, EV_SUCCESS)
