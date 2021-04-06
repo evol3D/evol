@@ -1,6 +1,6 @@
 #include <evol/common/types/dvec.h>
 #include <evol/common/ev_macros.h>
-#include <evolpthreads.h>
+#include <evol/threads/evolpthreads.h>
 
 struct dvec{
   vec_t buffers[2];

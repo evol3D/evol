@@ -1,4 +1,3 @@
-#define EV_CORE_FILE
 #include <evol/core/namespace.h>
 #include <hashmap.h>
 

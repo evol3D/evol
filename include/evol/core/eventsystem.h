@@ -8,8 +8,8 @@
 
 #include <evol/common/ev_log.h>
 
-#include <evolpthreads.h>
-#include <evolthreadpool.h>
+#include <evol/threads/evolpthreads.h>
+#include <evol/threads/evolthreadpool.h>
 
 #define DISPATCH_EVENT(T, ...) \
   if(!EVENT_TYPE(T)) { \

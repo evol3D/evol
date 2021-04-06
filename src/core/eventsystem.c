@@ -1,8 +1,7 @@
-#define EV_CORE_FILE
 #include <evol/core/evol.h>
 #include <evol/core/eventsystem.h>
 #include <evol/common/types/dvec.h>
-#include <evolpthreads.h>
+#include <evol/threads/evolpthreads.h>
 
 I32
 ev_eventsystem_init(void);

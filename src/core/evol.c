@@ -1,7 +1,6 @@
 /*!
  * \file evol.c
  */
-#define EV_CORE_FILE
 #include <evol/core/evol.h>
 #include <evol/core/eventsystem.h>
 #include <cargs.h>
@@ -21,7 +20,7 @@
 
 #include <evol/evolmod.h>
 
-#include <evolpthreads.h>
+#include <evol/threads/evolpthreads.h>
 
 #include <evol/meta/strings.h>
 #include <evol/meta/configvars.h>

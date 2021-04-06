@@ -1,4 +1,3 @@
-#define EV_CORE_FILE
 #include <evol/core/event.h>
 
 ev_eventtype_t EVENT_TYPE_COUNT = 0;

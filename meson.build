@@ -44,7 +44,6 @@ luajit = dependency('luajit')
 cargs_sub = subproject('cargs', default_options: ['default_library=static'])
 cargs = cargs_sub.get_variable('cargs_dep')
 
-evol_threads = dependency('evol_threads')
 hashmap = dependency('hashmap')
 dl = cc.find_library('dl', required: false)
 cute_files = dependency('cute_files')
@@ -58,11 +57,11 @@ evol_incdir = [
 
 subdir('src')
 
-evol_c_args = ['-fms-extensions']
+evol_c_args = ['-DEV_CORE_FILE']
+evol_c_args += ['-fms-extensions']
 
 evol_deps = [
   luajit,
-  evol_threads,
   cargs,
   hashmap,
   dl,

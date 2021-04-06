@@ -32,4 +32,10 @@ evol_src += [
   'src/extern/sds.c',
 ]
 
+evol_src += [
+  # Threads
+  'src/threads/evolpthreads.c',
+  'src/threads/evolthreadpool.c',
+]
+
 subdir('lua')
