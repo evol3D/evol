@@ -16,7 +16,10 @@ struct SearchStruct {
 
 // If the file's extension matches the extension we're looking for, then it is added
 // to the vector
-void extcheck_add2vec(cf_file_t* file, void* udata)
+void 
+extcheck_add2vec(
+  cf_file_t* file, 
+  PTR udata)
 {
   if (file->is_dir) {
     return;
@@ -30,7 +33,10 @@ void extcheck_add2vec(cf_file_t* file, void* udata)
 }
 
 void
-find_contains_r(const char *search_dir, const char *query, vec_t *res)
+find_contains_r(
+  CONST_STR search_dir, 
+  CONST_STR query, 
+  vec_t *res)
 {
   cf_traverse(search_dir, extcheck_add2vec, &(struct SearchStruct){
     .extension = query,

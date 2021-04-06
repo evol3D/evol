@@ -3,18 +3,17 @@
  */
 #include <evol/core/evol.h>
 #include <evol/core/eventsystem.h>
+#include <evol/core/configloader.h>
 #include <cargs.h>
 #include <string.h>
 #include <stdlib.h>
 #include <hashmap.h>
-
 
 #include <evol/common/ev_log.h>
 #include <evol/common/ev_globals.h>
 
 #include <evol/common/ev_profile.h>
 
-#include <evol/core/lualoader.h>
 #include <evol/core/modulemanager.h>
 #include <evol/core/namespace.h>
 
@@ -22,8 +21,6 @@
 
 #include <evol/threads/evolpthreads.h>
 
-#include <evol/meta/strings.h>
-#include <evol/meta/configvars.h>
 #include <time.h>
 
 evstore_t *GLOBAL_STORE = NULL;
@@ -67,7 +64,8 @@ evol_create()
 }
 
 void
-evol_destroy(evolengine_t *evengine)
+evol_destroy(
+  evolengine_t *evengine)
 {
   ev_log_debug("Destroying evol instance");
   if (!evengine)
@@ -88,55 +86,37 @@ evol_destroy(evolengine_t *evengine)
   ev_log_trace("Free'd memory used by the instance");
 }
 
-
 EvEngineResult
-evol_config_loadlua(CONST_STR configfile)
-{
-  EvLuaLoaderResult lua_res = ev_lua_runfile(configfile);
-
-  if (lua_res != EV_LUALOADER_SUCCESS) {
-    ev_log_error("LuaLoader error: %s", RES_STRING(EvLuaLoaderResult, lua_res));
-  }
-
-  ev_log_trace("Reading config file");
-
-  return EV_ENGINE_SUCCESS;
-}
-
-void evol_loadconfigvars(void)
-{
-  CONFIG_ENTRY(CONFIGVAR_NAME, EV_CORE_NAME, SDS, "evol-app")
-  CONFIG_ENTRY(CONFIGVAR_MODDIR, EV_CORE_MODULEDIR, SDS, ".")
-  CONFIG_ENTRY(CONFIGVAR_VERSION_MAJOR, EV_CORE_VERSION_MAJOR, U8, 0)
-  CONFIG_ENTRY(CONFIGVAR_VERSION_MINOR, EV_CORE_VERSION_MINOR, U8, 1)
-
-#ifdef EV_APP_CONFIG
-#include EV_APP_CONFIG
-#endif
-}
-
-EvEngineResult
-evol_init(evolengine_t *evengine)
+evol_init(
+  evolengine_t *evengine)
 {
   I32 res = 0;
 
-  EvLuaLoaderResult luaLoader_init_result = ev_lua_init();
-  if (luaLoader_init_result != EV_LUALOADER_SUCCESS) {
-    ev_log_error("LuaLoader error: %s",
-                 RES_STRING(EvLuaLoaderResult, luaLoader_init_result));
-    return EV_ENGINE_ERROR_LUA;
+  EvConfigLoaderResult configLoader_init_result = ev_configloader_init();
+  if (configLoader_init_result != EV_CONFIGLOADER_SUCCESS) {
+    ev_log_error("ConfigLoader error: %s",
+                  RES_STRING(EvConfigLoaderResult, configLoader_init_result));
+    DEBUG_ASSERT(configLoader_init_result == EV_CONFIGLOADER_SUCCESS);
+    return EV_ENGINE_ERROR_CONFIGLOADER;
+  }
+  EvModuleManagerResult moduleManager_init_result = ev_modulemanager_init();
+  if (moduleManager_init_result != EV_MODULEMANAGER_SUCCESS) {
+    ev_log_error("ModuleManager error: %s",
+                  RES_STRING(EvModuleManagerResult, moduleManager_init_result));
+    DEBUG_ASSERT(moduleManager_init_result == EV_MODULEMANAGER_SUCCESS);
+    return EV_ENGINE_ERROR_MODULEMANAGER;  
   }
 
   evstore_entry_t configfile;
-  res = evstore_get(GLOBAL_STORE, EV_CORE_CONFIGPATH, &configfile);
+  res = evstore_get(GLOBAL_STORE, "EV_CORE_CONFIGPATH", &configfile);
 
   if (res == EV_STORE_ENTRY_FOUND) {
-    EvEngineResult luaConfig_load_result = evol_config_loadlua(configfile.data);
-    if (luaConfig_load_result != EV_ENGINE_SUCCESS)
-      return luaConfig_load_result;
+    EvConfigLoaderResult configLoader_load_result = ev_configloader_loadfile(configfile.data);
+    if (configLoader_load_result != EV_ENGINE_SUCCESS) {
+      ev_log_error("ConfigLoader loading error: %s", RES_STRING(EvConfigLoaderResult, configLoader_load_result));
+      return EV_ENGINE_ERROR_CONFIGLOADER;
+    }
   }
-
-  evol_loadconfigvars();
 
   // Config loading should be the first thing to be done as multiple modules'
   // initialization depends on variables initialized in the config file
@@ -144,19 +124,24 @@ evol_init(evolengine_t *evengine)
   //TODO Error checking
   EventSystem.init();
 
-  evstore_entry_t moduledir;
-  res = evstore_get_checktype(GLOBAL_STORE, EV_CORE_MODULEDIR, EV_TYPE_SDS, &moduledir);
+  SDS module_dir = NULL; 
+  EvConfigLoaderResult configLoader_getmoddir_result = ev_configloader_get("module_dir", EV_TYPE_SDS, &module_dir);
 
-  if(res == EV_STORE_ENTRY_FOUND) {
-    EvModuleManagerResult modulemanager_det_result =
-      ev_modulemanager_detect(moduledir.data);
+  if(configLoader_getmoddir_result == EV_CONFIGLOADER_SUCCESS) {
+    ev_log_info("Module Directory Found: %s", module_dir);
+    EvModuleManagerResult modulemanager_det_result = ev_modulemanager_detect(module_dir);
     if (modulemanager_det_result != EV_MODULEMANAGER_SUCCESS) {
       ev_log_error("ModuleManager error: %s",
                   RES_STRING(EvModuleManagerResult, modulemanager_det_result));
       return EV_ENGINE_ERROR_MODULEMANAGER;
     }
   } else {
+    ev_log_error("module_dir couldn't be retrieved: %s", RES_STRING(EvConfigLoaderResult, configLoader_getmoddir_result));
     ev_log_error("Module directory not specified");
+  }
+
+  if(module_dir) {
+    sdsfree(module_dir);
   }
 
   evstore_entry_t core_active;
@@ -171,20 +156,31 @@ evol_init(evolengine_t *evengine)
 }
 
 void
-evol_deinit(evolengine_t *evengine)
+evol_deinit(
+  evolengine_t *evengine)
 {
   if (!evengine)
     return;
 
-  if (ev_lua_isactive()) {
-    ev_lua_deinit();
-  }
+  ev_modulemanager_deinit();
+  ev_configloader_deinit();
+
+  evstore_entry_t core_active;
+  core_active.key = "EV_CORE_ACTIVE";
+  core_active.type = EV_TYPE_I8;
+  core_active.data = (PTR)0;
+  core_active.free = EV_TYPE_FREE_I8;
+
+  evstore_set(GLOBAL_STORE, &core_active);
 
   EventSystem.deinit();
 }
 
 EvEngineResult
-evol_parse_args(evolengine_t *evengine, int argc, char **argv)
+evol_parse_args(
+  evolengine_t *evengine, 
+  int argc, 
+  char **argv)
 {
   if (argc <= 1)
     return EV_ENGINE_SUCCESS;
@@ -204,8 +200,8 @@ evol_parse_args(evolengine_t *evengine, int argc, char **argv)
         ev_log_debug("Option '%c' has value '%s'", 'c', passed_config);
 
         evstore_set(GLOBAL_STORE, &(evstore_entry_t){
-            .key  = EV_CORE_CONFIGPATH,
-            .type = EV_TYPE_STR,
+            .key  = "EV_CORE_CONFIGPATH",
+            .type = EV_TYPE_SDS,
             .data = sdsnew(passed_config),
             .free = sdsfree,
         });
@@ -223,13 +219,15 @@ evol_parse_args(evolengine_t *evengine, int argc, char **argv)
 }
 
 evolmodule_t
-evol_loadmodule(CONST_STR modquery)
+evol_loadmodule(
+  CONST_STR modquery)
 {
   return ev_modulemanager_openmodule(modquery);
 }
 
 void
-evol_unloadmodule(evolmodule_t module)
+evol_unloadmodule(
+  evolmodule_t module)
 {
   if (!module)
     return;
@@ -237,26 +235,36 @@ evol_unloadmodule(evolmodule_t module)
 }
 
 FN_PTR
-evol_getmodfunc(evolmodule_t module, CONST_STR func_name)
+evol_getmodfunc(
+  evolmodule_t module, 
+  CONST_STR func_name)
 {
   return ev_module_getfn(module, func_name);
 }
 
 PTR
-evol_getmodvar(evolmodule_t module, CONST_STR var_name)
+evol_getmodvar(
+  evolmodule_t module, 
+  CONST_STR var_name)
 {
   return ev_module_getvar(module, var_name);
 }
 
 U32
-evol_registerNS(evolengine_t *evengine, NS *ns)
+evol_registerNS(
+  evolengine_t *evengine, 
+  NS *ns)
 {
   //TODO handle oom
   hashmap_set(evengine->namespaces, ns);
 }
 
 U32
-evol_bindNSFunction(evolengine_t *evengine, STR nsName, STR fnName, FN_PTR fnHandle)
+evol_bindNSFunction(
+  evolengine_t *evengine, 
+  STR nsName, 
+  STR fnName, 
+  FN_PTR fnHandle)
 {
   NS  queryNS;
   queryNS.name = nsName;
@@ -276,7 +284,10 @@ evol_bindNSFunction(evolengine_t *evengine, STR nsName, STR fnName, FN_PTR fnHan
 }
 
 FN_PTR
-evol_getNSBinding(evolengine_t *evengine, STR nsName, STR fnName)
+evol_getNSBinding(
+  evolengine_t *evengine, 
+  STR nsName, 
+  STR fnName)
 {
   NS  queryNS;
   queryNS.name = nsName;

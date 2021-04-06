@@ -2,14 +2,20 @@
 #include <hashmap.h>
 
 U64
-NS_hash(const void *item, U64 seed0, U64 seed1)
+NS_hash(
+  const PTR item, 
+  U64 seed0, 
+  U64 seed1)
 {
   NS *ns = (NS *)item;
   return hashmap_murmur(ns->name, strlen(ns->name), seed0, seed1);
 }
 
-int
-NS_cmp(const void *item1, const void *item2, void *_udata)
+I32
+NS_cmp(
+  const PTR item1, 
+  const PTR item2, 
+  PTR _udata)
 {
   EV_UNUSED_PARAM(_udata);
   NS *ns1 = (NS *)item1;
@@ -19,7 +25,9 @@ NS_cmp(const void *item1, const void *item2, void *_udata)
 }
 
 bool
-NS_free(void *item, void *_udata)
+NS_free(
+  PTR item, 
+  PTR _udata)
 {
   EV_UNUSED_PARAM(_udata);
   if(item)
@@ -29,15 +37,21 @@ NS_free(void *item, void *_udata)
 
 
 U64
-NSFn_hash(const void *item, U64 seed0, U64 seed1)
+NSFn_hash(
+  const PTR item, 
+  U64 seed0, 
+  U64 seed1)
 {
   NSFn *fn = (NSFn *)item;
 
   return hashmap_murmur(fn->name, strlen(fn->name), seed0, seed1);
 }
 
-int
-NSFn_cmp(const void *item1, const void *item2, void *_udata)
+I32
+NSFn_cmp(
+  const PTR item1, 
+  const PTR item2, 
+  PTR _udata)
 {
   EV_UNUSED_PARAM(_udata);
   NSFn *fn1 = (NSFn *)item1;
@@ -47,7 +61,9 @@ NSFn_cmp(const void *item1, const void *item2, void *_udata)
 }
 
 bool
-NSFn_free(void *item, void *_udata)
+NSFn_free(
+  PTR item, 
+  PTR _udata)
 {
   EV_UNUSED_PARAM(_udata);
   if (item)
@@ -55,7 +71,9 @@ NSFn_free(void *item, void *_udata)
   return true;
 }
 
-U32 NamespaceInit(NS *ns)
+U32 
+NamespaceInit(
+  NS *ns)
 {
   if (!ns)
     return 0;
@@ -67,14 +85,20 @@ U32 NamespaceInit(NS *ns)
     return 1;
 }
 
-U32 NamespaceSetName(NS *ns, const char *name)
+U32 
+NamespaceSetName(
+  NS *ns, 
+  CONST_STR name)
 {
   if (ns->name)
     sdsfree(ns->name);
   ns->name = sdsnew(name);
 }
 
-U32 NamespaceAddFn(NS *ns, NSFn *fn)
+U32 
+NamespaceAddFn(
+  NS *ns, 
+  NSFn *fn)
 {
   if (!ns->functions)
     return 1;
@@ -91,7 +115,9 @@ U32 NamespaceAddFn(NS *ns, NSFn *fn)
 }
 
 #include <stdio.h>
-void _ev_printFunctionParams(NSFn *fn)
+void 
+_ev_printFunctionParams(
+  NSFn *fn)
 {
   NSFnParam *param;
   vec_foreach(param, fn->params) {
@@ -99,7 +125,9 @@ void _ev_printFunctionParams(NSFn *fn)
   }
 }
 
-void _ev_printFunction(NSFn *fn)
+void 
+_ev_printFunction(
+  NSFn *fn)
 {
   printf("\t%s %s(", fn->returnType, fn->name);
   _ev_printFunctionParams(fn);
@@ -107,7 +135,9 @@ void _ev_printFunction(NSFn *fn)
 }
 
 bool
-NSFn_print(void *item, void *_udata)
+NSFn_print(
+  PTR item, 
+  PTR _udata)
 {
   EV_UNUSED_PARAM(_udata);
   if (!item)
@@ -117,14 +147,18 @@ NSFn_print(void *item, void *_udata)
   return true;
 }
 
-void NamespacePrint(NS *ns)
+void 
+NamespacePrint(
+  NS *ns)
 {
   printf("\n%s {\n", ns->name);
   hashmap_scan(ns->functions, NSFn_print, NULL);
   printf("}\n\n");
 }
 
-void NamespaceDeinit(NS *ns)
+void 
+NamespaceDeinit(
+  NS *ns)
 {
   if (ns->name)
     sdsfree(ns->name);
@@ -137,14 +171,17 @@ void NamespaceDeinit(NS *ns)
 }
 
 void
-NSFnParam_cpy(NSFnParam *dst, const NSFnParam *src)
+NSFnParam_cpy(
+  NSFnParam *dst, 
+  const NSFnParam *src)
 {
   dst->name = sdsnew(src->name);
   dst->type = sdsnew(src->type);
 }
 
 void
-NSFnParam_destr(NSFnParam *data)
+NSFnParam_destr(
+  NSFnParam *data)
 {
   if (data->type)
     sdsfree(data->type);
@@ -153,7 +190,8 @@ NSFnParam_destr(NSFnParam *data)
 }
 
 U32
-FunctionInit(NSFn *fn)
+FunctionInit(
+  NSFn *fn)
 {
   fn->name = NULL;
   fn->returnType = NULL;
@@ -165,14 +203,20 @@ FunctionInit(NSFn *fn)
   return 0;
 }
 
-U32 FunctionSetName(NSFn *fn, const char *name)
+U32 
+FunctionSetName(
+  NSFn *fn, 
+  CONST_STR name)
 {
   if (fn->name)
     sdsfree(fn->name);
   fn->name = sdsnew(name);
 }
 
-U32 FunctionSetReturnType(NSFn *fn, const char *ret_type)
+U32 
+FunctionSetReturnType(
+  NSFn *fn, 
+  CONST_STR ret_type)
 {
   if (fn->returnType)
     sdsfree(fn->returnType);
@@ -180,7 +224,10 @@ U32 FunctionSetReturnType(NSFn *fn, const char *ret_type)
 }
 
 #include <stdarg.h>
-U32 FunctionPushParams(NSFn *fn, ...)
+U32 
+FunctionPushParams(
+  NSFn *fn, 
+  ...)
 {
   va_list args;
   va_start(args, fn);
@@ -195,12 +242,17 @@ U32 FunctionPushParams(NSFn *fn, ...)
   va_end(args);
 }
 
-U32 FunctionBind(NSFn *fn, FN_PTR fn_impl)
+U32 
+FunctionBind(
+  NSFn *fn, 
+  FN_PTR fn_impl)
 {
   fn->handle = fn_impl;
 }
 
-void FunctionDeinit(NSFn *fn)
+void 
+FunctionDeinit(
+  NSFn *fn)
 {
   if (fn->name)
     sdsfree(fn->name);

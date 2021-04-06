@@ -9,13 +9,21 @@ struct evstore {
   pthread_rwlock_t rwlock;
 };
 
-uint64_t evstore_entry_hash(const void* data, uint64_t seed0, uint64_t seed1)
+U64 
+evstore_entry_hash(
+  const PTR data, 
+  U64 seed0, 
+  U64 seed1)
 {
   const evstore_entry_t *entry = data;
   return hashmap_murmur(entry->key, strlen(entry->key), seed0, seed1);
 }
 
-int32_t evstore_entry_compare(const void* data1, const void* data2, void* _udata)
+I32 
+evstore_entry_compare(
+  const PTR data1, 
+  const PTR data2, 
+  PTR _udata)
 {
   (void)_udata;
   const evstore_entry_t *entry1 = data1;
@@ -24,7 +32,10 @@ int32_t evstore_entry_compare(const void* data1, const void* data2, void* _udata
   return strcmp(entry1->key, entry2->key);
 }
 
-bool entry_clear(const void *data, void *_udata)
+bool 
+entry_clear(
+  const PTR data, 
+  PTR _udata)
 {
   (void)_udata;
   evstore_entry_t *entry = data;
@@ -78,7 +89,8 @@ map_creation_failed:
 }
 
 void
-evstore_destroy(evstore_t *store)
+evstore_destroy(
+  evstore_t *store)
 {
   if(store == NULL)
     return;
@@ -90,7 +102,10 @@ evstore_destroy(evstore_t *store)
 }
 
 EvStoreResult
-evstore_get(evstore_t *store, const char *key, evstore_entry_t *res)
+evstore_get(
+  evstore_t *store, 
+  CONST_STR key, 
+  evstore_entry_t *res)
 {
   I32 res_err = 0;
   evstore_entry_t search_entry = {.key = key};
@@ -110,7 +125,11 @@ evstore_get(evstore_t *store, const char *key, evstore_entry_t *res)
 }
 
 EvStoreResult
-evstore_get_checktype(evstore_t *store, const char *key, ev_type type, evstore_entry_t *res)
+evstore_get_checktype(
+  evstore_t *store, 
+  CONST_STR key, 
+  ev_type type, 
+  evstore_entry_t *res)
 {
   I32 res_err = 0;
   evstore_entry_t search_entry = {.key = key};
@@ -132,7 +151,9 @@ evstore_get_checktype(evstore_t *store, const char *key, ev_type type, evstore_e
 }
 
 EvStoreResult
-evstore_set(evstore_t *store, evstore_entry_t *entry)
+evstore_set(
+  evstore_t *store, 
+  evstore_entry_t *entry)
 {
   pthread_rwlock_wrlock(&store->rwlock);
   evstore_entry_t *prev_entry = hashmap_set(store->map, entry);
@@ -152,7 +173,8 @@ evstore_set(evstore_t *store, evstore_entry_t *entry)
 }
 
 EvStoreResult
-evstore_clear(evstore_t *store)
+evstore_clear(
+  evstore_t *store)
 {
   pthread_rwlock_wrlock(&store->rwlock);
   hashmap_scan(store->map, entry_clear, NULL);

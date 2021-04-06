@@ -20,7 +20,8 @@ typedef PTR evolmodule_t;
  *   - If the process fails, `NULL` is returned.
  */
 evolmodule_t
-ev_module_open(const char *modpath);
+ev_module_open(
+    const char *modpath);
 
 /*!
  * \brief Unloads a module.
@@ -38,7 +39,8 @@ ev_module_open(const char *modpath);
  * \param module The module to unload
  */
 void
-ev_module_close(evolmodule_t module);
+ev_module_close(
+    evolmodule_t module);
 
 /*!
  * \brief Retrieve function from module
@@ -51,7 +53,9 @@ ev_module_close(evolmodule_t module);
  * is returned.
  */
 FN_PTR
-ev_module_getfn(evolmodule_t module, const char *fn_name);
+ev_module_getfn(
+    evolmodule_t module, 
+    const char *fn_name);
 
 /*!
  * \brief Retrieve global variable from module
@@ -64,4 +68,6 @@ ev_module_getfn(evolmodule_t module, const char *fn_name);
  * returned.
  */
 PTR
-ev_module_getvar(evolmodule_t module, const char *var_name);
+ev_module_getvar(
+    evolmodule_t module, 
+    const char *var_name);

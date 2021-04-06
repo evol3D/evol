@@ -5,7 +5,6 @@
 
 #include <evol/common/ev_types.h>
 #include <evol/common/ev_macros.h>
-#include <evol/meta/strings.h>
 #include <evol/core/evstore.h>
 #include <evol/core/namespace.h>
 
@@ -45,7 +44,8 @@ evol_create();
   \param engine Pointer to the `evolengine_t` object to be destroyed
  */
 EVCOREAPI void
-evol_destroy(evolengine_t *engine);
+evol_destroy(
+  evolengine_t *engine);
 
 /*!
   \brief Initializes an engine instance that was created using `evol_create()`
@@ -72,7 +72,8 @@ evol_destroy(evolengine_t *engine);
   - If a problem occured in the modulemanager, returns `EV_ENGINE_ERROR_MODULEMANAGER`
 */
 EVCOREAPI EvEngineResult
-evol_init(evolengine_t *engine);
+evol_init(
+  evolengine_t *engine);
 
 /*!
  * \brief Parse commandline arguments into engine config
@@ -89,7 +90,10 @@ evol_init(evolengine_t *engine);
  *   `EV_ENGINE_ERROR_OOM` is returned
  */
 EVCOREAPI EvEngineResult
-evol_parse_args(evolengine_t *engine, int argc, char **argv);
+evol_parse_args(
+  evolengine_t *engine, 
+  int argc, 
+  char **argv);
 
 /*!
  * \brief Deinitializes an `evolengine_t` instance
@@ -97,7 +101,8 @@ evol_parse_args(evolengine_t *engine, int argc, char **argv);
  * \param engine Pointer to the `evolengine_t` object to deinitialized
  */
 EVCOREAPI void
-evol_deinit(evolengine_t *engine);
+evol_deinit(
+  evolengine_t *engine);
 
 /*!
  * \brief Loads a module from the modules directory.
@@ -120,7 +125,8 @@ evol_deinit(evolengine_t *engine);
  *   - If the process fails, `NULL` is returned.
  */
 EVCOREAPI evolmodule_t
-evol_loadmodule(const char *modquery);
+evol_loadmodule(
+  const char *modquery);
 
 /*!
  * \brief Unloads a module.
@@ -138,7 +144,8 @@ evol_loadmodule(const char *modquery);
  * \param module The module to unload
  */
 EVCOREAPI void
-evol_unloadmodule(evolmodule_t module);
+evol_unloadmodule(
+  evolmodule_t module);
 
 /*!
  * \brief Retrieve function from module
@@ -151,7 +158,9 @@ evol_unloadmodule(evolmodule_t module);
  * is returned.
  */
 EVCOREAPI FN_PTR
-evol_getmodfunc(evolmodule_t module, const char *func_name);
+evol_getmodfunc(
+  evolmodule_t module, 
+  const char *func_name);
 
 /*!
  * \brief Retrieve variable from module
@@ -164,17 +173,27 @@ evol_getmodfunc(evolmodule_t module, const char *func_name);
  * is returned.
  */
 EVCOREAPI PTR
-evol_getmodvar(evolmodule_t module, const char *var_name);
+evol_getmodvar(
+  evolmodule_t module, 
+  const char *var_name);
 
 
 EVCOREAPI U32
-evol_registerNS(evolengine_t *evengine, NS *ns);
+evol_registerNS(
+  evolengine_t *evengine, NS *ns);
 
 EVCOREAPI U32
-evol_bindNSFunction(evolengine_t *evengine, STR nsName, STR fnName, FN_PTR fnHandle);
+evol_bindNSFunction(
+  evolengine_t *evengine, 
+  STR nsName, 
+  STR fnName, 
+  FN_PTR fnHandle);
 
 EVCOREAPI FN_PTR
-evol_getNSBinding(evolengine_t *evengine, STR nsName, STR fnName);
+evol_getNSBinding(
+  evolengine_t *evengine, 
+  STR nsName, 
+  STR fnName);
 
 #define EV_CHECK_CORE_ACTIVE do {                                                \
   evstore_entry_t core_active;                                                   \

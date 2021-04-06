@@ -17,4 +17,6 @@
  * [CRC32]: https://en.wikipedia.org/wiki/Cyclic_redundancy_check#CRC-32_algorithm "CRC32"
  */
 uint32_t
-checksum_crc32(const void *data, size_t sz);
+checksum_crc32(
+    const void *data, 
+    size_t sz);
