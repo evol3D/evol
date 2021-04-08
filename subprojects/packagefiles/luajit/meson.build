@@ -1,12 +1,18 @@
 project('luajit', ['c'], version: '2.0')
 
 cc = meson.get_compiler('c')
+fs = import('fs')
 
 if build_machine.system() == 'windows'
-  run_command('luajitbuild.bat')
+  command = 'luajitbuild.bat'
+  outfile = 'lua51.dll'
 else
   # Assuming everything else is POSIX
-  run_command('make')
+  error('Find the name of the outfile on non-windows')
+  command = 'make'
+endif
+if not fs.exists('src/'+outfile)
+  run_command(command)
 endif
 
 luajit_dep = declare_dependency(
@@ -19,6 +25,4 @@ luajit_dep = declare_dependency(
   include_directories: include_directories('src')
 )
 
-if meson.version().version_compare('>= 0.54.0')
-  meson.override_dependency('luajit', luajit_dep)
-endif
+meson.override_dependency('luajit', luajit_dep)
