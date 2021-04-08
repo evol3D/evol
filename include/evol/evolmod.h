@@ -193,11 +193,11 @@ STATIC_DEINIT()
 #endif
 }
 
-const char MODULE_DATA[] =
+CONST_STR MODULE_DATA =
 #if defined(EVMOD_LUA)
-#include EV_STRINGIZE(EVMOD_LUA)
+EV_STRINGIZE(EVMOD_LUA);
 #else
-{'\0'};
+"\0";
 #endif
 
 EVMODAPI const char * getMetadata() { return MODULE_DATA; }

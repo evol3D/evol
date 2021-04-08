@@ -119,3 +119,5 @@ endif
 if get_option('build_demo')
   subdir('demo')
 endif
+
+evolmod_subdir = meson.project_source_root() + '/export/module'
