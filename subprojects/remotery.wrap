@@ -1,7 +1,7 @@
 [wrap-git]
 directory = remotery
 url = https://github.com/Celtoys/Remotery
-revision = main
+revision = b55bea17488493c27f5fc5525e8831f46990872b
 depth = 1
 patch_directory = remotery
 

@@ -47,6 +47,8 @@ cargs = cargs_sub.get_variable('cargs_dep')
 dl = cc.find_library('dl', required: false)
 cute_files = dependency('cute_files')
 
+thread_dep = dependency('threads')
+
 evol_src = []
 
 evol_incdir = [
@@ -64,6 +66,7 @@ evol_deps = [
   cargs,
   dl,
   cute_files,
+  thread_dep,
 ]
 
 remotery_dep = dependency('remotery')
