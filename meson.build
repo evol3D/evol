@@ -48,6 +48,8 @@ hashmap = dependency('hashmap')
 dl = cc.find_library('dl', required: false)
 cute_files = dependency('cute_files')
 
+thread_dep = dependency('threads')
+
 evol_src = []
 
 evol_incdir = [
@@ -66,6 +68,7 @@ evol_deps = [
   hashmap,
   dl,
   cute_files,
+  thread_dep,
 ]
 
 remotery_dep = dependency('remotery')
