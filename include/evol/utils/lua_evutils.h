@@ -5,6 +5,7 @@
 
 #include <evol/common/ev_types.h>
 #include <luajit.h>
+#include <lautoc.h>
 
 #define RES_PREFIX EV_LUAUTILS_
 #define RES_FILE <evol/meta/results/luautilsresults.h>

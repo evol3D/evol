@@ -18,8 +18,38 @@
 //TODO if use_math build option enabled
 
 #include <cglm/cglm.h>
-typedef vec3 Vec3;
-#define Vec3(x, y, z) (Vec3){x, y, z}
+union EV_ALIGN(16) _ev_impl_vec3 {
+  struct {
+    float x;
+    float y;
+    float z;
+  };
+  struct {
+    float r;
+    float g;
+    float b;
+  };
+};
+
+union EV_ALIGN(16) _ev_impl_vec4 {
+  struct {
+    float x;
+    float y;
+    float z;
+    float w;
+  };
+  struct {
+    float r;
+    float g;
+    float b;
+    float a;
+  };
+};
+
+typedef union _ev_impl_vec3 Vec3;
+#define Vec3new(nx, ny, nz) (Vec3){.x = nx, .y = ny, .z = nz}
+typedef union _ev_impl_vec4 Vec4;
+/* #define Vec4(nx, ny, nz, nw) (Vec4){.x = nx, .y = ny, .z = nz, .w = nw} */
 
 // #endif
 

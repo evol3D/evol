@@ -21,6 +21,7 @@
 #define EV_IMPORT __declspec(dllimport)
 
 #define EV_UNUSED
+#define EV_ALIGN(x) __declspec(align(x))
 
 #elif defined(EV_CC_GCC)
 
@@ -28,6 +29,7 @@
 #define EV_IMPORT
 
 #define EV_UNUSED __attribute__((unused))
+#define EV_ALIGN(x) __attribute__((aligned(x)))
 
 #else
 
@@ -40,6 +42,8 @@
  * \brief Attribute to silence compiler warnings for unused functions/variables
  */
 #define EV_UNUSED
+
+#define EV_ALIGN(x)
 
 #endif
 
@@ -165,3 +169,11 @@
 #endif
 
 # define UNIMPLEMENTED() assert(!"Hit an unimplemented path")
+
+# define DEFER_I EV_CONCAT(_defer_i_, __LINE__)
+# define EV_DEFER(start, end) \
+  start;                      \
+  for(                        \
+  int DEFER_I = (0);          \
+  !DEFER_I;                   \
+  (DEFER_I++), end)

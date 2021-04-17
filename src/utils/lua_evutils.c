@@ -7,18 +7,25 @@
 #include <stdarg.h>
 #include <string.h>
 
+#include <lautoc.h>
 #include <lua.h>
 #include <luajit.h>
 #include <lualib.h>
 #include <lauxlib.h>
+
+// Helper for lua to be able to call luaA registered functions
+I32 C(lua_State *L) { return luaA_call_name(L, lua_tostring(L, 1)); }
 
 lua_State *
 ev_lua_newState(
   bool stdlibs)
 {
   lua_State *state = luaL_newstate();
+  luaA_open(state);
+
   if(state && stdlibs) {
     luaL_openlibs(state);
+    lua_register(state, "C", C);
   }
 
   return state;
@@ -28,6 +35,7 @@ EvLuaUtilsResult
 ev_lua_destroyState(
   lua_State **state)
 {
+  luaA_close(*state);
   lua_close(*state);
   *state = NULL;
   return EV_LUAUTILS_SUCCESS;
@@ -208,7 +216,7 @@ ev_lua_runstring(
 {
   I32 result = luaL_dostring(state, luaString);
   if (result) {
-    ev_log_error(lua_tostring(state, -1));
+    ev_log_error("Lua: Error: %s", lua_tostring(state, -1));
     return EV_LUAUTILS_EXECUTION_ERROR;
   }
 

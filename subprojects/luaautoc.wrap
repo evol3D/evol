@@ -1,0 +1,6 @@
+[wrap-git]
+url = https://github.com/evol3d/luaautoc
+revision = master
+
+[provides]
+dependency_names = luaautoc

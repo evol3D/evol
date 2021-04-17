@@ -4,4 +4,4 @@ option('using_cglm', type: 'boolean', value: true)
 
 option('enable_profiling', type: 'boolean', value: true)
 
-option('colored_logging', type: 'boolean', value: true)
+option('colored_logging', type: 'boolean', value: false)

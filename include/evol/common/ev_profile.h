@@ -26,3 +26,9 @@ enum CPUSampleFlags {
 
 #define ev_BeginCPUSample(Label, Flags) rmt_BeginCPUSample(Label, Flags)
 #define ev_EndCPUSample() rmt_EndCPUSample()
+
+#if RMT_ENABLED
+#define ev_ProfileCPU(Label, Flags) EV_DEFER(rmt_BeginCPUSample(Label, Flags), _rmt_EndCPUSample())
+#else
+#define ev_ProfileCPU(Label, Flags)
+#endif

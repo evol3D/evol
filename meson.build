@@ -3,7 +3,7 @@ version : '0.2',
 default_options : [
   'warning_level=3',
   'default_library=both',
-  'c_std=gnu11',
+  'c_std=gnu17',
   ])
 
 cc = meson.get_compiler('c')
@@ -44,7 +44,6 @@ luajit = dependency('luajit')
 cargs_sub = subproject('cargs', default_options: ['default_library=static'])
 cargs = cargs_sub.get_variable('cargs_dep')
 
-hashmap = dependency('hashmap')
 dl = cc.find_library('dl', required: false)
 cute_files = dependency('cute_files')
 
@@ -63,7 +62,6 @@ evol_c_args += ['-fms-extensions']
 evol_deps = [
   luajit,
   cargs,
-  hashmap,
   dl,
   cute_files,
 ]
@@ -71,6 +69,14 @@ evol_deps = [
 remotery_dep = dependency('remotery')
 evol_deps += remotery_dep
 evol_c_args += '-DRMT_IMPL'
+
+hashmap_dep = dependency('hashmap')
+evol_deps += hashmap_dep
+evol_c_args += '-DHM_IMPL'
+
+lac_dep = dependency('luaautoc')
+evol_deps += lac_dep
+evol_c_args += '-DLAC_IMPL'
 
 if get_option('enable_profiling') == true
   build_config.set('EV_PROFILING_ENABLED', true)
