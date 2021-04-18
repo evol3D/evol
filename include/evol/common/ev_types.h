@@ -47,9 +47,9 @@ union EV_ALIGN(16) _ev_impl_vec4 {
 };
 
 typedef union _ev_impl_vec3 Vec3;
-#define Vec3new(nx, ny, nz) (Vec3){.x = nx, .y = ny, .z = nz}
+#define Vec3new(nx, ny, nz)     (Vec3){.x = nx, .y = ny, .z = nz}
 typedef union _ev_impl_vec4 Vec4;
-/* #define Vec4(nx, ny, nz, nw) (Vec4){.x = nx, .y = ny, .z = nz, .w = nw} */
+#define Vec4new(nx, ny, nz, nw) (Vec4){.x = nx, .y = ny, .z = nz, .w = nw}
 
 // #endif
 
