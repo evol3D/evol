@@ -8,8 +8,8 @@ if build_machine.system() == 'windows'
   outfile = 'lua51.dll'
 else
   # Assuming everything else is POSIX
-  error('Find the name of the outfile on non-windows')
   command = 'make'
+  outfile = 'libluajit.so'
 endif
 if not fs.exists('src/'+outfile)
   run_command(command)
