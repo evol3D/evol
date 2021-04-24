@@ -7,6 +7,10 @@
 
 #pragma once
 
+#if defined(__cplusplus)
+extern "C" {
+#endif
+
 #include <stdio.h>
 #include <stdarg.h>
 #include <stdbool.h>
@@ -72,3 +76,7 @@ log_log(
   int line, 
   const char *fmt, 
   ...);
+
+#if defined(__cplusplus)
+}
+#endif

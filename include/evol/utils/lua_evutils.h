@@ -3,6 +3,10 @@
  */
 #pragma once
 
+#if defined(__cplusplus)
+extern "C" {
+#endif
+
 #include <evol/common/ev_types.h>
 #include <luajit.h>
 #include <lautoc.h>
@@ -82,3 +86,7 @@ ev_lua_callfn(
   CONST_STR fn_name, 
   CONST_STR sig, 
   ...);
+
+#if defined(__cplusplus)
+}
+#endif

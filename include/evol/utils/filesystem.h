@@ -3,6 +3,10 @@
  */
 #pragma once
 
+#if defined(__cplusplus)
+extern "C" {
+#endif
+
 #include <evol/common/ev_types.h>
 
 /*!
@@ -17,3 +21,7 @@ find_contains_r(
     const char *module_dir, 
     const char *query, 
     vec_t *res_modules);
+
+#if defined(__cplusplus)
+}
+#endif

@@ -1,6 +1,10 @@
 /*!
  * \file namespace_import.h
  */
+#if defined(__cplusplus)
+extern "C" {
+#endif
+
 #include <evol/common/ev_macros.h>
 #include <evol/core/module.h>
 #include <evol/core/namespace.h>
@@ -73,3 +77,7 @@
 # undef EV_NS_DEF_FN
 
 #undef NAMESPACE_MODULE
+
+#if defined(__cplusplus)
+}
+#endif

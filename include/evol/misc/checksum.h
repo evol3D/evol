@@ -3,6 +3,10 @@
  */
 #pragma once
 
+#if defined(__cplusplus)
+extern "C" {
+#endif
+
 #include <stdint.h>
 #include <stddef.h>
 
@@ -20,3 +24,7 @@ uint32_t
 checksum_crc32(
     const void *data, 
     size_t sz);
+
+#if defined(__cplusplus)
+}
+#endif

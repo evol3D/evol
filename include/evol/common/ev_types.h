@@ -1,6 +1,10 @@
 /*!  \file ev_types.h */
 #pragma once
 
+#if defined(__cplusplus)
+extern "C" {
+#endif
+
 #include <stdint.h>
 #include <stdbool.h>
 
@@ -19,31 +23,13 @@
 
 #include <cglm/cglm.h>
 union EV_ALIGN(16) _ev_impl_vec3 {
-  struct {
-    float x;
-    float y;
-    float z;
-  };
-  struct {
-    float r;
-    float g;
-    float b;
-  };
+  struct { float x, y, z; };
+  struct { float r, g, b; };
 };
 
 union EV_ALIGN(16) _ev_impl_vec4 {
-  struct {
-    float x;
-    float y;
-    float z;
-    float w;
-  };
-  struct {
-    float r;
-    float g;
-    float b;
-    float a;
-  };
+  struct { float x, y, z, w; };
+  struct { float r, g, b, a; };
 };
 
 typedef union _ev_impl_vec3 Vec3;
@@ -167,3 +153,7 @@ sdsvecdestr(void *elem)
  * vector with the default values for sds.
  */
 #define sdsvec_init() vec_init_impl(sizeof(sds), sdsveccopy, sdsvecdestr)
+
+#if defined(__cplusplus)
+}
+#endif

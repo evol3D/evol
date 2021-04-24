@@ -1,5 +1,9 @@
 #pragma once
 
+#if defined(__cplusplus)
+extern "C" {
+#endif
+
 #include <evol/common/ev_macros.h>
 
 #ifdef EV_OS_WINDOWS
@@ -132,3 +136,7 @@ EVCOREAPI void
 ms_to_timespec(
   struct timespec *ts, 
   unsigned int ms);
+
+#if defined(__cplusplus)
+}
+#endif

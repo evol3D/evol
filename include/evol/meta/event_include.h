@@ -1,6 +1,11 @@
 /*!
  * \file event_include.h
  */
+
+#if defined(__cplusplus)
+extern "C" {
+#endif
+
 #include <evol/common/ev_macros.h>
 #include <evol/core/eventsystem.h>
 #include <evol/core/module.h>
@@ -43,3 +48,7 @@ void EVENT_IMPORT_FN_NAME(evolmodule_t mod)
 
 #undef EVENT_IMPORT_FN_NAME
 #undef EVENT_MODULE
+
+#if defined(__cplusplus)
+}
+#endif

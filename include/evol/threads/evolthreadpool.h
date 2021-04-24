@@ -1,5 +1,9 @@
 #pragma once
 
+#if defined(__cplusplus)
+extern "C" {
+#endif
+
 #include <stdbool.h>
 #include <stddef.h>
 
@@ -29,3 +33,7 @@ ev_tpool_add_work(
 EVCOREAPI void 
 ev_tpool_wait(
     ev_tpool_t *tm);
+
+#if defined(__cplusplus)
+}
+#endif
