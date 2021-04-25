@@ -31,7 +31,6 @@ EVCOREAPI extern struct ev_eventsystem {
   I32 (*progress)(void);
   U32 (*sync)(void);
 
-
   vec(dvec(ev_event_t)) buffers;
   vec(vec(ev_eventlistener_t)) listeners;
 

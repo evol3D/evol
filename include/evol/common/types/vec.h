@@ -29,7 +29,7 @@ typedef void *vec_t;
  * vec(int) v = vec_init(int, 0, 0);
  * ```
  */
-#define vec(type) vec_t
+#define vec(T) T*
 
 /*!
  * \brief Signature of a function that copies data from one address to another.

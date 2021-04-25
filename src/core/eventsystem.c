@@ -124,8 +124,8 @@ ev_eventsystem_sync(
   res |= vec_setlen(&EventSystem.buffer_write_mutex, new_len);
 
   for(U32 i = prev_len; i < new_len; i++) {
-    ((vec_t *)EventSystem.listeners)[i] = vec_init(ev_eventlistener_t, NULL, NULL);
-    ((dvec_t *)EventSystem.buffers)[i] = dvec_init(ev_event_t, NULL, (elem_destr)event_destr);
+    EventSystem.listeners[i] = vec_init(ev_eventlistener_t, NULL, NULL);
+    EventSystem.buffers[i] = dvec_init(ev_event_t, NULL, (elem_destr)event_destr);
     res |= pthread_mutex_init(&((pthread_mutex_t *)EventSystem.buffer_write_mutex)[i], NULL);
   }
   ev_eventsystem_unlock();
@@ -139,7 +139,7 @@ ev_eventsystem_subscribe(
 {
   ev_eventtype_t primary_type = GET_PRIMARY_TYPE(listener->type);
   ev_eventsystem_lock();
-  vec_push(&((vec_t*)EventSystem.listeners)[primary_type], listener);
+  vec_push(&EventSystem.listeners[primary_type], listener);
   ev_eventsystem_unlock();
 }
 
@@ -149,11 +149,11 @@ ev_eventsystem_progress(
 {
   ev_eventsystem_lock();
   for(U32 primary_type = 1; primary_type < vec_len(EventSystem.buffers); primary_type++) {
-    dvec_t buffer = ((dvec_t *)EventSystem.buffers)[primary_type];
+    dvec_t buffer = EventSystem.buffers[primary_type];
     if(vec_len(dvec_write(buffer)) == 0) {
       continue;
     }
-    vec_t listeners_vec = ((vec_t*)EventSystem.listeners)[primary_type];
+    vec_t listeners_vec = EventSystem.listeners[primary_type];
 
     dvec_swap(buffer);
 
@@ -171,7 +171,7 @@ ev_eventsystem_progress(
   ev_tpool_wait(EventSystem.handlers_tpool);
 
   for(U32 primary_type = 1; primary_type < vec_len(EventSystem.buffers); primary_type++) {
-    vec_clear(dvec_read(((dvec_t *)EventSystem.buffers)[primary_type]));
+    vec_clear(dvec_read(EventSystem.buffers[primary_type]));
   }
   ev_eventsystem_unlock();
 

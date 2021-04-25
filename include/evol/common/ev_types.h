@@ -15,6 +15,7 @@ extern "C" {
 #include <evol/meta/resdef.h>
 
 #include <evol/common/types/vec.h>
+#include <evol/common/types/dvec.h>
 
 #include <evol/extern/sds.h>
 
