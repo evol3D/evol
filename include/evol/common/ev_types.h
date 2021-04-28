@@ -17,6 +17,8 @@ extern "C" {
 #include <vec.h>
 #include <evol/common/types/dvec.h>
 
+#include <hashmap.h>
+
 #include <evol/extern/sds.h>
 
 // #if defined(MATH_SUPPORT)
@@ -69,6 +71,38 @@ typedef void(*FN_PTR)();
 typedef void* PTR;
 
 typedef PTR evolmodule_t;
+
+HashFunctionDefine(U8)
+HashFunctionDefine(U16)
+HashFunctionDefine(U32)
+HashFunctionDefine(U64)
+
+HashFunctionDefine(I8)
+HashFunctionDefine(I16)
+HashFunctionDefine(I32)
+HashFunctionDefine(I64)
+
+HashFunctionDefine(F32)
+HashFunctionDefine(F64)
+
+HashFunctionDefine(PTR)
+HashFunctionDefine(FN_PTR)
+
+CmpFunctionDefine(U8)
+CmpFunctionDefine(U16)
+CmpFunctionDefine(U32)
+CmpFunctionDefine(U64)
+
+CmpFunctionDefine(I8)
+CmpFunctionDefine(I16)
+CmpFunctionDefine(I32)
+CmpFunctionDefine(I64)
+
+CmpFunctionDefine(F32)
+CmpFunctionDefine(F64)
+
+CmpFunctionDefine(PTR)
+CmpFunctionDefine(FN_PTR)
 
 #define EV_TYPE_NEW_DEFAULT(val) val
 #define EV_TYPE_FREE_DEFAULT NULL
