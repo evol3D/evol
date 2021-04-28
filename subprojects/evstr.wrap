@@ -1,0 +1,8 @@
+[wrap-git]
+directory = evstr
+url = https://github.com/evol3d/evstr
+revision = master
+patch_directory = evstr
+
+[provide]
+dependency_names = evstr

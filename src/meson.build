@@ -29,11 +29,6 @@ evol_src += [
 ]
 
 evol_src += [
-  # Extern
-  'src/extern/sds.c',
-]
-
-evol_src += [
   # Threads
   'src/threads/evolpthreads.c',
   'src/threads/evolthreadpool.c',

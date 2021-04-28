@@ -19,7 +19,7 @@ extern "C" {
 
 #include <hashmap.h>
 
-#include <evol/extern/sds.h>
+#include <evstr.h>
 
 // #if defined(MATH_SUPPORT)
 //TODO if use_math build option enabled

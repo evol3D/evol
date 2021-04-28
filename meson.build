@@ -85,6 +85,10 @@ vec_dep = dependency('vec')
 evol_deps += vec_dep
 evol_c_args += '-DVEC_IMPL'
 
+evstr_dep = dependency('evstr')
+evol_deps += evstr_dep
+evol_c_args += '-DEVSTR_IMPL'
+
 if get_option('enable_profiling') == true
   build_config.set('EV_PROFILING_ENABLED', true)
 endif
