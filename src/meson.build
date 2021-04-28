@@ -13,7 +13,6 @@ evol_src += [
 evol_src += [
   # Common
   'src/common/log.c',
-  'src/common/vec.c',
   'src/common/dvec.c',
 ]
 

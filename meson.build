@@ -81,6 +81,10 @@ lac_dep = dependency('luaautoc')
 evol_deps += lac_dep
 evol_c_args += '-DLAC_IMPL'
 
+vec_dep = dependency('vec')
+evol_deps += vec_dep
+evol_c_args += '-DVEC_IMPL'
+
 if get_option('enable_profiling') == true
   build_config.set('EV_PROFILING_ENABLED', true)
 endif
