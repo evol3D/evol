@@ -74,9 +74,9 @@ I32
 ev_eventsystem_init(
   void)
 {
-  EventSystem.buffers = vec_init(dvec(ev_event_t), NULL, (elem_destr)eventbuf_destr);
-  EventSystem.buffer_write_mutex = vec_init(pthread_mutex_t, NULL, (elem_destr)pthread_mutex_destroy);
-  EventSystem.listeners = vec_init(vec(ev_eventlistener_t), NULL, (elem_destr)vec_destr);
+  EventSystem.buffers = vec_init(dvec(ev_event_t), (elem_destr)eventbuf_destr);
+  EventSystem.buffer_write_mutex = vec_init(pthread_mutex_t, (elem_destr)pthread_mutex_destroy);
+  EventSystem.listeners = vec_init(vec(ev_eventlistener_t), (elem_destr)vec_destr);
   EventSystem.handlers_tpool = ev_tpool_create(0);
 
   pthread_mutex_init(&EventSystemData.systemlock, NULL);
@@ -124,7 +124,7 @@ ev_eventsystem_sync(
   res |= vec_setlen(&EventSystem.buffer_write_mutex, new_len);
 
   for(U32 i = prev_len; i < new_len; i++) {
-    EventSystem.listeners[i] = vec_init(ev_eventlistener_t, NULL, NULL);
+    EventSystem.listeners[i] = vec_init(ev_eventlistener_t);
     EventSystem.buffers[i] = dvec_init(ev_event_t, NULL, (elem_destr)event_destr);
     res |= pthread_mutex_init(&((pthread_mutex_t *)EventSystem.buffer_write_mutex)[i], NULL);
   }
