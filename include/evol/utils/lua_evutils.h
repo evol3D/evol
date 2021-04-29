@@ -41,8 +41,8 @@ ev_lua_runfile(
 EVCOREAPI EvLuaUtilsResult
 ev_lua_getstring(
   lua_State *state, 
-  CONST_STR globalName, 
-  STR *result);
+  const char *globalName, 
+  evstring *result);
 
 EVCOREAPI EvLuaUtilsResult
 ev_lua_getint(
@@ -64,10 +64,10 @@ ev_lua_getvar(
   PTR result);
 
 EVCOREAPI EvLuaUtilsResult
-ev_lua_getsdsvec(
+ev_lua_getstring_vec(
   lua_State *state,
   CONST_STR globalName, 
-  sdsvec_t *result);
+  vec(evstring) *result);
 
 EVCOREAPI EvLuaUtilsResult
 ev_lua_getlen(

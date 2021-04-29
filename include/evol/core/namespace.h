@@ -4,21 +4,20 @@
 
 #define NAMESPACE(name) EV_CONCAT(EVNS_, name)
 
-// TODO change all to sds
 typedef struct NamespaceFunctionParameter {
-  SDS type;
-  SDS name;
+  evstring type;
+  evstring name;
 } NSFnParam;
 
 typedef struct NamespaceFunction {
-  SDS name;
-  SDS returnType;
+  evstring name;
+  evstring returnType;
   FN_PTR handle;
   vec(NSFnParam) params;
 } NSFn;
 
 typedef struct Namespace {
-  SDS name;
+  evstring name;
   struct hashmap *functions;
 } NS;
 

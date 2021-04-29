@@ -72,7 +72,7 @@ ev_lua_runloadedfile(
 EvLuaUtilsResult
 ev_lua_runfile(
   lua_State *state,
-  CONST_STR filePath)
+  const char *filePath)
 {
   EvLuaUtilsResult loadResult = ev_lua_loadfile(state, filePath);
   if (loadResult != EV_LUAUTILS_SUCCESS)
@@ -82,39 +82,17 @@ ev_lua_runfile(
 }
 
 EvLuaUtilsResult
-ev_lua_getsds(
-  lua_State *state, 
-  CONST_STR globalName, 
-  SDS *result)
-{
-  EvLuaUtilsResult res;
-
-  lua_getglobal(state, globalName);
-
-  if (lua_isstring(state, -1)) {
-    *result = sdsnew(lua_tostring(state, -1));
-    res     = EV_LUAUTILS_SUCCESS;
-  } else if (lua_isnil(state, -1)) {
-    res = EV_LUAUTILS_GLOBAL_ERROR_NOTFOUND;
-  } else {
-    res = EV_LUAUTILS_GLOBAL_ERROR_WRONGTYPE;
-  }
-
-  return res;
-}
-
-EvLuaUtilsResult
 ev_lua_getstring(
   lua_State *state, 
-  CONST_STR globalName, 
-  STR *result)
+  const char *globalName, 
+  evstring *result)
 {
   EvLuaUtilsResult res;
 
   lua_getglobal(state, globalName);
 
   if (lua_isstring(state, -1)) {
-    *result = lua_tostring(state, -1);
+    *result = evstring_new(lua_tostring(state, -1));
     res     = EV_LUAUTILS_SUCCESS;
   } else if (lua_isnil(state, -1)) {
     res = EV_LUAUTILS_GLOBAL_ERROR_NOTFOUND;
@@ -170,10 +148,10 @@ ev_lua_getdouble(
 }
 
 EvLuaUtilsResult
-ev_lua_getsdsvec(
+ev_lua_getstring_vec(
   lua_State *state,
   CONST_STR globalName, 
-  sdsvec_t *result)
+  vec(evstring) *result)
 {
   U32 vecsize = 0;
   EvLuaUtilsResult getlen_res = ev_lua_getlen(state, globalName, &vecsize);
@@ -185,7 +163,7 @@ ev_lua_getsdsvec(
   for(U32 i = 1; i <= vecsize; ++i) {
     lua_pushnumber(state, i); // Push index
     lua_gettable(state, -2); // Replaces the index at the top of the stack with the result
-    CONST_STR val = lua_tostring(state, -1); // This should be checked but there is currently no need for that.
+    const char *val = lua_tostring(state, -1); // This should be checked but there is currently no need for that.
     vec_push(result, &val);
     lua_pop(state, 1); // Pop result
   }
@@ -295,7 +273,7 @@ endwhile:
       if (!lua_isstring(state, nres)) {
         luaL_error(state, "Wrong result type");
       }
-      *va_arg(vl, sds*) = sdsnew(lua_tostring(state, nres));
+      *va_arg(vl, evstring*) = evstring_new(lua_tostring(state, nres));
       break;
     case 'b':
       if (!lua_isboolean(state, nres)) {
@@ -329,19 +307,11 @@ ev_lua_getvar(
     case EV_TYPE_F64:
       res = ev_lua_getdouble(state, globalName, result);
       break;
-    case EV_TYPE_STR:
-    case EV_TYPE_CONST_STR:
-      // WARNING, THIS SHOULD NEVER BE USED. THE LUA GARBAGE COLLECTOR
-      // WILL SCREW YOU UP IF YOU'RE NOT CAREFUL. SDS IS A MUCH BETTER
-      // CHOICE FOR MOST CASES
-      ev_log_warn("Usage of one of (STR, CONST_STR) types detected in config. It is recommended to use SDS instead.");
+    case EV_TYPE_STRING:
       res = ev_lua_getstring(state, globalName, result);
       break;
-    case EV_TYPE_SDS:
-      res = ev_lua_getsds(state, globalName, result);
-      break;
     default:
-      ev_log_error("Unsupported Config type. Please pick a supported type (I64, F64, STR, CONST_STR, SDS)");
+      ev_log_error("Unsupported Config type. Please pick a supported type (I64, F64, STRING)");
       break;
   }
   return res;

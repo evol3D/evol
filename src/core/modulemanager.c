@@ -46,11 +46,11 @@ EvModuleManagerResult
 ev_modulemanager_detect(
   CONST_STR module_dir)
 {
-  sdsvec_t modules = sdsvec_init();
+  vec(evstring) modules = vec_init(evstring, evstring_veccopy, evstring_vecdestr);
 
   find_contains_r(module_dir, LIB_EXTENSION, &modules);
 
-  sds *iter;
+  evstring *iter;
   vec_foreach(iter, modules) {
     int res = 0;
 
@@ -90,14 +90,14 @@ ev_modulemanager_openmodule_w_name(
 {
   evolmodule_t module = NULL;
 
-  sds modpath;
+  evstring modpath = NULL;
   ev_lua_callfn(ModuleManagerData.state, "get_module_with_name", "s>s", modname, &modpath);
 
   if (modpath) {
     module = ev_module_open(modpath);
   }
 
-  sdsfree(modpath);
+  evstring_free(modpath);
 
   return module;
 }
@@ -108,14 +108,14 @@ ev_modulemanager_openmodule_w_category(
 {
   evolmodule_t module = NULL;
 
-  sds modpath;
+  evstring modpath = NULL;
   ev_lua_callfn(ModuleManagerData.state, "get_module_with_category", "s>s", modcategory, &modpath);
 
   if (modpath) {
     module = ev_module_open(modpath);
   }
 
-  sdsfree(modpath);
+  evstring_free(modpath);
 
   return module;
 }
@@ -125,13 +125,13 @@ ev_modulemanager_openmodule(
   CONST_STR module_query)
 {
   evolmodule_t module = NULL;
-  sds modpath;
+  evstring modpath = NULL;
   ev_lua_callfn(ModuleManagerData.state, "get_module", "s>s", module_query, &modpath);
 
   if (modpath) {
     module = ev_module_open(modpath);
   }
-  sdsfree(modpath);
+  evstring_free(modpath);
 
   return module;
 }

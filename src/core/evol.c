@@ -124,8 +124,8 @@ evol_init(
   //TODO Error checking
   EventSystem.init();
 
-  SDS module_dir = NULL; 
-  EvConfigLoaderResult configLoader_getmoddir_result = ev_configloader_get("module_dir", EV_TYPE_SDS, &module_dir);
+  evstring module_dir = NULL; 
+  EvConfigLoaderResult configLoader_getmoddir_result = ev_configloader_get("module_dir", EV_TYPE_STRING, &module_dir);
 
   if(configLoader_getmoddir_result == EV_CONFIGLOADER_SUCCESS) {
     ev_log_info("Module Directory Found: %s", module_dir);
@@ -141,7 +141,7 @@ evol_init(
   }
 
   if(module_dir) {
-    sdsfree(module_dir);
+    evstring_free(module_dir);
   }
 
   evstore_entry_t core_active;
@@ -201,9 +201,9 @@ evol_parse_args(
 
         evstore_set(GLOBAL_STORE, &(evstore_entry_t){
             .key  = "EV_CORE_CONFIGPATH",
-            .type = EV_TYPE_SDS,
-            .data = sdsnew(passed_config),
-            .free = sdsfree,
+            .type = EV_TYPE_STRING,
+            .data = evstring_new(passed_config),
+            .free = evstring_free,
         });
       } else {
         ev_log_warn("No value found for option '%c'. Ignoring...", 'c');

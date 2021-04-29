@@ -65,7 +65,7 @@ typedef F32 REAL;
 typedef char *  STR;
 typedef const char *  CONST_STR;
 
-typedef sds SDS;
+typedef evstring STRING;
 
 typedef void(*FN_PTR)();
 typedef void* PTR;
@@ -88,6 +88,11 @@ HashFunctionDefine(F64)
 HashFunctionDefine(PTR)
 HashFunctionDefine(FN_PTR)
 
+HashFunctionDefineCustom(evstring, pVar)
+{
+    return hashmap_murmur(*pVar, strlen(*pVar), seed0, seed1);           
+}
+
 CmpFunctionDefine(U8)
 CmpFunctionDefine(U16)
 CmpFunctionDefine(U32)
@@ -103,6 +108,11 @@ CmpFunctionDefine(F64)
 
 CmpFunctionDefine(PTR)
 CmpFunctionDefine(FN_PTR)
+
+CmpFunctionDefineCustom(evstring, pVar0, pVar1)
+{
+    return strcmp(*pVar0, *pVar1);
+}
 
 #define EV_TYPE_NEW_DEFAULT(val) val
 #define EV_TYPE_FREE_DEFAULT NULL
@@ -154,40 +164,29 @@ typedef enum {
   EV_TYPE_CONST_STR,
 #define EV_TYPE_NEW_CONST_STR EV_TYPE_NEW_DEFAULT
 #define EV_TYPE_FREE_CONST_STR EV_TYPE_FREE_DEFAULT
-  EV_TYPE_SDS,
-#define EV_TYPE_NEW_SDS sdsnew
-#define EV_TYPE_FREE_SDS sdsfree
+
+  EV_TYPE_STRING
+#define EV_TYPE_NEW_STRING(val) evstring_new(val)
+#define EV_TYPE_FREE_STRING evstring_free
 } ev_type;
 
-
 /*!
- * \brief A specialized vector for sds (dynamic strings)
- */
-typedef vec_t sdsvec_t;
-
-/*!
- * \brief elem_copy implementation for the `sds` type
+ * \brief elem_copy implementation for the `evstring` type
  */
 static inline void
-sdsveccopy(void *dst, const void *src)
+evstring_veccopy(void *dst, const void *src)
 {
-  *(sds*)dst = sdsnew(*(sds*)src);
+  *(evstring*)dst = evstring_new(*(const char **)src);
 }
 
 /*!
- * \brief elem_destr implementation for the `sds` type
+ * \brief elem_destr implementation for the `evstring` type
  */
 static inline void
-sdsvecdestr(void *elem)
+evstring_vecdestr(void *elem)
 {
-  sdsfree(*(sds*)elem);
+  evstring_free(*(evstring*)elem);
 }
-
-/*!
- * \brief `vec_init` equivalent that takes no arguments and initializes the
- * vector with the default values for sds.
- */
-#define sdsvec_init() vec_init_impl(sizeof(sds), sdsveccopy, sdsvecdestr)
 
 #if defined(__cplusplus)
 }

@@ -91,8 +91,8 @@ NamespaceSetName(
   CONST_STR name)
 {
   if (ns->name)
-    sdsfree(ns->name);
-  ns->name = sdsnew(name);
+    evstring_clear(&(ns->name));
+  evstring_pushstr(&(ns->name), name);
 }
 
 U32 
@@ -161,7 +161,7 @@ NamespaceDeinit(
   NS *ns)
 {
   if (ns->name)
-    sdsfree(ns->name);
+    evstring_free(ns->name);
   if (ns->functions) {
     hashmap_scan(ns->functions, NSFn_free, NULL);
     hashmap_free(ns->functions);
@@ -175,8 +175,8 @@ NSFnParam_cpy(
   NSFnParam *dst, 
   const NSFnParam *src)
 {
-  dst->name = sdsnew(src->name);
-  dst->type = sdsnew(src->type);
+  dst->name = evstring_clone(src->name);
+  dst->type = evstring_clone(src->type);
 }
 
 void
@@ -184,16 +184,16 @@ NSFnParam_destr(
   NSFnParam *data)
 {
   if (data->type)
-    sdsfree(data->type);
+    evstring_free(data->type);
   if (data->name)
-    sdsfree(data->name);
+    evstring_free(data->name);
 }
 
 U32
 FunctionInit(
   NSFn *fn)
 {
-  fn->name = NULL;
+  fn->name       = NULL;
   fn->returnType = NULL;
   fn->handle     = NULL;
   fn->params     = vec_init(NSFnParam, NSFnParam_cpy, NSFnParam_destr);
@@ -209,8 +209,8 @@ FunctionSetName(
   CONST_STR name)
 {
   if (fn->name)
-    sdsfree(fn->name);
-  fn->name = sdsnew(name);
+    evstring_clear(&(fn->name));
+  evstring_pushstr(&(fn->name), name);
 }
 
 U32 
@@ -219,8 +219,8 @@ FunctionSetReturnType(
   CONST_STR ret_type)
 {
   if (fn->returnType)
-    sdsfree(fn->returnType);
-  fn->returnType = sdsnew(ret_type);
+    evstring_clear(&(fn->returnType));
+  evstring_pushstr(&(fn->returnType), ret_type);
 }
 
 #include <stdarg.h>
@@ -255,9 +255,9 @@ FunctionDeinit(
   NSFn *fn)
 {
   if (fn->name)
-    sdsfree(fn->name);
+    evstring_free(fn->name);
   if (fn->returnType)
-    sdsfree(fn->returnType);
+    evstring_free(fn->returnType);
   if (fn->params)
     vec_fini(fn->params);
   fn->name   = NULL;

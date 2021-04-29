@@ -10,8 +10,8 @@
 #include <cute_files.h>
 
 struct SearchStruct {
-  const char *extension;
-  vec_t      *vector;
+  const char    *extension;
+  vec(evstring) *vector;
 };
 
 // If the file's extension matches the extension we're looking for, then it is added
@@ -27,8 +27,8 @@ extcheck_add2vec(
 
   struct SearchStruct *res = udata;
   if (cf_match_ext(file, res->extension)) {
-    char *path_p = file->path;
-    vec_push(res->vector, &path_p);
+    char *path = file->path;
+    vec_push(res->vector, &path);
   }
 }
 
@@ -36,7 +36,7 @@ void
 find_contains_r(
   CONST_STR search_dir, 
   CONST_STR query, 
-  vec_t *res)
+  vec(evstring) *res)
 {
   cf_traverse(search_dir, extcheck_add2vec, &(struct SearchStruct){
     .extension = query,
