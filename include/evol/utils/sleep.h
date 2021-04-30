@@ -7,11 +7,13 @@
 extern "C" {
 #endif
 
+#include <evol/common/ev_macros.h>
+
 /*!
  * \brief A function that suspends the thread for a given amount of milliseconds
  * \param milliseconds The amount of milliseconds to sleep
  */
-void
+EVCOREAPI void
 sleep_ms(
     double milliseconds);
 
