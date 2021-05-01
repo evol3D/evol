@@ -15,13 +15,18 @@ if not fs.exists('src/'+outfile)
   run_command(command)
 endif
 
-luajit_dep = declare_dependency(
-  dependencies: [
+luajit_deps = [
     cc.find_library('dl', required: false),
-    cc.find_library('luajit', dirs: meson.current_source_dir() + '/src'),
-    cc.find_library('lua51', dirs: meson.current_source_dir() + '/src', required: false),
     cc.find_library('m', required: false),
-  ],
+    cc.find_library('lua51', dirs: meson.current_source_dir() + '/src', required: false),
+]
+
+if build_machine.system() != 'windows'
+    luajit_deps += cc.find_library('luajit', dirs: meson.current_source_dir() + '/src')
+endif
+
+luajit_dep = declare_dependency(
+  dependencies: luajit_deps,
   include_directories: include_directories('src')
 )
 
