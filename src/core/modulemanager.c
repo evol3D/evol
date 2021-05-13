@@ -130,8 +130,8 @@ ev_modulemanager_openmodule(
 
   if (modpath) {
     module = ev_module_open(modpath);
+    evstring_free(modpath);
   }
-  evstring_free(modpath);
 
   return module;
 }
