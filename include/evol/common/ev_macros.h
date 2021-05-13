@@ -147,7 +147,7 @@
   } while(0);
 
 #if defined(EV_OS_WINDOWS)
-# define EV_BREAK_IF(cond) cond ? __debugbreak():0
+# define _EV_BREAK_IF(cond) cond ? __debugbreak():0
 #elif defined(EV_OS_LINUX)
 #include <signal.h>
 # define _EV_BREAK_IF(cond) cond ? raise(SIGTRAP):0
