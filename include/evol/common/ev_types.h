@@ -40,6 +40,15 @@ typedef union _ev_impl_vec3 Vec3;
 typedef union _ev_impl_vec4 Vec4;
 #define Vec4new(nx, ny, nz, nw) (Vec4){.x = nx, .y = ny, .z = nz, .w = nw}
 
+typedef float EV_ALIGN(16) Matrix4x4[4][4];
+
+#define PRINT_VEC3(v) \
+  printf("Vec3 %s = (%f, %f, %f)\n", EV_STRINGIZE(v), v.x, v.y, v.z)
+
+#define PRINT_VEC4(v) \
+  printf("Vec4 %s = (%f, %f, %f, %f)\n", EV_STRINGIZE(v), v.x, v.y, v.z, v.w)
+
+
 // #endif
 
 
