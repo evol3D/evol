@@ -177,3 +177,6 @@
   int DEFER_I = (0);          \
   !DEFER_I;                   \
   (DEFER_I++), end)
+
+#define IMPORT_MODULE_H <evol/meta/module_import.h>
+
