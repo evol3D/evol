@@ -47,8 +47,8 @@ extern "C" {
 #define IMPORT_NAMESPACE_FN(name) EV_CONCAT(IMPORT_NAMESPACE_, name)(evolmodule_t mod)
 
 # define EV_NS_DEF_BEGIN(name)                                                                                             \
-  NAMESPACE(name) *name;                                                                                                   \
-  void IMPORT_NAMESPACE_FN(name)                                                                                           \
+  static NAMESPACE(name) *name;                                                                                                   \
+  static void IMPORT_NAMESPACE_FN(name)                                                                                           \
   {                                                                                                                        \
     NAMESPACE(name)*(*getns)() = (NAMESPACE(name)*(*)())evol_getmodfunc(mod, EV_STRINGIZE(EV_CONCAT(GetNamespace, name))); \
     if (!getns)                                                                                                            \
