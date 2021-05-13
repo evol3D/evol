@@ -2,6 +2,7 @@
  * \file module.c
  */
 #include <evol/core/module.h>
+#include <evol/common/ev_log.h>
 
 #if defined(EV_CC_GCC)
 #include <dlfcn.h>
@@ -16,6 +17,9 @@ ev_module_open(
   evolmodule_t res = 0;
 #if defined(EV_CC_GCC)
   res = dlopen(modpath, RTLD_LAZY);
+  if(!res) {
+    ev_log_error("Couldn't load %s. Error: %s", modpath, dlerror());
+  }
 
 #elif defined(EV_CC_MSVC)
   res = LoadLibrary(modpath);
