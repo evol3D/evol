@@ -120,11 +120,12 @@ CmpFunctionDefine(FN_PTR)
 
 CmpFunctionDefineCustom(evstring, pVar0, pVar1)
 {
-    return strcmp(*pVar0, *pVar1);
+  (void)udata;
+  return strcmp(*pVar0, *pVar1);
 }
 
 #define EV_TYPE_NEW_DEFAULT(val) val
-#define EV_TYPE_FREE_DEFAULT NULL
+static inline void EV_TYPE_FREE_DEFAULT(void *_) {(void)_;}
 
 typedef enum {
   EV_TYPE_I8,
