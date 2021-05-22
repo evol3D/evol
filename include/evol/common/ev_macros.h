@@ -15,6 +15,12 @@
  */
 #define EV_ALIGNAS _Alignas
 
+/*!
+ * \brief A simple decorator with no purpose other than to make it known that
+ * a function parameter is not guaranteed to be aligned.
+ */
+#define EV_UNALIGNED
+
 #if defined(EV_CC_MSVC)
 
 #define EV_EXPORT __declspec(dllexport)
