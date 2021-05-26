@@ -81,6 +81,8 @@ typedef void* PTR;
 
 typedef PTR evolmodule_t;
 
+typedef U64 GenericHandle;
+
 HashFunctionDefine(U8)
 HashFunctionDefine(U16)
 HashFunctionDefine(U32)
@@ -96,6 +98,8 @@ HashFunctionDefine(F64)
 
 HashFunctionDefine(PTR)
 HashFunctionDefine(FN_PTR)
+
+HashFunctionDefine(GenericHandle)
 
 HashFunctionDefineCustom(evstring, pVar)
 {
@@ -117,6 +121,8 @@ CmpFunctionDefine(F64)
 
 CmpFunctionDefine(PTR)
 CmpFunctionDefine(FN_PTR)
+
+CmpFunctionDefine(GenericHandle)
 
 CmpFunctionDefineCustom(evstring, pVar0, pVar1)
 {
@@ -175,9 +181,13 @@ typedef enum {
 #define EV_TYPE_NEW_CONST_STR EV_TYPE_NEW_DEFAULT
 #define EV_TYPE_FREE_CONST_STR EV_TYPE_FREE_DEFAULT
 
-  EV_TYPE_STRING
+  EV_TYPE_STRING,
 #define EV_TYPE_NEW_STRING(val) evstring_new(val)
 #define EV_TYPE_FREE_STRING evstring_free
+
+  EV_TYPE_GenericHandle,
+#define EV_TYPE_NEW_GenericHandle EV_TYPE_NEW_DEFAULT
+#define EV_TYPE_FREE_GenericHandle EV_TYPE_FREE_DEFAULT
 } ev_type;
 
 /*!
