@@ -43,8 +43,9 @@ extern "C" {
 # undef EV_NS_DEF_END
 # undef EV_NS_DEF_FN
 
-#define IMPORT_NAMESPACE(name, mod) EV_CONCAT(IMPORT_NAMESPACE_, name)(mod)
+#define IMPORT_NAMESPACE(name, mod) EV_CONCAT(IMPORT_NAMESPACE_, name)(mod);
 #define IMPORT_NAMESPACE_FN(name) EV_CONCAT(IMPORT_NAMESPACE_, name)(evolmodule_t mod)
+#define imports(module, ...) FOREACH_UDATA(IMPORT_NAMESPACE, module, EV_EXPAND __VA_ARGS__)
 
 # define EV_NS_DEF_BEGIN(name)                                                                                             \
   static NAMESPACE(name) *name;                                                                                                   \
