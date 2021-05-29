@@ -53,7 +53,8 @@
 
 #endif
 
-#define EV_UNUSED_PARAM(A) (void)A
+#define EV_UNUSED_PARAM(A) (void)A;
+#define EV_UNUSED_PARAMS(...) FOREACH(EV_UNUSED_PARAM, __VA_ARGS__)
 
 #if defined(EV_CORE_FILE)
 #define EVCOREAPI EV_EXPORT
@@ -120,7 +121,7 @@
 #define FOREACH_LAST15(OP, LAST_OP, a, ...) OP(a) FOREACH_LAST14(OP, LAST_OP, __VA_ARGS__)
 #define FOREACH_LAST(OP, LAST_OP, ...) EV_CONCAT(FOREACH_LAST, EV_VA_ARGS_NARG(__VA_ARGS__))(OP, LAST_OP, __VA_ARGS__)
 
-#define FOREACH1(OP, a, ...) OP(a)
+#define FOREACH1(OP, a     ) OP(a)
 #define FOREACH2(OP, a, ...) OP(a) FOREACH1(OP, __VA_ARGS__)
 #define FOREACH3(OP, a, ...) OP(a) FOREACH2(OP, __VA_ARGS__)
 #define FOREACH4(OP, a, ...) OP(a) FOREACH3(OP, __VA_ARGS__)
