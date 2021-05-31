@@ -1,12 +1,13 @@
 #pragma once
 
 #include <stddef.h>
+#include <evol/common/ev_macros.h>
 
-void *
+EVCOREAPI void *
 aligned_malloc(
     size_t bytes, 
     size_t alignment);
 
-void *
+EVCOREAPI void *
 aligned_free(
     void *alig_ptr);

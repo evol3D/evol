@@ -21,6 +21,7 @@ evol_src += [
   'src/utils/filesystem.c',
   'src/utils/lua_evutils.c',
   'src/utils/sleep.c',
+  'src/utils/aligned_alloc.c',
 ]
 
 evol_src += [
