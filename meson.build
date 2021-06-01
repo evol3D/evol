@@ -89,6 +89,10 @@ evstr_dep = dependency('evstr')
 evol_deps += evstr_dep
 evol_c_args += '-DEVSTR_IMPL'
 
+evjson_dep = dependency('evjson')
+evol_deps += evjson_dep
+evol_c_args += '-DEVJSON_IMPL'
+
 if get_option('enable_profiling') == true
   build_config.set('EV_PROFILING_ENABLED', true)
 endif
