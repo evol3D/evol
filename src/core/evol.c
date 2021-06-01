@@ -23,12 +23,22 @@
 
 #include <time.h>
 
+#include <evjson.h>
+
 evstore_t *GLOBAL_STORE = NULL;
 
 struct evolengine {
   struct hashmap *namespaces;
   Remotery *rmt;
 };
+
+EV_UNUSED void
+dummy_linker_force_import(
+    void)
+{
+  evjson_t *_json = evjs_init();
+  evjs_fini(_json);
+}
 
 evolengine_t *
 evol_create()
