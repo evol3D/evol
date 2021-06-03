@@ -34,6 +34,25 @@ ev_module_open(
   return res;
 }
 
+PTR
+ev_module_gethandle(
+    CONST_STR modpath)
+{
+  evolmodule_t res = 0;
+#if defined(EV_CC_GCC)
+  res = dlopen(modpath, RTLD_NOLOAD | RTLD_LAZY);
+  if(res) {
+    dlclose(res);
+  }
+#elif defined(EV_CC_MSVC)
+  res = GetModuleHandle(modpath);
+#else
+#error("Unknown compiler. Can't get module handle")
+#endif
+  return res;
+}
+
+
 void
 ev_module_close(
   evolmodule_t module)

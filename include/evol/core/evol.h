@@ -129,6 +129,13 @@ evol_loadmodule(
   const char *modquery);
 
 /*!
+ * \brief Same as `evol_loadmodule` but doesn't affect the refcount
+ */
+EVCOREAPI evolmodule_t
+evol_loadmodule_weak(
+  const char *modquery);
+
+/*!
  * \brief Unloads a module.
  *
  * \details Due to modules internally being dynamic libraries, the operating

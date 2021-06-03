@@ -97,6 +97,10 @@ evolmodule_t
 ev_modulemanager_openmodule(
     const char *module_query);
 
+evolmodule_t
+ev_modulemanager_getmodulehandle(
+  CONST_STR module_query);
+
 EvModuleManagerResult
 ev_modulemanager_init();
 

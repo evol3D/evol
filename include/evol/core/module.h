@@ -24,6 +24,21 @@ ev_module_open(
     const char *modpath);
 
 /*!
+ * \brief Get handle to an already loaded module
+ *
+ * Mostly the same as `ev_module_open` but without the refcount
+ *
+ * \param modpath Path to the module
+ *
+ * \returns
+ *   - If the module was found in memory, then its handle is returned.
+ *   - If the process fails, `NULL` is returned.
+ */
+evolmodule_t
+ev_module_gethandle(
+    const char *modpath);
+
+/*!
  * \brief Unloads a module.
  *
  * \details Due to modules internally being dynamic libraries, the operating

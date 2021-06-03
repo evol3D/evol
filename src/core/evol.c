@@ -235,6 +235,13 @@ evol_loadmodule(
   return ev_modulemanager_openmodule(modquery);
 }
 
+EVCOREAPI evolmodule_t
+evol_loadmodule_weak(
+  const char *modquery)
+{
+  return ev_modulemanager_getmodulehandle(modquery);
+}
+
 void
 evol_unloadmodule(
   evolmodule_t module)

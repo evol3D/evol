@@ -135,3 +135,19 @@ ev_modulemanager_openmodule(
 
   return module;
 }
+
+evolmodule_t
+ev_modulemanager_getmodulehandle(
+  CONST_STR module_query)
+{
+  evolmodule_t module = NULL;
+  evstring modpath = NULL;
+  ev_lua_callfn(ModuleManagerData.state, "get_module", "s>s", module_query, &modpath);
+
+  if (modpath) {
+    module = ev_module_gethandle(modpath);
+    evstring_free(modpath);
+  }
+
+  return module;
+}
