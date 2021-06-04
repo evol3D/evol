@@ -1,0 +1,8 @@
+[wrap-git]
+directory = luadbg
+url = https://github.com/mo7sen/debugger.lua
+revision = master
+patch_directory = luadbg
+
+[provide]
+dependency_names = luadbg

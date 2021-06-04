@@ -40,6 +40,8 @@ endif
 # Subprojects
 subproject('luajit')
 luajit = dependency('luajit')
+subproject('luadbg')
+luadbg = dependency('luadbg')
 
 cargs_sub = subproject('cargs', default_options: ['default_library=static'])
 cargs = cargs_sub.get_variable('cargs_dep')
@@ -63,6 +65,8 @@ evol_c_args += ['-fms-extensions']
 
 evol_deps = [
   luajit,
+  luadbg,
+
   cargs,
   dl,
   cute_files,
