@@ -8,6 +8,7 @@
 #include <string.h>
 
 #include <lautoc.h>
+#include <debugger_lua.h>
 #include <lua.h>
 #include <luajit.h>
 #include <lualib.h>
@@ -23,13 +24,34 @@ ev_lua_newState(
   lua_State *state = luaL_newstate();
   luaA_open(state);
 
-  if(state && stdlibs) {
-    luaL_openlibs(state);
-    lua_register(state, "C", C);
+  if(state) {
+    if(stdlibs) {
+      luaL_openlibs(state);
+      lua_register(state, "C", C);
+    }
+#if defined(EV_BUILD_DEBUG)
+    dbg_setup(state, "debugger", "dbg", NULL, NULL);
+#endif
   }
 
   return state;
 }
+
+int
+ev_lua_pcall(
+    lua_State *L,
+    int nargs,
+    int nresults,
+    int errfunc)
+{
+#if defined(EV_BUILD_DEBUG)
+  return dbg_pcall(L, nargs, nresults, errfunc);
+#else
+  return lua_pcall(L, nargs, nresults, errfunc);
+#endif
+}
+
+
 
 EvLuaUtilsResult
 ev_lua_destroyState(
@@ -59,7 +81,7 @@ EvLuaUtilsResult
 ev_lua_runloadedfile(
   lua_State *state)
 {
-  int result = lua_pcall(state, 0, 0, 0);
+  int result = ev_lua_pcall(state, 0, 0, 0);
 
   if (result) {
     ev_log_error(lua_tostring(state, -1));
@@ -243,7 +265,7 @@ ev_lua_callfn(
 endwhile:
 
   nres = strlen(sig);
-  if (lua_pcall(state, narg, nres, 0) != 0) {
+  if (ev_lua_pcall(state, narg, nres, 0) != 0) {
     luaL_error(state, "error running function `%s': %s", fn_name, lua_tostring(state, -1));
   }
 

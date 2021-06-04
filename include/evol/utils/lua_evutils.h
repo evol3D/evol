@@ -87,6 +87,13 @@ ev_lua_callfn(
   CONST_STR sig, 
   ...);
 
+EVCOREAPI int
+ev_lua_pcall(
+    lua_State *L,
+    int nargs,
+    int nresults,
+    int errfunc);
+
 #if defined(__cplusplus)
 }
 #endif

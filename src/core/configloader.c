@@ -11,7 +11,7 @@ struct ev_ConfigLoaderData {
 EvConfigLoaderResult
 ev_configloader_init()
 {
-    ConfigLoaderData.state = ev_lua_newState(false);
+    ConfigLoaderData.state = ev_lua_newState(true);
     assert(ConfigLoaderData.state);
     return EV_CONFIGLOADER_SUCCESS;
 }
