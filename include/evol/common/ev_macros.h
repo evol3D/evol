@@ -104,7 +104,7 @@
 
 #define EV_EXPAND(...) __VA_ARGS__
 
-#define FOREACH_LAST1(OP, LAST_OP, a, ...) LAST_OP(a)
+#define FOREACH_LAST1(OP, LAST_OP, a     ) LAST_OP(a)
 #define FOREACH_LAST2(OP, LAST_OP, a, ...) OP(a) FOREACH_LAST1(OP, LAST_OP, __VA_ARGS__)
 #define FOREACH_LAST3(OP, LAST_OP, a, ...) OP(a) FOREACH_LAST2(OP, LAST_OP, __VA_ARGS__)
 #define FOREACH_LAST4(OP, LAST_OP, a, ...) OP(a) FOREACH_LAST3(OP, LAST_OP, __VA_ARGS__)
@@ -138,7 +138,7 @@
 #define FOREACH15(OP, a, ...) OP(a) FOREACH14(OP, __VA_ARGS__)
 #define FOREACH(OP, ...) EV_CONCAT(FOREACH, EV_VA_ARGS_NARG(__VA_ARGS__))(OP, __VA_ARGS__)
 
-#define FOREACH_UDATA1(OP, udata, a, ...) OP(a, udata)
+#define FOREACH_UDATA1(OP, udata, a     ) OP(a, udata)
 #define FOREACH_UDATA2(OP, udata, a, ...) OP(a, udata) FOREACH_UDATA1(OP, udata, __VA_ARGS__)
 #define FOREACH_UDATA3(OP, udata, a, ...) OP(a, udata) FOREACH_UDATA2(OP, udata, __VA_ARGS__)
 #define FOREACH_UDATA4(OP, udata, a, ...) OP(a, udata) FOREACH_UDATA3(OP, udata, __VA_ARGS__)
