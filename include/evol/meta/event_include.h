@@ -30,7 +30,7 @@ extern "C" {
 #undef PRIMARY
 
 #define EVENT_IMPORT_FN_NAME EV_CONCAT(IMPORT_EVENTS_, EVENT_MODULE)
-void EVENT_IMPORT_FN_NAME(evolmodule_t mod)
+static void EVENT_IMPORT_FN_NAME(evolmodule_t mod)
 {
 #define PRIMARY(T, ...) \
   EVENT_TYPE(T) = *(ev_eventtype_t *)evol_getmodvar(mod, EV_STRINGIZE(EVENT_TYPE(T)));
