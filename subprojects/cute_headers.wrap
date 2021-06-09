@@ -1,6 +1,6 @@
 [wrap-git]
 directory = cute_headers
-url = https://github.com/RandyGaul/cute_headers
+url = https://github.com/evol3D/cute_headers
 revision = master
 depth = 1
 
