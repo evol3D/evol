@@ -86,3 +86,4 @@ PTR
 ev_module_getvar(
     evolmodule_t module, 
     const char *var_name);
+
