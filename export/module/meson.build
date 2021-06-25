@@ -38,3 +38,6 @@ moduleconfig = get_option('moduleconfig')
 modconf_contents = fs.read(meson.project_source_root() / moduleconfig).strip()
 modconf_oneline = ''.join(modconf_contents.split('\n'))
 add_project_arguments('-DEVMOD_LUA='+modconf_oneline, language: supported_langs)
+
+evmod_name_prefix = ''
+evmod_name_suffix = 'evmod'

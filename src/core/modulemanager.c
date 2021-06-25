@@ -9,14 +9,7 @@
 #include <evol/utils/filesystem.h>
 #include <evol/utils/lua_evutils.h>
 
-// Should this check be for the compiler or the operating system?
-// Or should we just change the library prefix/suffix from the
-// buildsystem and pass them here through a configuration header
-#if defined(EV_CC_MSVC)
-#define LIB_EXTENSION ".dll"
-#elif defined(EV_CC_GCC)
-#define LIB_EXTENSION ".so"
-#endif
+#define LIB_EXTENSION ".evmod"
 
 struct ev_ModuleManagerData {
   lua_State *state;
