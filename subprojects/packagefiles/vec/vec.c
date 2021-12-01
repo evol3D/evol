@@ -1,2 +1,2 @@
-#define EV_VEC_IMPL
+#define VEC_IMPLEMENTATION
 #include <vec.h>
