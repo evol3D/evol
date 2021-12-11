@@ -73,9 +73,6 @@ evol_deps = [
   thread_dep,
 ]
 
-remotery_dep = dependency('remotery')
-evol_deps += remotery_dep
-evol_c_args += '-DRMT_IMPL'
 
 hashmap_dep = dependency('hashmap')
 evol_deps += hashmap_dep
