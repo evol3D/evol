@@ -1,38 +1,38 @@
 evol_src += [
   # Core
   'src/core/evol.c',
-  'src/core/modulemanager.c',
-  'src/core/module.c',
-  'src/core/configloader.c',
-  'src/core/evstore.c',
-  'src/core/eventsystem.c',
-  'src/core/event.c',
-  'src/core/namespace.c',
+  # 'src/core/modulemanager.c',
+  # 'src/core/module.c',
+  # 'src/core/configloader.c',
+  # 'src/core/evstore.c',
+  # 'src/core/eventsystem.c',
+  # 'src/core/event.c',
+  # 'src/core/namespace.c',
 ]
 
 evol_src += [
   # Common
-  'src/common/log.c',
-  'src/common/dvec.c',
+  # 'src/common/log.c',
+  # 'src/common/dvec.c',
 ]
 
 evol_src += [
   # Utils
-  'src/utils/filesystem.c',
-  'src/utils/lua_evutils.c',
-  'src/utils/sleep.c',
-  'src/utils/aligned_alloc.c',
+  # 'src/utils/filesystem.c',
+  # 'src/utils/lua_evutils.c',
+  # 'src/utils/sleep.c',
+  # 'src/utils/aligned_alloc.c',
 ]
 
 evol_src += [
   # Misc
-  'src/misc/checksum.c',
+  # 'src/misc/checksum.c',
 ]
 
 evol_src += [
   # Threads
-  'src/threads/evolpthreads.c',
-  'src/threads/evolthreadpool.c',
+  # 'src/threads/evolpthreads.c',
+  # 'src/threads/evolthreadpool.c',
 ]
 
-subdir('lua')
+# subdir('lua')
