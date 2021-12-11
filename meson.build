@@ -141,8 +141,4 @@ if meson.version().version_compare('>= 0.54.0')
   meson.override_dependency('evol', evollib_dep)
 endif
 
-if get_option('build_demo')
-  subdir('demo')
-endif
-
 evolmod_subdir = meson.project_source_root() + '/export/module'
