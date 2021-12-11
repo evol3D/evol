@@ -82,6 +82,7 @@ typedef void* PTR;
 typedef PTR evolmodule_t;
 
 typedef U64 GenericHandle;
+#define INVALID_GENERIC_HANDLE (~0ull)
 
 HashFunctionDefine(U8)
 HashFunctionDefine(U16)
@@ -129,6 +130,10 @@ CmpFunctionDefineCustom(evstring, pVar0, pVar1)
   (void)udata;
   return strcmp(*pVar0, *pVar1);
 }
+
+#ifndef __cplusplus
+HashmapDefine(evstring, GenericHandle, evstring_free, NULL);
+#endif
 
 #define EV_TYPE_NEW_DEFAULT(val) val
 static inline void EV_TYPE_FREE_DEFAULT(void *_) {(void)_;}
