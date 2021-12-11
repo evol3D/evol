@@ -38,18 +38,18 @@ else
 endif
 
 # Subprojects
-subproject('luajit')
-luajit = dependency('luajit')
-subproject('luadbg')
-luadbg = dependency('luadbg')
+# subproject('luajit')
+# luajit = dependency('luajit')
+# subproject('luadbg')
+# luadbg = dependency('luadbg')
 
-cargs_sub = subproject('cargs', default_options: ['default_library=static'])
-cargs = cargs_sub.get_variable('cargs_dep')
+# cargs_sub = subproject('cargs', default_options: ['default_library=static'])
+# cargs = cargs_sub.get_variable('cargs_dep')
 
 dl = cc.find_library('dl', required: false)
-cute_files = dependency('cute_files')
+# cute_files = dependency('cute_files')
 
-thread_dep = dependency('threads')
+# thread_dep = dependency('threads')
 
 evol_src = []
 
@@ -64,44 +64,43 @@ evol_c_args = ['-DEV_CORE_FILE']
 evol_c_args += ['-fms-extensions']
 
 evol_deps = [
-  luajit,
-  luadbg,
+  # luajit,
+  # luadbg,
 
-  cargs,
-  dl,
-  cute_files,
-  thread_dep,
+  # cargs,
+  # dl,
+  # cute_files,
+  # thread_dep,
 ]
 
+# hashmap_dep = dependency('hashmap')
+# evol_deps += hashmap_dep
+# evol_c_args += '-DHM_IMPL'
 
-hashmap_dep = dependency('hashmap')
-evol_deps += hashmap_dep
-evol_c_args += '-DHM_IMPL'
+# lac_dep = dependency('luaautoc')
+# evol_deps += lac_dep
+# evol_c_args += '-DLAC_IMPL'
 
-lac_dep = dependency('luaautoc')
-evol_deps += lac_dep
-evol_c_args += '-DLAC_IMPL'
+# vec_dep = dependency('vec')
+# evol_deps += vec_dep
+# evol_c_args += '-DVEC_IMPL'
 
-vec_dep = dependency('vec')
-evol_deps += vec_dep
-evol_c_args += '-DVEC_IMPL'
+# evstr_dep = dependency('evstr')
+# evol_deps += evstr_dep
+# evol_c_args += '-DEVSTR_IMPL'
 
-evstr_dep = dependency('evstr')
-evol_deps += evstr_dep
-evol_c_args += '-DEVSTR_IMPL'
-
-evjson_dep = dependency('evjson')
-evol_deps += evjson_dep
-evol_c_args += '-DEVJSON_IMPL'
+# evjson_dep = dependency('evjson')
+# evol_deps += evjson_dep
+# evol_c_args += '-DEVJSON_IMPL'
 
 if get_option('enable_profiling') == true
   build_config.set('EV_PROFILING_ENABLED', true)
 endif
 
-if get_option('using_cglm')
-  cglm_dep = dependency('cglm')
-  evol_deps += cglm_dep
-endif
+# if get_option('using_cglm')
+  # cglm_dep = dependency('cglm')
+  # evol_deps += cglm_dep
+# endif
 
 evol_link_libs = [
 ]
@@ -113,15 +112,24 @@ endif
 configure_file(output: 'buildconfig.h',
   configuration: build_config)
 
-evol_lib = shared_library('evol',
-  evol_src,
-  include_directories: include_directories(evol_incdir),
-  dependencies: evol_deps,
-  link_with: evol_link_libs,
-  c_pch: 'pch/evpch.h',
-  c_args: evol_c_args,
-  install : true,
-)
+if get_option('use_pch')
+  evol_lib = shared_library('evol',
+    evol_src,
+    include_directories: include_directories(evol_incdir),
+    dependencies: evol_deps,
+    link_with: evol_link_libs,
+    c_pch: 'pch/evpch.h',
+    c_args: evol_c_args,
+  )
+else
+  evol_lib = shared_library('evol',
+    evol_src,
+    include_directories: include_directories(evol_incdir),
+    dependencies: evol_deps,
+    link_with: evol_link_libs,
+    c_args: evol_c_args,
+  )
+endif
 
 evol_extern_deps = []
 foreach dep : evol_deps
